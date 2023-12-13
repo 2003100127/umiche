@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-class undirected(object):
+class undirected:
 
     def __init__(self, ):
         pass

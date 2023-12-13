@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 from umiche.network.CC import cc as gbfscc
 
 
-class cluster(object):
+class cluster:
 
     def __init__(self, ):
         pass

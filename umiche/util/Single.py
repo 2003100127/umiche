@@ -7,7 +7,7 @@ import sys
 sys.path.append('../../../../../')
 
 
-class single(object):
+class single:
 
     def __init__(self, ):
         pass

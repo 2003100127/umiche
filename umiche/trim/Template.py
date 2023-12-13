@@ -11,11 +11,11 @@ from umiche.trim.Filter import filter
 from umiche.trim.BCRuleOut import bcRuleOut as bcro
 from umiche.trim.UMIRuleOut import umiRuleOut as umiro
 from umiche.trim.SeqRuleOut import seqRuleOut as seqro
-from umiche.util.Console import console
+from umiche.util.Console import Console
 from umiche.path import to
 
 
-class template(object):
+class template:
 
     def __init__(self, params, verbose=True):
         self.params = params
@@ -26,7 +26,7 @@ class template(object):
         self.seqro = seqro(read_summary=self.params, verbose=self.verbose)
         self.rfastq = rfastq
         self.wfastq = wfastq
-        self.console = console()
+        self.console = Console()
         self.console.verbose = self.verbose
 
     def todf(self, ):

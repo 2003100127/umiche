@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 from collections import deque
 
 
-class connectedComponent(object):
+class connectedComponent:
 
     def __init__(self, ):
         pass

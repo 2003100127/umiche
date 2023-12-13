@@ -7,11 +7,11 @@ __lab__ = "cribbslab"
 import time
 import pysam
 import pandas as pd
-from umiche.util.Console import console
+from umiche.util.Console import Console
 # import bamnostic as bs
 
 
-class read(object):
+class read:
 
     def __init__(self, bam_fpn, verbose=False):
         """
@@ -26,7 +26,7 @@ class read(object):
         bam_fpn
         verbose
         """
-        self.console = console()
+        self.console = Console()
         self.console.verbose = verbose
         self.console.print('===>reading the bam file... {}'.format(bam_fpn))
         read_bam_stime = time.time()

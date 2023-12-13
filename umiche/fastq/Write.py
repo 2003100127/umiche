@@ -9,7 +9,7 @@ import gzip
 from umiche.util.Folder import folder as crtfolder
 
 
-class write(object):
+class write:
 
     def __init__(self):
         pass

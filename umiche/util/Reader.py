@@ -11,7 +11,7 @@ import pandas as pd
 from functools import wraps
 
 
-class reader(object):
+class reader:
 
     def __init__(self, ):
         pass

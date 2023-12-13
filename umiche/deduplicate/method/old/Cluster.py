@@ -8,7 +8,7 @@ from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 import networkx as nx
 
 
-class cluster(object):
+class cluster:
 
     def __init__(self, ):
         pass

@@ -1,5 +1,5 @@
 # ## /*** block. remote ***/
-from .monomer import *
+from .method import *
 
 # ## /*** block. local ***/
 # try:

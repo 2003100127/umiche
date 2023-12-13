@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 from collections import deque
 
 
-class cc(object):
+class cc:
 
     def __init__(self, ):
         pass

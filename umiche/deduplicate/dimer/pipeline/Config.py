@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 import numpy as np
 
 
-class config(object):
+class config:
 
     def __init__(self, ):
         self.permutation_num = 2

@@ -1,6 +1,6 @@
 
 
-class mcl(object):
+class mcl:
 
     def __init__(self, ):
         pass

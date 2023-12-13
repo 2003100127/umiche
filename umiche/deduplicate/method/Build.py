@@ -10,12 +10,17 @@ from umiche.path import to
 from umiche.util.Number import number as rannum
 from umiche.util.Hamming import hamming
 from umiche.network.Edge import edge as guuedge
-from umiche.util.Console import console
+from umiche.util.Console import Console
 
 
-class build():
+class Build:
 
-    def __init__(self, df, ed_thres, verbose=False):
+    def __init__(
+            self,
+            df,
+            ed_thres,
+            verbose=False,
+    ):
         """
 
         Parameters
@@ -27,7 +32,7 @@ class build():
         # print(df)
         self.hamming = hamming()
         self.guuedge = guuedge()
-        self.console = console()
+        self.console = Console()
         self.console.verbose = verbose
 
         umi_keymap_stime = time.time()
@@ -125,7 +130,7 @@ class build():
 
 
 if __name__ == "__main__":
-    umiche = build(
+    umiche = Build(
         # bam_fpn=to('example/data/example.bam'),
         bam_fpn=to('example/data/RM82CLK1_S1_XT_gene.bam'),
         ed_thres=5,

@@ -10,7 +10,7 @@ from umiche.path import to
 from umiche.deduplicate.trimer.Collapse import collapse
 
 
-class setCoverOptimization(object):
+class setCoverOptimization:
 
     def __init__(self, ):
         self.collapse = collapse()

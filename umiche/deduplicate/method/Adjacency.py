@@ -5,9 +5,14 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
 
-class adjacency(object):
+class adjacency:
 
-    def umi_tools(self, connected_components, df_umi_uniq_val_cnt, graph_adj):
+    def umi_tools(
+            self,
+            connected_components,
+            df_umi_uniq_val_cnt,
+            graph_adj,
+    ):
         """
         Examples
         --------
@@ -105,7 +110,7 @@ class adjacency(object):
 
 if __name__ == "__main__":
     import pandas as pd
-    from umiche.deduplicate.monomer.Cluster import cluster as umimonoclust
+    from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 
     p = adjacency()
 

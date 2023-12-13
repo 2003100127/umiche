@@ -7,27 +7,65 @@ __lab__ = "cribbslab"
 import os
 import sys
 import time
-import argparse
 import numpy as np
 import pandas as pd
 from umiche.align.Read import read as aliread
 from umiche.align.Write import write as aliwrite
-from umiche.fastq.Read import read as rfastq
-from umiche.fastq.Write import write as wfastq
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
 from umiche.util.Number import number as rannum
-from umiche.util.Console import console
-from umiche.deduplicate.monomer.Build import build as umibuild
-from umiche.deduplicate.monomer.Cluster import cluster as umimonoclust
-from umiche.deduplicate.monomer.Adjacency import adjacency as umitoolmonoadj
-from umiche.deduplicate.monomer.Directional import directional as umitoolmonodirec
-from umiche.deduplicate.monomer.MarkovClustering import markovClustering as umimonomcl
+from umiche.util.Console import Console
+from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
+from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
+from umiche.deduplicate.method.MarkovClustering import markovClustering as umimonomcl
+sys.setrecursionlimit(15000000)
 
 
-class dedupSC():
+class Gene:
 
-    def __init__(self, bam_fpn, ed_thres, method, gene_assigned_tag, gene_is_assigned_tag, mode='internal', mcl_fold_thres=None, inflat_val=2.0, exp_val=2, iter_num=100, is_sv=True, sv_fpn='./dedup.bam', verbose=False):
+    def __init__(
+            self,
+            bam_fpn,
+            ed_thres,
+            method,
+            gene_assigned_tag,
+            gene_is_assigned_tag,
+            mcl_fold_thres=None,
+            inflat_val=2.0,
+            exp_val=2,
+            iter_num=100,
+            is_sv=True,
+            sv_fpn='./dedup.bam',
+            verbose=False,
+    ):
+        """
+        Parameters
+        ----------
+        bam_fpn
+            str - the full path of a BAM file curated by requirements of different dedup modules
+        ed_thres
+            int - an edit distance threshold (>1, integer)
+        method
+            str - a deduplication method (mcl, mcl_val, mcl_ed, cluster, unique, ajacency, directional)
+        mode
+            str - externally or internally run the module (external by defualt, internal)
+        mcl_fold_thres
+            float - a mcl fold threshold (1.5 by defualt)
+        inflat_val
+            float - an inflation value for generating mcl clusters (2.0 by defualt)
+        exp_val
+            int - an expansion value for generating mcl clusters (2 by defualt)
+        iter_num
+            int - number of iterations for mcl (100 by defualt)
+        is_sv
+            bool - is the deduplicated bam file to save (True by default or False)
+        sv_fpn
+            str - the deduplication file path
+        verbose
+            bool - print log on the console, (True by default or False)
+        """
         self.rannum = rannum()
         self.gwriter = gwriter()
         self.umibuild = umibuild
@@ -47,7 +85,7 @@ class dedupSC():
             self.verbose = verbose
             print('run Mclumi internally.')
 
-        self.console = console()
+        self.console = Console()
         self.console.verbose = self.verbose
 
         self.dirname = os.path.dirname(self.sv_fpn) + '/'
@@ -56,9 +94,8 @@ class dedupSC():
         self.umitoolmonoadj = umitoolmonoadj()
         self.umitoolmonodirec = umitoolmonodirec()
 
-        self.console.print('======>runing method {}...'.format(self.method))
         self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
-        self.df_bam = self.alireader.todf(tags=[self.gene_assigned_tag, self.gene_is_assigned_tag, 'BC'])
+        self.df_bam = self.alireader.todf(tags=[self.gene_assigned_tag, self.gene_is_assigned_tag])
         self.console.print('======># of raw reads: {}'.format(self.df_bam.shape[0]))
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
@@ -66,18 +103,17 @@ class dedupSC():
         # self.df_bam = self.df_bam.loc[self.df_bam[self.gene_is_assigned_tag] == 'Assigned'][:10000]
         self.console.print('======># of reads with assigned genes: {}'.format(self.df_bam.shape[0]))
 
-        self.df_bam['bc'] = self.df_bam['BC']
         self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[1])
-        self.console.print('======># of unique barcodes: {}'.format(self.df_bam['bc'].unique().shape[0]))
+        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: self.correct(x))
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
 
         self.aliwriter = aliwrite(df=self.df_bam)
         self.aliwriter.is_sv = self.is_sv
 
-        self.df_bam_gp = self.df_bam.groupby(by=['bc', self.gene_assigned_tag])
+        self.df_bam_gp = self.df_bam.groupby(by=[self.gene_assigned_tag])
         self.gp_keys = self.df_bam_gp.groups.keys()
-        self.console.print('======># of gene-by-cell positions in the bam: {}'.format(len(self.gp_keys)))
+        self.console.print('======># of gene positions in the bam: {}'.format(len(self.gp_keys)))
         self.console.print('======>edit distance thres: {}'.format(self.ed_thres))
 
         self.umimonomcl = umimonomcl(
@@ -91,7 +127,6 @@ class dedupSC():
         gps = []
         res_sum = []
         for g in self.gp_keys:
-            # print(g)
             umi_vignette = self.umibuild(
                 df=self.df_bam_gp.get_group(g),
                 ed_thres=self.ed_thres,
@@ -109,14 +144,6 @@ class dedupSC():
                 cc,
                 [*umi_vignette['umi_uniq_mapped_rev'].keys()],
             ])
-            # if umi_vignette['fff']:
-            #     print(len(self.umimonomcl.decompose(
-            #         list_nd=self.umimonomcl.dfclusters(
-            #             connected_components=cc,
-            #             graph_adj=umi_vignette['graph_adj'],
-            #         )['clusters'].values)))
-            #     print(len(cc))
-
         self.df = pd.DataFrame(
             data=res_sum,
             columns=['vignette', 'cc', 'uniq_repr_nodes'],
@@ -127,33 +154,32 @@ class dedupSC():
         self.df['uniq_umi_len'] = self.df['uniq_repr_nodes'].apply(lambda x: self.length(x))
 
         self.console.print('===>start deduplication by the {} method...'.format(self.method))
-
         if self.method == 'unique':
             dedup_umi_stime = time.time()
             # self.df['uniq_sgl_mark'] = self.df['uniq_repr_nodes'].apply(lambda x: self.markSingleUMI(x))
             # self.df = self.df.loc[self.df['uniq_sgl_mark'] == 'no']
             self.console.print('======># of positions with non-single umis: {}'.format(self.df.shape[0]))
-            # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-            # self.console.print('======>calculate average edit distances between umis...')
-            # dedup_umi_edave_stime = time.time()
-            # self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='uniq_repr_nodes'), axis=1)
-            # self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
-            # ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
-            # self.console.check(ave_ed_bins)
-            # self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='uniq_repr_nodes'), axis=1)
-            # self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='uniq_repr_nodes'), axis=1)
-            # self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
-            # self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
-            # self.df_dedup_sum = self.df[[
-            #     'ave_eds',
-            #     'uniq_umi_len',
-            #     'dedup_uniq_diff_pos',
-            #     'dedup_read_diff_pos',
-            # ]]
-#             # self.console.print('======>start writing deduplicated reads to BAM...')
-            # dedup_reads_write_stime = time.time()
-            # self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='uniq_repr_nodes'), axis=1)
-            # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+            self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+            self.console.print('======>calculate average edit distances between umis...')
+            dedup_umi_edave_stime = time.time()
+            self.df['ave_eds'] = self.df.apply(lambda x: self.edave(x, by_col='uniq_repr_nodes'), axis=1)
+            self.console.print('======>finish calculating ave eds in {:.2f}s'.format(time.time() - dedup_umi_edave_stime))
+            ave_ed_bins = self.df['ave_eds'].value_counts().sort_index()
+            self.console.check(ave_ed_bins)
+            self.df['dedup_uniq_diff_pos'] = self.df.apply(lambda x: self.diffDedupUniqCountPos(x, by_col='uniq_repr_nodes'), axis=1)
+            self.df['dedup_read_diff_pos'] = self.df.apply(lambda x: self.diffDedupReadCountPos(x, by_col='uniq_repr_nodes'), axis=1)
+            self.console.print('======># of deduplicated unique umis {} on the basis of the unique method'.format(self.df['dedup_uniq_diff_pos'].sum()))
+            self.console.print('======># of deduplicated reads {} on the basis of the unique method'.format(self.df['dedup_read_diff_pos'].sum()))
+            self.df_dedup_sum = self.df[[
+                'ave_eds',
+                'uniq_umi_len',
+                'dedup_uniq_diff_pos',
+                'dedup_read_diff_pos',
+            ]]
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.bamids(x, by_col='uniq_repr_nodes'), axis=1)
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
 
         elif self.method == 'cluster':
             dedup_umi_stime = time.time()
@@ -313,7 +339,7 @@ class dedupSC():
             self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_val'), axis=1)
             self.df['mcl_val_umi_len'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.length(x))
             self.dedup_index = self.df.index
-            self.dedup_num = self.df['mcl_val_umi_len'].values.tolist()
+            self.dedup_num = self.df['direc_umi_len'].values.tolist()
             print(self.dedup_num)
             # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
             # self.console.print('======>calculate average edit distances between umis...')
@@ -357,7 +383,7 @@ class dedupSC():
             self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umimax(x, by_col='mcl_ed'), axis=1)
             self.df['mcl_ed_umi_len'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.length(x))
             self.dedup_index = self.df.index
-            self.dedup_num = self.df['mcl_ed_umi_len'].values.tolist()
+            self.dedup_num = self.df['direc_umi_len'].values.tolist()
             print(self.dedup_num)
             # self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
             # self.console.print('======>calculate average edit distances between umis...')
@@ -405,6 +431,23 @@ class dedupSC():
             return 'yes'
         else:
             return 'no'
+
+    def correct(self, umi):
+        vernier = [i for i in range(36) if i % 3 == 0]
+        umi_trimers = [umi[v: v+3] for v in vernier]
+        # umi_trimers = textwrap.wrap(umi, 3)
+        t = []
+        for umi_trimer in umi_trimers:
+            s = set(umi_trimer)
+            if len(s) == 3:
+                rand_index = self.rannum.uniform(low=0, high=3, num=1, use_seed=False)[0]
+                t.append(umi_trimer[rand_index])
+            elif len(s) == 2:
+                sdict = {umi_trimer.count(i): i for i in s}
+                t.append(sdict[2])
+            else:
+                t.append(umi_trimer[0])
+        return ''.join(t)
 
     def decompose(self, list_nd):
         """
@@ -490,27 +533,24 @@ class dedupSC():
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = dedupSC(
-        mode='internal',
-        # mode='external',
-
+    umiche = Gene(
         # method='unique',
-        method='cluster',
+        # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
 
-        bam_fpn=to('example/data/assigned_sorted.bam'),
+        bam_fpn=to('example/data/RM82CLK1_S3_featurecounts_gene_sorted.bam'),
         gene_assigned_tag='XT',
         gene_is_assigned_tag='XS',
-        mcl_fold_thres=1.5,
+        mcl_fold_thres=1.6,
         inflat_val=1.6,
         exp_val=2,
         iter_num=100,
         verbose=True,
-        ed_thres=6,
+        ed_thres=7,
         is_sv=False,
-        sv_fpn=to('example/data/sc/') + '' + 'assigned_sorted_dedup.bam',
+        sv_fpn=to('example/data/gene/assigned_sorted_dedup.bam'),
     )

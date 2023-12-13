@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 import os
 
 
-class folder(object):
+class folder:
 
     def __init__(self, ):
         pass

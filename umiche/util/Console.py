@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 from datetime import datetime
 
 
-class console:
+class Console:
     
     def __init__(self, placeholder='logger: ', verbose=False):
         self._verbose = verbose

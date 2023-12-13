@@ -10,8 +10,8 @@ from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.dimer.pipeline import Config
-from umiche.deduplicate.monomer.Relation import relation as umimonorel
-from umiche.deduplicate.monomer.DedupPos import dedupPos
+from umiche.deduplicate.method.Relation import relation as umimonorel
+from umiche.deduplicate.Position import dedupPos
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 

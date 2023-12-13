@@ -4,7 +4,7 @@ __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
-from umiche.util.Console import console
+from umiche.util.Console import Console
 
 
 class bcRuleOut:
@@ -12,7 +12,7 @@ class bcRuleOut:
     def __init__(self, read_summary, verbose=True):
         self.read_summary = read_summary
         self.verbose = verbose
-        self.console = console()
+        self.console = Console()
         self.console.verbose = self.verbose
 
     def sequential(self, compo_struct, bc_pos_in_struct):

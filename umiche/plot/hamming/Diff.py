@@ -15,7 +15,7 @@ from umiche.path import to
 from matplotlib import rcParams
 
 
-class diff(object):
+class diff:
 
     def __init__(self, ):
         self.gfreader = gfreader()

@@ -11,7 +11,7 @@ from simreadflow.util.sequence.symbol.Single import single as dnasgl
 from sklearn.cluster import DBSCAN as skdbscan
 
 
-class dbscan(object):
+class dbscan:
 
     def __init__(self, ):
         self.gbfscc = gbfscc()

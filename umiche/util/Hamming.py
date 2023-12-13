@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
 
-class hamming(object):
+class hamming:
 
     def __init__(self, ):
         pass

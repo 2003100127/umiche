@@ -10,21 +10,35 @@ import numpy as np
 import pandas as pd
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
-from umiche.util.Console import console
+from umiche.util.Console import Console
 from umiche.util.Number import number as rannum
 from umiche.align.Read import read as aliread
 # from umiche.align.Write import write as aliwrite
-from umiche.deduplicate.monomer.Build import build as umibuild
-from umiche.deduplicate.monomer.Cluster import cluster as umimonoclust
-from umiche.deduplicate.monomer.Adjacency import adjacency as umitoolmonoadj
-from umiche.deduplicate.monomer.Directional import directional as umitoolmonodirec
-from umiche.deduplicate.monomer.MarkovClustering import markovClustering as umimonomcl
+from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
+from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
+from umiche.deduplicate.method.MarkovClustering import markovClustering as umimonomcl
 from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
 
-class dedupPos():
+class Position:
 
-    def __init__(self, bam_fpn, ed_thres, method, mode='external', pos_tag='PO', mcl_fold_thres=None, inflat_val=2.0, exp_val=2, iter_num=100, is_sv=True, sv_fpn='./dedup.bam', verbose=False):
+    def __init__(
+            self,
+            bam_fpn,
+            ed_thres,
+            method,
+            mode='external',
+            pos_tag='PO',
+            mcl_fold_thres=None,
+            inflat_val=2.0,
+            exp_val=2,
+            iter_num=100,
+            is_sv=True,
+            sv_fpn=None,
+            verbose=False,
+    ):
         self.rannum = rannum()
         self.gwriter = gwriter()
         self.umibuild = umibuild
@@ -43,7 +57,7 @@ class dedupPos():
             self.verbose = verbose
             # print('run Mclumi internally.')
 
-        self.console = console()
+        self.console = Console()
         self.console.verbose = self.verbose
         
         self.dirname = os.path.dirname(self.sv_fpn) + '/'
@@ -509,10 +523,7 @@ class dedupPos():
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = dedupPos(
-        mode='internal',
-        # mode='external',
-
+    umiche = Position(
         # method='unique',
         # method='cluster',
         # method='adjacency',

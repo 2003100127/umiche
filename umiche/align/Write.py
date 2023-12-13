@@ -5,15 +5,15 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
 # import pysam
-from umiche.util.Console import console
+from umiche.util.Console import Console
 
 
-class write(object):
+class write:
 
     def __init__(self, df, is_sv=False, verbose=False):
         self.df = df
         self._is_sv = is_sv
-        self.console = console()
+        self.console = Console()
         self.console.verbose = verbose
 
     @property

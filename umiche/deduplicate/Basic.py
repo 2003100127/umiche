@@ -7,7 +7,6 @@ __lab__ = "cribbslab"
 import os
 import sys
 import time
-import argparse
 import numpy as np
 import pandas as pd
 from umiche.align.Read import read as aliread
@@ -15,17 +14,29 @@ from umiche.align.Write import write as aliwrite
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
 from umiche.util.Number import number as rannum
-from umiche.util.Console import console
-from umiche.deduplicate.monomer.Build import build as umibuild
-from umiche.deduplicate.monomer.Cluster import cluster as umimonoclust
-from umiche.deduplicate.monomer.Adjacency import adjacency as umitoolmonoadj
-from umiche.deduplicate.monomer.Directional import directional as umitoolmonodirec
-from umiche.deduplicate.monomer.MarkovClustering import markovClustering as umimonomcl
+from umiche.util.Console import Console
+from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
+from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
+from umiche.deduplicate.method.MarkovClustering import markovClustering as umimonomcl
 
 
-class dedupBasic():
+class Basic:
 
-    def __init__(self, bam_fpn, ed_thres, method, mode='external', mcl_fold_thres=None, inflat_val=2.0, exp_val=2, iter_num=100, is_sv=True, sv_fpn='./dedup.bam', verbose=False):
+    def __init__(
+            self,
+            bam_fpn,
+            ed_thres,
+            method,
+            mcl_fold_thres=None,
+            inflat_val=2.0,
+            exp_val=2,
+            iter_num=100,
+            is_sv=True,
+            sv_fpn='./dedup.bam',
+            verbose=False,
+    ):
         """
 
         Parameters
@@ -53,118 +64,22 @@ class dedupBasic():
         verbose
             bool - print log on the console, (True by default or False)
         """
+        self.method = method
+        self.bam_fpn = bam_fpn
+        self.ed_thres = ed_thres
+        self.mcl_fold_thres = mcl_fold_thres
+        self.inflat_val = inflat_val
+        self.exp_val = exp_val
+        self.iter_num = iter_num
+        self.is_sv = is_sv
+        self.sv_fpn = sv_fpn
+        self.verbose = verbose
+
         self.umibuild = umibuild
         self.rannum = rannum()
         self.gwriter = gwriter()
-        if mode == 'internal':
-            self.method = method
-            self.bam_fpn = bam_fpn
-            self.ed_thres = ed_thres
-            self.mcl_fold_thres = mcl_fold_thres
-            self.inflat_val = inflat_val
-            self.exp_val = exp_val
-            self.iter_num = iter_num
-            self.is_sv = is_sv
-            self.sv_fpn = sv_fpn
-            self.verbose = verbose
-            print('run Mclumi internally.')
-        else:
-            self.parser = argparse.ArgumentParser(
-                description='The dedupBasic module'
-            )
-            self.parser.add_argument(
-                "--method", "-m",
-                metavar='method',
-                dest='m',
-                required=True,
-                type=str,
-                help='str - a dedup method: unique | cluster | adjacency | directional | mcl | mcl_ed | mcl_val',
-            )
-            self.parser.add_argument(
-                "--input_bam", "-ibam",
-                metavar='input_bam',
-                dest='ibam',
-                required=True,
-                type=str,
-                help='str - input a bam file curated by requirements of THE dedup_basic modules',
-            )
-            self.parser.add_argument(
-                "--edit_dist", "-ed",
-                metavar='edit dist',
-                dest='ed',
-                default=1,
-                type=int,
-                help='int - an edit distance used for building graphs (int >1)',
-            )
-            self.parser.add_argument(
-                "--inflation_value", "-infv",
-                metavar='inflation_value',
-                dest='infv',
-                default=2.0,
-                type=float,
-                help='float - an inflation value for MCL',
-            )
-            self.parser.add_argument(
-                "--expansion_value", "-expv",
-                metavar='expansion_value',
-                dest='expv',
-                default=2,
-                type=int,
-                help='int - an expansion value for MCL at a range of (1, 5)',
-            )
-            self.parser.add_argument(
-                "--iteration_number", "-itern",
-                metavar='iteration_number',
-                dest='itern',
-                default=100,
-                type=int,
-                help='int - iteration number for MCL at a range of (1, +inf) (100 by defualt)',
-            )
-            self.parser.add_argument(
-                "--mcl_fold_thres", "-fthres",
-                metavar='mcl_fold_thres',
-                dest='fthres',
-                default=1.1,
-                type=float,
-                help='float - a fold threshold for MCL  at a range of (1, l) where l is the length of a UMI (1.5 by defualt)',
-            )
-            self.parser.add_argument(
-                "--is_sv", "-issv",
-                metavar='is_sv',
-                dest='issv',
-                default=True,
-                type=bool,
-                help='bool - to make sure if the deduplicated bam info writes to a bam file.',
-            )
-            self.parser.add_argument(
-                "--output_bam", "-obam",
-                metavar='output_bam',
-                dest='obam',
-                required=True,
-                type=str,
-                help='str - output UMI-de-duplicated summary statistics to a bam file.',
-            )
-            self.parser.add_argument(
-                "--verbose", "-vb",
-                metavar='verbose',
-                dest='vb',
-                default=True,
-                type=bool,
-                help='bool - to enable if output logs are on console, print log on the console, (True by default or False)',
-            )
-            args = self.parser.parse_args()
-            self.method = args.m
-            self.bam_fpn = args.ibam
-            self.ed_thres = args.ed
-            self.mcl_fold_thres = args.fthres
-            self.inflat_val = args.infv
-            self.exp_val = args.expv
-            self.iter_num = args.itern
-            self.is_sv = args.issv
-            self.sv_fpn = args.obam
-            self.verbose = args.vb
 
-        self.console = console()
+        self.console = Console()
         self.console.verbose = self.verbose
 
         self.dirname = os.path.dirname(self.sv_fpn) + '/'
@@ -731,10 +646,7 @@ class dedupBasic():
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = dedupBasic(
-        # mode='internal',
-        mode='external',
-
+    umiche = Basic(
         # method='unique',
         # method='cluster',
         # method='adjacency',

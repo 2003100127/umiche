@@ -2,7 +2,7 @@ import time
 import numpy as np
 
 
-class trace(object):
+class trace:
 
     def __init__(self, df_fastq, df_umi_uniq_val_cnt, umi_uniq_mapped_rev, umi_trace_dict):
         self.df_fastq = df_fastq

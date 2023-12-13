@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 
-class ed(object):
+class ed:
 
     def __init__(self, ):
         pass

@@ -4,19 +4,45 @@ __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
+import os
 import numpy as np
 import pandas as pd
 import markov_clustering as mc
-from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
-from simreadflow.read.similarity.distance.Hamming import hamming
+from umiche.network.CC import cc as gbfscc
+from umiche.util.Hamming import hamming
 
 
-class markovClustering(object):
+class markovClustering:
 
-    def __init__(self, ):
+    def __init__(self, inflat_val, exp_val, iter_num):
         self.gbfscc = gbfscc()
-        
+        self.inflat_val = inflat_val
+        self.exp_val = exp_val
+        self.iter_num = iter_num
+
     def dfclusters(self, connected_components, graph_adj):
+        """
+
+        Parameters
+        ----------
+        connected_components
+            connected components in dict format:
+            {
+                'cc0': [...] # nodes,
+                'cc1': [...],
+                'cc2': [...],
+                ...
+                'ccn': [...],
+            }
+        graph_adj
+            the adjacency list of a graph
+
+        Returns
+        -------
+            a pandas dataframe
+            each connected component is decomposed into more connected subcomponents.
+
+        """
         # print([*connected_components.values])
         df_ccs = pd.DataFrame({'cc': [*connected_components.values()]})
         df_ccs['graph_cc_adj'] = df_ccs['cc'].apply(lambda x: self.graph_cc_adj(x, graph_adj))
@@ -27,25 +53,96 @@ class markovClustering(object):
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.keyToNode(list_2d=x['mcl_clusters'], keymap=x['keymap_rev']), axis=1)
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
         # print(df_ccs[['graph_cc_adj', 'mcl_clusters', 'clusters']])
+        # print(df_ccs['clusters'])
         return df_ccs
 
+    def decompose(self, list_nd):
+        """
+
+        Parameters
+        ----------
+        df
+
+        Returns
+        -------
+        {
+
+        }
+
+        """
+        # print(list_nd)
+        list_md = []
+        for i in list_nd:
+            list_md = list_md + i
+        res = {}
+        for i, cc_sub_each_mcl in enumerate(list_md):
+            res[i] = cc_sub_each_mcl
+        return res
+
     def graph_cc_adj(self, cc, graph_adj):
+        """
+
+        Parameters
+        ----------
+        cc
+            The first parameter.
+        graph_adj
+            The se parameter.
+
+        Returns
+        -------
+
+        """
         return {node: graph_adj[node] for node in cc}
 
     def keyToNode(self, list_2d, keymap):
+        """
+
+        Parameters
+        ----------
+        list_2d
+        keymap
+
+        Returns
+        -------
+
+        """
         return [[keymap[i] for i in lis] for lis in list_2d]
 
     def cluster(self, cc_adj_mat):
+        """
+
+        Parameters
+        ----------
+        cc_adj_mat
+
+        Returns
+        -------
+
+        """
         result = mc.run_mcl(
             cc_adj_mat,
-            # inflation=3.5,
-            expansion=3
+            inflation=self.inflat_val,
+            expansion=self.exp_val,
+            iterations=int(self.iter_num),
         )
         clusters = mc.get_clusters(result)
         # print(clusters)
         return clusters
 
     def maxval_val(self, df_mcl_ccs, df_umi_uniq_val_cnt, thres_fold):
+        """
+
+        Parameters
+        ----------
+        df_mcl_ccs
+        df_umi_uniq_val_cnt
+        thres_fold
+
+        Returns
+        -------
+
+        """
         df_mcl_ccs['mscmv_val'] = df_mcl_ccs['clusters'].apply(
             lambda x: self.maxval_val_(
                 mcl_clusters_per_cc=x,
@@ -59,10 +156,26 @@ class markovClustering(object):
         df_mcl_ccs['mscmv_val_disapv'] = df_mcl_ccs['mscmv_val'].apply(lambda x: x[3])
         # print(df_mcl_ccs['mscmv_val_len'].sum())
         # print(df_mcl_ccs[['mscmv_val_clusters', 'mscmv_val_disapv', ]])
-        return df_mcl_ccs['mscmv_val_len'], df_mcl_ccs['mscmv_val_clusters'], df_mcl_ccs['mscmv_val_apv'], df_mcl_ccs[
-            'mscmv_val_disapv']
+        return {
+            'count': df_mcl_ccs['mscmv_val_len'],
+            'clusters': df_mcl_ccs['mscmv_val_clusters'],
+            'apv': df_mcl_ccs['mscmv_val_apv'],
+            'disapv': df_mcl_ccs['mscmv_val_disapv'],
+        }
 
     def maxval_val_(self, mcl_clusters_per_cc, df_umi_uniq_val_cnt, thres_fold):
+        """
+
+        Parameters
+        ----------
+        mcl_clusters_per_cc
+        df_umi_uniq_val_cnt
+        thres_fold
+
+        Returns
+        -------
+
+        """
         mcl_sub_clust_max_val_graph = {}
         mcl_sub_clust_max_val_weights = {}
         for clust in mcl_clusters_per_cc:
@@ -98,6 +211,19 @@ class markovClustering(object):
         return len(clusters), clusters, approval, disapproval
 
     def maxval_ed(self, df_mcl_ccs, df_umi_uniq_val_cnt, umi_uniq_mapped_rev, thres_fold):
+        """
+
+        Parameters
+        ----------
+        df_mcl_ccs
+        df_umi_uniq_val_cnt
+        umi_uniq_mapped_rev
+        thres_fold
+
+        Returns
+        -------
+
+        """
         df_mcl_ccs['mscmv_ed'] = df_mcl_ccs['clusters'].apply(
             lambda x: self.maxval_ed_(
                 mcl_clusters_per_cc=x,
@@ -112,7 +238,12 @@ class markovClustering(object):
         df_mcl_ccs['mscmv_ed_disapv'] = df_mcl_ccs['mscmv_ed'].apply(lambda x: x[3])
         # print(df_mcl_ccs['mscmv_ed_len'].sum())
         # print(df_mcl_ccs[['mscmv_ed_clusters', 'mscmv_ed_disapv', ]])
-        return df_mcl_ccs['mscmv_ed_len'], df_mcl_ccs['mscmv_ed_clusters'], df_mcl_ccs['mscmv_ed_apv'], df_mcl_ccs['mscmv_ed_disapv']
+        return {
+            'count': df_mcl_ccs['mscmv_ed_len'],
+            'clusters': df_mcl_ccs['mscmv_ed_clusters'],
+            'apv': df_mcl_ccs['mscmv_ed_apv'],
+            'disapv': df_mcl_ccs['mscmv_ed_disapv'],
+        }
 
     def maxval_ed_(self, mcl_clusters_per_cc, df_umi_uniq_val_cnt, umi_uniq_mapped_rev, thres_fold):
         """
@@ -129,6 +260,17 @@ class markovClustering(object):
         #                 approval.append([k1, k2])
         #             else:
         #                 disapproval.append([k1, k2])
+
+        Parameters
+        ----------
+        mcl_clusters_per_cc
+        df_umi_uniq_val_cnt
+        umi_uniq_mapped_rev
+        thres_fold
+
+        Returns
+        -------
+
         """
         mcl_sub_clust_max_val_graph = {}
         mcl_sub_clust_max_val_weights = {}
@@ -162,9 +304,31 @@ class markovClustering(object):
         return len(clusters), clusters, approval, disapproval
 
     def sort_vals(self, df_umi_uniq_val_cnt, cc):
+        """
+
+        Parameters
+        ----------
+        df_umi_uniq_val_cnt
+        cc
+
+        Returns
+        -------
+
+        """
         return df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
 
     def keymap(self, graph_adj, reverse=False):
+        """
+
+        Parameters
+        ----------
+        graph_adj
+        reverse
+
+        Returns
+        -------
+
+        """
         keys = [*graph_adj.keys()]
         glen = len(keys)
         if reverse:
@@ -173,12 +337,19 @@ class markovClustering(object):
             return {keys[k]: k for k in range(glen)}
 
     def matrix(self, graph_adj, key_map):
+        """
+
+        Parameters
+        ----------
+        graph_adj
+        key_map
+
+        Returns
+        -------
+
+        """
         adj_mat = np.zeros(shape=[len(key_map), len(key_map)])
         for k, vals in graph_adj.items():
             for val in vals:
                 adj_mat[key_map[k], key_map[val]] = 1
         return adj_mat
-
-
-if __name__ == "__main__":
-    p = markovClustering()

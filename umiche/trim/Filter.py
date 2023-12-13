@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 from umiche.path import to
 
 
-class filter(object):
+class filter:
 
     def __init__(self, ):
         pass

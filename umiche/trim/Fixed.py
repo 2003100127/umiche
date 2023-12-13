@@ -6,7 +6,7 @@ __lab__ = "cribbslab"
 
 import argparse
 from umiche.trim.Template import template as umitrim
-from umiche.util.Console import console
+from umiche.util.Console import Console
 
 
 class fixed():
@@ -15,7 +15,7 @@ class fixed():
         if mode == 'internal':
             self.params = params
             self.verbose = verbose
-            self.console = console()
+            self.console = Console()
             self.console.verbose = self.verbose
             self.console.print('run Mclumi internally.')
             self.console.print('Your params for trimming UMIs are: \n{}'.format(self.params))
@@ -77,7 +77,7 @@ class fixed():
                 'fpn': self.fastq_fpn,
                 'trimmed_fpn': self.fastq_trimmed_fpn,
             }
-            self.console = console()
+            self.console = Console()
             self.console.verbose = self.verbose
 
     def call(self, ):

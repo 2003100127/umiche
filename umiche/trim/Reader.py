@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 import time
 
 
-class reader(object):
+class reader:
 
     def __init__(self, ):
         pass

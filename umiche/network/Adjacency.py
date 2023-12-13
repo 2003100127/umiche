@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 import numpy as np
 
 
-class adjacency(object):
+class adjacency:
 
     def __init__(self, graph=None):
         self._graph = graph

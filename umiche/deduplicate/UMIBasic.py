@@ -10,8 +10,8 @@ from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.trimer.pipeline import Config
-from umiche.deduplicate.monomer.Relation import relation as umimonorel
-from umiche.deduplicate.monomer.DedupPos import dedupPos
+from umiche.deduplicate.method.Relation import relation as umimonorel
+from umiche.deduplicate.Position import Position as deduppos
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 
@@ -151,7 +151,7 @@ class umi(Config.Config):
                     #     if i_metric == 0.125 or i_metric == 0.15:
                     #         continue
                     #     else:
-                    dedup_ob = dedupPos(
+                    dedup_ob = deduppos(
                         mode='internal',
                         method=self.method,
                         # bam_fpn=to('example/data/example.bam'),

@@ -7,7 +7,7 @@ __lab__ = "cribbslab"
 import numpy as np
 
 
-class adjacency(object):
+class adjacency:
 
     def __init__(self, graph=None):
         self._graph = graph

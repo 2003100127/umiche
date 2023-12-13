@@ -17,7 +17,7 @@ from umiche.util.Number import number as rannum
 from umiche.path import to
 
 
-class collapse(object):
+class collapse:
 
     def __init__(self, ):
         pass

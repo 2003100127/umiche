@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 
-class visit(object):
+class visit:
 
     def __init__(self, graph):
         self.graph = graph

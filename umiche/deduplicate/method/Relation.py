@@ -13,7 +13,7 @@ from umiche.util.Hamming import hamming
 from umiche.graph.undirected.unweighted.repr.Edge import edge as guuedge
 
 
-class relation(object):
+class relation:
 
     def __init__(self, fastq_path, fastq_name, ed_thres):
         self.rfastq = rfastq

@@ -1,6 +1,6 @@
 
 
-class style(object):
+class style:
 
     def __init__(self, ):
         pass

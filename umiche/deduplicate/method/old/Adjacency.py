@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
 
 
-class adjacency(object):
+class adjacency:
 
     def umi_tools(self, connected_components, df_umi_uniq_val_cnt, graph_adj):
         tcl = []
