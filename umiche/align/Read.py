@@ -131,7 +131,7 @@ class read:
                 read.next_reference_start,
                 read.query_qualities,
                 # read.template_length,
-                # read,
+                read,
             ] + tag_keys
             l.append(vignette)
         df = pd.DataFrame(
@@ -149,7 +149,7 @@ class read:
                 'next_reference_start',
                 'query_qualities',
                 # 'template_length',
-                # 'read',
+                'read',
             ] + tags,
         )
         # print(df['XA'].loc[df['reference_id'] != -1].shape)

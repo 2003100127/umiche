@@ -107,6 +107,9 @@ class Build:
         # self.ed_list = self.calc_ed()
         # print(self.ed_list)
         self.df_eds = pd.DataFrame(self.ed_list, columns=['node_1', 'node_2', 'ed'])
+        self.ave_ed = np.ceil(sum(self.df_eds['ed']) / (len(self.df_eds['ed'])))
+        ### @@ self.ave_ed
+        # 5.0
         ### @@ self.df_eds
         #          node_1  node_2  ed
         # 0             0       1   4
@@ -177,6 +180,7 @@ class Build:
             'int_to_umi_dict': self.int_to_umi_dict,
             'df_umi_uniq_val_cnt': self.df_umi_uniq_val_cnt,
             'umi_bam_ids': self.umi_bam_ids,
+            'ave_ed': self.ave_ed if len(self.int_to_umi_dict) != 1 else -1,
             # 'fff': fff,
         }
 
