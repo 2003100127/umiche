@@ -90,15 +90,34 @@ class read:
         """
         l = []
         self.console.print('=========>start converting bam to df...')
-        import time
         stime = time.time()
         for id, read in enumerate(self.pysam_bam):
             # print(read)
             read_tags = read.get_tags()
-            # print(read_tags)
             rt_dict = {k: v for k, v in read_tags}
             rt_keys = [*rt_dict.keys()]
+            ### @@ read_tags | per read
+            ### @@ rt_dict | per read
+            ### @@ rt_keys | per read
+            # 1st read
+            # [('XA', 2), ('MD', '44T2T5'), ('NM', 2)]
+            # {'XA': 2, 'MD': '44T2T5', 'NM': 2}
+            # ['XA', 'MD', 'NM']
+            # 2nd read
+            # [('XA', 2), ('MD', '12A0C6'), ('NM', 2)]
+            # {'XA': 2, 'MD': '12A0C6', 'NM': 2}
+            # ['XA', 'MD', 'NM']
+            # ...
+            # the last read
+            # [('XA', 2), ('MD', '1T4A13'), ('NM', 2)]
+            # {'XA': 2, 'MD': '1T4A13', 'NM': 2}
+            # ['XA', 'MD', 'NM']
             tag_keys = [rt_dict[k] if k in rt_keys else 'None' for k in tags]
+            ### @@ tag_keys
+            # [2, '44T2T5', 2]
+            # [2, '12A0C6', 2]
+            # ...
+            # [2, '1T4A13', 2]
             vignette = [
                 id,
                 read.query_name,
@@ -110,9 +129,9 @@ class read:
                 read.query_sequence,
                 read.next_reference_id,
                 read.next_reference_start,
-                # read.template_length,
                 read.query_qualities,
-                read,
+                # read.template_length,
+                # read,
             ] + tag_keys
             l.append(vignette)
         df = pd.DataFrame(
@@ -122,15 +141,15 @@ class read:
                 'query_name',
                 'flag',
                 'reference_id',
-                'pos',
+                'genome_pos',
                 'mapping_quality',
                 'cigar',
                 'query_sequence',
                 'next_reference_id',
                 'next_reference_start',
-                # 'template_length',
                 'query_qualities',
-                'read',
+                # 'template_length',
+                # 'read',
             ] + tags,
         )
         # print(df['XA'].loc[df['reference_id'] != -1].shape)
@@ -143,70 +162,6 @@ class read:
         #     n=50,
         #     replace=True
         # )
-        return df
-    
-    def todf11(self, ):
-        """
-        Notes
-        -----
-        11 columns from alignments deciphered by Pysam
-            # read.query_name
-            # read.flag
-            # read.reference_id
-            # read.reference_start
-            # read.mapping_quality
-            # read.cigar
-            # read.query_sequence
-            # read.next_reference_id
-            # read.next_reference_start
-            # read.template_length
-            # read.query_qualities
-
-        See Also
-        --------
-        https://pysam.readthedocs.io/en/latest/usage.html#creating-bam-cram-sam-files-from-scratch
-        https://pysam.readthedocs.io/_/downloads/en/v0.12.0/pdf/
-
-        Returns
-        -------
-
-        """
-        l = []
-        self.console.print('=========>start converting bam to df...')
-        stime = time.time()
-        for id, read in enumerate(self.pysam_bam):
-            l.append([
-                id,
-                read.query_name,
-                read.flag,
-                read.reference_id,
-                read.reference_start,
-                read.mapping_quality,
-                read.cigar,
-                read.query_sequence,
-                read.next_reference_id,
-                read.next_reference_start,
-                read.template_length,
-                read.query_qualities,
-            ])
-        df = pd.DataFrame.from_dict(
-            l,
-            columns=[
-                'id',
-                'query_name',
-                'flag',
-                'reference_id',
-                'reference_start',
-                'mapping_quality',
-                'cigar',
-                'query_sequence',
-                'next_reference_id',
-                'next_reference_start',
-                'template_length',
-                'query_qualities',
-            ],
-        )
-        self.console.print('=========>time to df: {:.3f}s'.format(time.time() - stime))
         return df
 
     def todf11_depr(self, ):

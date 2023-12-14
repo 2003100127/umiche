@@ -13,7 +13,7 @@ from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.method.pipeline import Config
 from umiche.deduplicate.method.Relation import relation as umimonorel
 from umiche.deduplicate.method.Trace import trace as umimonotrace
-from umiche.deduplicate.Position import dedupPos
+from umiche.deduplicate.MultiPos import dedupPos
 from umiche.deduplicate.method.old.Cluster import cluster as umimonoclust
 from umiche.deduplicate.method.old.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.old.Directional import directional as umitoolmonodirec

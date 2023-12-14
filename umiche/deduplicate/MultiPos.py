@@ -14,7 +14,7 @@ from umiche.util.Console import Console
 from umiche.util.Number import number as rannum
 from umiche.align.Read import read as aliread
 # from umiche.align.Write import write as aliwrite
-from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.method.Build import Build as umibuild
 from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
@@ -22,14 +22,13 @@ from umiche.deduplicate.method.MarkovClustering import markovClustering as umimo
 from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
 
-class Position:
+class MultiPos:
 
     def __init__(
             self,
             bam_fpn,
             ed_thres,
             method,
-            mode='external',
             pos_tag='PO',
             mcl_fold_thres=None,
             inflat_val=2.0,
@@ -39,26 +38,23 @@ class Position:
             sv_fpn=None,
             verbose=False,
     ):
+        self.method = method
+        self.bam_fpn = bam_fpn
+        self.ed_thres = ed_thres
+        self.pos_tag = pos_tag
+        self.mcl_fold_thres = mcl_fold_thres
+        self.inflat_val = inflat_val
+        self.exp_val = exp_val
+        self.iter_num = iter_num
+        self.is_sv = is_sv
+        self.sv_fpn = sv_fpn
+
         self.rannum = rannum()
         self.gwriter = gwriter()
         self.umibuild = umibuild
 
-        if mode == 'internal':
-            self.method = method
-            self.bam_fpn = bam_fpn
-            self.ed_thres = ed_thres
-            self.pos_tag = pos_tag
-            self.mcl_fold_thres = mcl_fold_thres
-            self.inflat_val = inflat_val
-            self.exp_val = exp_val
-            self.iter_num = iter_num
-            self.is_sv = is_sv
-            self.sv_fpn = sv_fpn
-            self.verbose = verbose
-            # print('run Mclumi internally.')
-
         self.console = Console()
-        self.console.verbose = self.verbose
+        self.console.verbose = verbose
         
         self.dirname = os.path.dirname(self.sv_fpn) + '/'
         self.umimonoclust = umimonoclust()
@@ -66,7 +62,7 @@ class Position:
         self.umitoolmonodirec = umitoolmonodirec()
         self.umiscp = umiscp()
 
-        self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
+        self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=verbose)
         self.df_bam = self.alireader.todf(tags=[self.pos_tag])
         # print(self.df_bam.columns)
         # print(self.df_bam.query_name)
@@ -98,6 +94,7 @@ class Position:
         umi_graph_build_stime = time.time()
         gps = []
         res_sum = []
+        print(self.df_bam)
         for g in self.gp_keys:
             umi_vignette = self.umibuild(
                 df=self.df_bam_gp.get_group(g),
@@ -122,6 +119,7 @@ class Position:
             columns=['vignette', 'cc', 'uniq_repr_nodes'],
             index=gps,
         )
+        print(self.df)
         self.console.print('===>time for building umi graphs: {:.2f}s'.format(time.time() - umi_graph_build_stime))
 
         self.df['uniq_umi_len'] = self.df['uniq_repr_nodes'].apply(lambda x: self.length(x))
@@ -523,17 +521,17 @@ class Position:
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = Position(
+    umiche = MultiPos(
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
-        method='mcl_val',
+        # method='mcl_val',
         # method='mcl_ed',
 
-        # bam_fpn=to('example/data/example.bam'),
-        bam_fpn=to('example/data/example_bundle.bam'),
+        bam_fpn=to('data/example.bam'),
+        # bam_fpn=to('data/example_bundle.bam'),
         pos_tag='PO',
         mcl_fold_thres=1.5,
         inflat_val=1.6,
@@ -542,5 +540,5 @@ if __name__ == "__main__":
         verbose=True,
         ed_thres=1,
         is_sv=False,
-        sv_fpn=to('example/data/pos/assigned_sorted_dedup.bam'),
+        sv_fpn=to('data/assigned_sorted_dedup.bam'),
     )

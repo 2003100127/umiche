@@ -11,18 +11,20 @@ import numpy as np
 import pandas as pd
 from umiche.align.Read import read as aliread
 from umiche.align.Write import write as aliwrite
+from umiche.deduplicate.method.Build import Build as umibuild
+
+from umiche.deduplicate.method.Cluster import cluster as umiclust
+from umiche.deduplicate.method.Adjacency import adjacency as umiadj
+from umiche.deduplicate.method.Directional import directional as umidirec
+from umiche.deduplicate.method.MarkovClustering import markovClustering as umimcl
+
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
 from umiche.util.Number import number as rannum
 from umiche.util.Console import Console
-from umiche.deduplicate.method.Build import build as umibuild
-from umiche.deduplicate.method.Cluster import cluster as umimonoclust
-from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
-from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
-from umiche.deduplicate.method.MarkovClustering import markovClustering as umimonomcl
 
 
-class Basic:
+class OnePos:
 
     def __init__(
             self,
@@ -33,7 +35,7 @@ class Basic:
             inflat_val=2.0,
             exp_val=2,
             iter_num=100,
-            is_sv=True,
+            umi_='_',
             sv_fpn='./dedup.bam',
             verbose=False,
     ):
@@ -57,8 +59,6 @@ class Basic:
             int - an expansion value for generating mcl clusters (2 by defualt)
         iter_num
             int - number of iterations for mcl (100 by defualt)
-        is_sv
-            bool - is the deduplicated bam file to save (True by default or False)
         sv_fpn
             str - the deduplication file path
         verbose
@@ -71,22 +71,27 @@ class Basic:
         self.inflat_val = inflat_val
         self.exp_val = exp_val
         self.iter_num = iter_num
-        self.is_sv = is_sv
         self.sv_fpn = sv_fpn
         self.verbose = verbose
 
         self.umibuild = umibuild
         self.rannum = rannum()
         self.gwriter = gwriter()
-
         self.console = Console()
         self.console.verbose = self.verbose
 
         self.dirname = os.path.dirname(self.sv_fpn) + '/'
         # sys.stdout = open(self.dirname + self.method + '_log.txt', 'w')
-        self.umimonoclust = umimonoclust()
-        self.umitoolmonoadj = umitoolmonoadj()
-        self.umitoolmonodirec = umitoolmonodirec()
+
+
+        self.umiclust = umiclust()
+        self.umiadj = umiadj()
+        self.umidirec = umidirec()
+        self.umimcl = umimcl(
+            inflat_val=self.inflat_val,
+            exp_val=self.exp_val,
+            iter_num=self.iter_num,
+        )
 
         self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
         self.df_bam = self.alireader.todf(tags=[])
@@ -94,52 +99,56 @@ class Basic:
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
 
-        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split('_')[1])
+        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
-
-        self.df_bam['basic'] = 'yes'
-
-        self.aliwriter = aliwrite(df=self.df_bam)
-        self.aliwriter.is_sv = self.is_sv
-
-        self.df_bam_gp = self.df_bam.groupby(by=['basic'])
-        self.gp_keys = self.df_bam_gp.groups.keys()
         self.console.print('======>edit distance thres: {}'.format(self.ed_thres))
 
-        self.umimonomcl = umimonomcl(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
-        )
+        self.df_bam['source'] = 1
+        self.df_bam_gp = self.df_bam.groupby(by=['source'])
+        self.pos_gp_keys = self.df_bam_gp.groups.keys()
+
+        self.aliwriter = aliwrite(df=self.df_bam)
+
+        self.console.print('======># of columns in the bam df: {}'.format(len(self.df_bam.columns)))
+        self.console.print('======>Columns in the bam df: {}'.format(self.df_bam.columns.tolist()))
+        self.console.print('======># of raw reads:\n{}'.format(self.df_bam))
 
         self.console.print('===>start building umi graphs...')
         umi_graph_build_stime = time.time()
         gps = []
         res_sum = []
-        for g in self.gp_keys:
+
+        for pos_g in self.pos_gp_keys:
             umi_vignette = self.umibuild(
-                df=self.df_bam_gp.get_group(g),
+                df=self.df_bam_gp.get_group(pos_g),
                 ed_thres=self.ed_thres,
-                verbose=False,
-                # verbose=True,
+                verbose=verbose,
             ).data_summary
             # print(umi_vignette)
-            # if len(umi_vignette['umi_uniq_mapped_rev']) == 1:
+            # if len(umi_vignette['int_to_umi_dict']) == 1:
+            #     print(True)
+            #     print(umi_vignette['int_to_umi_dict'])
             #     continue
             # else:
-            cc = self.umimonoclust.cc(umi_vignette['graph_adj'])
-            gps.append(g)
+            cc = self.umiclust.cc(umi_vignette['graph_adj'])
+            import json
+            with open('data.json', 'w') as f:
+                json.dump(cc, f)
+            gps.append(pos_g)
             res_sum.append([
                 umi_vignette,
                 cc,
-                [*umi_vignette['umi_uniq_mapped_rev'].keys()],
+                [*umi_vignette['int_to_umi_dict'].keys()],
             ])
         self.df = pd.DataFrame(
             data=res_sum,
             columns=['vignette', 'cc', 'uniq_repr_nodes'],
             index=gps,
         )
+        print(self.df.columns)
+        print(self.df)
+
         self.console.print('===>time for building umi graphs: {:.2f}s'.format(time.time() - umi_graph_build_stime))
 
         self.df['uniq_umi_len'] = self.df['uniq_repr_nodes'].apply(lambda x: self.length(x))
@@ -228,8 +237,8 @@ class Basic:
         elif self.method == 'adjacency':
             dedup_umi_stime = time.time()
             self.df['adj'] = self.df.apply(
-                lambda x: self.umitoolmonoadj.decompose(
-                    cc_sub_dict=self.umitoolmonoadj.umi_tools(
+                lambda x: self.umiadj.decompose(
+                    cc_sub_dict=self.umiadj.umi_tools(
                         connected_components=x['cc'],
                         df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
                         graph_adj=x['vignette']['graph_adj'],
@@ -278,8 +287,8 @@ class Basic:
         elif self.method == 'directional':
             dedup_umi_stime = time.time()
             self.df['direc'] = self.df.apply(
-                lambda x: self.umitoolmonodirec.decompose(
-                    cc_sub_dict=self.umitoolmonodirec.umi_tools(
+                lambda x: self.umidirec.decompose(
+                    cc_sub_dict=self.umidirec.umi_tools(
                         connected_components=x['cc'],
                         df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
                         graph_adj=x['vignette']['graph_adj'],
@@ -328,8 +337,8 @@ class Basic:
         elif self.method == 'mcl':
             dedup_umi_stime = time.time()
             self.df['mcl'] = self.df.apply(
-                lambda x: self.umimonomcl.decompose(
-                    list_nd=self.umimonomcl.dfclusters(
+                lambda x: self.umimcl.decompose(
+                    list_nd=self.umimcl.dfclusters(
                         connected_components=x['cc'],
                         graph_adj=x['vignette']['graph_adj'],
                     )['clusters'].values,
@@ -377,9 +386,9 @@ class Basic:
         elif self.method == 'mcl_val':
             dedup_umi_stime = time.time()
             self.df['mcl_val'] = self.df.apply(
-                lambda x: self.umimonomcl.decompose(
-                    list_nd=self.umimonomcl.maxval_val(
-                        df_mcl_ccs=self.umimonomcl.dfclusters(
+                lambda x: self.umimcl.decompose(
+                    list_nd=self.umimcl.maxval_val(
+                        df_mcl_ccs=self.umimcl.dfclusters(
                             connected_components=x['cc'],
                             graph_adj=x['vignette']['graph_adj'],
                         ),
@@ -430,14 +439,14 @@ class Basic:
         elif self.method == 'mcl_ed':
             dedup_umi_stime = time.time()
             self.df['mcl_ed'] = self.df.apply(
-                lambda x: self.umimonomcl.decompose(
-                    list_nd=self.umimonomcl.maxval_ed(
-                        df_mcl_ccs=self.umimonomcl.dfclusters(
+                lambda x: self.umimcl.decompose(
+                    list_nd=self.umimcl.maxval_ed(
+                        df_mcl_ccs=self.umimcl.dfclusters(
                             connected_components=x['cc'],
                             graph_adj=x['vignette']['graph_adj'],
                         ),
                         df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
-                        umi_uniq_mapped_rev=x['vignette']['umi_uniq_mapped_rev'],
+                        umi_uniq_mapped_rev=x['vignette']['int_to_umi_dict'],
                         thres_fold=self.mcl_fold_thres,
                     )['clusters'].values,
                 ),
@@ -600,7 +609,7 @@ class Basic:
 
     def edave(self, df_row, by_col):
         repr_nodes = df_row[by_col]
-        umi_maps = df_row['vignette']['umi_uniq_mapped_rev']
+        umi_maps = df_row['vignette']['int_to_umi_dict']
         node_len = len(repr_nodes)
         if node_len != 1:
             ed_list = []
@@ -618,7 +627,7 @@ class Basic:
         """"""
         print(df_row.index)
         repr_nodes = df_row[by_col]
-        umi_maps = df_row['vignette']['umi_uniq_mapped_rev']
+        umi_maps = df_row['vignette']['int_to_umi_dict']
         umi_val_cnts = df_row['vignette']['df_umi_uniq_val_cnt']
         # print(repr_nodes)
         # if len(repr_nodes) == len(np.unique(repr_nodes)):
@@ -646,23 +655,23 @@ class Basic:
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = Basic(
+    umiche = OnePos(
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
-        method='mcl',
+        method='directional',
+        # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
 
-        # bam_fpn=to('example/data/example.bam'),
-        bam_fpn=to('example/data/example_bundle.bam'),
+        bam_fpn=to('data/example.bam'),
+        # bam_fpn=to('data/example_bundle.bam'),
         mcl_fold_thres=1.5,
         inflat_val=1.6,
         exp_val=2,
         iter_num=100,
-        verbose=True,
         ed_thres=1,
-        is_sv=False,
-        sv_fpn=to('example/data/basic/assigned_sorted_dedup.bam'),
+        sv_fpn=to('data/assigned_sorted_dedup.bam'),
+
+        verbose=True,
     )
