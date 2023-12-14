@@ -1,5 +1,5 @@
 __version__ = "v1.0"
-__copyright__ = "Copyright 2023"
+__copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
 __lab__ = "cribbslab"
@@ -95,6 +95,13 @@ class OnePos:
 
         self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
         self.df_bam = self.alireader.todf(tags=[])
+        ### @@ self.df_bam
+        #           id  ... query_qualities
+        # 0          0  ...            None
+        # 1          1  ...            None
+        # 2          2  ...            None
+        # ...      ...  ...             ...
+        # 20683  20683  ...            None
         self.console.print('======># of raw reads: {}'.format(self.df_bam.shape[0]))
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
@@ -116,9 +123,8 @@ class OnePos:
 
         self.console.print('===>start building umi graphs...')
         umi_graph_build_stime = time.time()
-        gps = []
+        pos_gps = []
         res_sum = []
-
         for pos_g in self.pos_gp_keys:
             umi_vignette = self.umibuild(
                 df=self.df_bam_gp.get_group(pos_g),
@@ -132,10 +138,11 @@ class OnePos:
             #     continue
             # else:
             cc = self.umiclust.cc(umi_vignette['graph_adj'])
-            import json
-            with open('data.json', 'w') as f:
-                json.dump(cc, f)
-            gps.append(pos_g)
+            print('asc', len(cc))
+            # import json
+            # with open('data.json', 'w') as f:
+            #     json.dump(cc, f)
+            pos_gps.append(pos_g)
             res_sum.append([
                 umi_vignette,
                 cc,
@@ -144,15 +151,16 @@ class OnePos:
         self.df = pd.DataFrame(
             data=res_sum,
             columns=['vignette', 'cc', 'uniq_repr_nodes'],
-            index=gps,
+            index=pos_gps,
         )
-        print(self.df.columns)
-        print(self.df)
+        # print(self.df)
 
         self.console.print('===>time for building umi graphs: {:.2f}s'.format(time.time() - umi_graph_build_stime))
 
         self.df['uniq_umi_len'] = self.df['uniq_repr_nodes'].apply(lambda x: self.length(x))
-
+        ### @@ self.df['uniq_umi_len']
+        # 1    1949
+        # Name: uniq_umi_len, dtype: int64
         self.console.print('===>start deduplication by the {} method...'.format(self.method))
         if self.method == 'unique':
             dedup_umi_stime = time.time()
@@ -664,8 +672,8 @@ if __name__ == "__main__":
         # method='mcl_val',
         # method='mcl_ed',
 
-        bam_fpn=to('data/example.bam'),
-        # bam_fpn=to('data/example_bundle.bam'),
+        # bam_fpn=to('data/example.bam'),
+        bam_fpn=to('data/example_bundle.bam'),
         mcl_fold_thres=1.5,
         inflat_val=1.6,
         exp_val=2,

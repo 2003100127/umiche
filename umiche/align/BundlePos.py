@@ -1,5 +1,5 @@
 # import umi_tools.sam_methods as sam_methods
-import mclumi.external.UMItoolsSamMethods as sam_methods
+import umiche.external.UMItoolsSamMethods as sam_methods
 import pysam
 from umiche.util.Hamming import hamming
 import pandas as pd
