@@ -2,7 +2,7 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -12,7 +12,6 @@ from umiche.util.Writer import writer as gwriter
 from simreadflow.util.file.read.Reader import reader as gfreader
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.trimer.pipeline import Config
-from umiche.deduplicate.method.Relation import relation as umimonorel
 from umiche.deduplicate.MultiPos import dedupPos
 # from umiche.plot.Valid import valid as plotv
 from simreadflow.util.random.Number import number as rannum
@@ -31,7 +30,6 @@ class umiTranslocSelf(Config.config):
         self.gfreader = gfreader()
         self.gwriter = gwriter()
         self.rannum = rannum()
-        self.umimonorel = umimonorel
         self.umi_lib_fp = umi_lib_fp
         self.method = method
         self.seq_num = 100

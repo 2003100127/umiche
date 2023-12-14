@@ -2,11 +2,9 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
-import os
 import sys
-sys.path.insert(0, os.path.abspath('../../..'))
 import pandas as pd
 sys.setrecursionlimit(15000000)
 
@@ -16,7 +14,12 @@ class directional:
     def __init__(self, ):
         pass
 
-    def umi_tools(self, connected_components, df_umi_uniq_val_cnt, graph_adj):
+    def umi_tools(
+            self,
+            connected_components,
+            df_umi_uniq_val_cnt,
+            graph_adj,
+    ):
         """
 
         Parameters
@@ -55,7 +58,12 @@ class directional:
             'disapv': cc_disapvs,
         }
 
-    def umi_tools_(self, df_umi_uniq_val_cnt, cc, graph_adj):
+    def umi_tools_(
+            self,
+            df_umi_uniq_val_cnt,
+            cc,
+            graph_adj,
+    ):
         """
 
         Parameters
@@ -91,7 +99,13 @@ class directional:
         # print(disapv_node_nbr)
         return cc_sub, apv_node_nbr, disapv_node_nbr
 
-    def dfs(self, node, node_val_sorted, node_set_remaining, graph_adj):
+    def dfs(
+            self,
+            node,
+            node_val_sorted,
+            node_set_remaining,
+            graph_adj,
+    ):
         """
 
         Parameters
@@ -124,7 +138,10 @@ class directional:
         search(node)
         return visited, approval, disapproval
 
-    def formatApvsDisapv(self, cc_dict):
+    def formatApvsDisapv(
+            self,
+            cc_dict,
+    ):
         """
         input format for the Directional method in umi-tools
         Parameters
@@ -138,7 +155,10 @@ class directional:
         cc_lvl_df = pd.Series(cc_dict)
         return cc_lvl_df.apply(lambda x: self.dictTo2d(x))
 
-    def dictTo2d(self, x):
+    def dictTo2d(
+            self,
+            x,
+    ):
         """
 
         Parameters
@@ -155,7 +175,10 @@ class directional:
             res_2d = res_2d + i
         return res_2d
 
-    def formatCCS(self, cc_dict):
+    def formatCCS(
+            self,
+            cc_dict,
+    ):
         """
 
         Parameters
@@ -169,7 +192,10 @@ class directional:
         cc_lvl_df = pd.Series(cc_dict)
         return cc_lvl_df.apply(lambda x: [*x.values()])
 
-    def decompose(self, cc_sub_dict):
+    def decompose(
+            self,
+            cc_sub_dict,
+    ):
         """
 
         Parameters

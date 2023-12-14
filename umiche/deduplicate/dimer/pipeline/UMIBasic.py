@@ -2,7 +2,7 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
 import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
@@ -10,8 +10,7 @@ from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.dimer.pipeline import Config
-from umiche.deduplicate.method.Relation import relation as umimonorel
-from umiche.deduplicate.MultiPos import dedupPos
+from umiche.deduplicate.MultiPos import MultiPos as dedup1pos
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 
@@ -23,7 +22,6 @@ class umi(Config.config):
         self.metric = metric
         self.comp_cat = comp_cat
         self.gbfscc = gbfscc()
-        self.umimonorel = umimonorel
         self.method = method
         self.gwriter = gwriter()
         self.plotv = plotv()
@@ -141,8 +139,7 @@ class umi(Config.config):
                     #     if i_metric == 0.125 or i_metric == 0.15:
                     #         continue
                     #     else:
-                            dedup_ob = dedupPos(
-                                mode='internal',
+                            dedup_ob = dedup1pos(
                                 method=self.method,
                                 # bam_fpn=to('example/data/example.bam'),
                                 bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn + '.bam',

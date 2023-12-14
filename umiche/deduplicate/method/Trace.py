@@ -36,8 +36,14 @@ class trace:
     def by01(self, list_2d):
         """
 
-        :param list_2d: a 2d list, one with 2-sized vector consisting of 2 nodes.
-        :return:
+        Parameters
+        ----------
+        list_2d
+            A 2d list, one with 2-sized vector consisting of 2 nodes.
+
+        Returns
+        -------
+
         """
         trace_marks = []
         for nodes in list_2d:

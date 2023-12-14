@@ -2,7 +2,7 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
 import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
@@ -10,7 +10,6 @@ from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.method.pipeline import Config
-from umiche.deduplicate.method.Relation import relation as umimonorel
 from umiche.deduplicate.Gene import dedupGene
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
@@ -22,7 +21,6 @@ class umi(Config.config):
         super(umi, self).__init__()
         self.metric = metric
         self.gbfscc = gbfscc()
-        self.umimonorel = umimonorel
         self.method = method
         self.gwriter = gwriter()
         self.plotv = plotv()

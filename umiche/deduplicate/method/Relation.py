@@ -2,7 +2,7 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
 import time
 import numpy as np
@@ -22,11 +22,7 @@ class relation:
         self.guuedge = guuedge()
         print('===>read the fastq file {}.fastq.gz'.format(fastq_name))
         read_stime = time.time()
-        self.names, self.seqs, _, _ = self.rfastq().fromgz(
-            fastq_path=fastq_path,
-            fastq_name=fastq_name,
-            method='pyfastx',
-        )
+        self.names, self.seqs, _, _ = self.rfastq().fromgz(fastq_path + fastq_name + '.fasta')
         print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
 
         umi_df_stime = time.time()

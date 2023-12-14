@@ -2,7 +2,7 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
-__lab__ = "cribbslab"
+__lab__ = "Cribbslab"
 
 import json
 import numpy as np
@@ -14,7 +14,6 @@ from umiche.util.Writer import writer as gwriter
 from simreadflow.util.file.read.Reader import reader as gfreader
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.trimer.pipeline import Config
-from umiche.deduplicate.method.Relation import relation as umimonorel
 from simreadflow.util.random.Number import number as rannum
 from umiche.path import to
 
@@ -30,7 +29,6 @@ class newTransloc(Config.config):
         self.gfreader = gfreader()
         self.gwriter = gwriter()
         self.rannum = rannum()
-        self.umimonorel = umimonorel
         self.sv_cnt_lib_fpn = sv_cnt_lib_fpn
         self.method = method
         self.section = section
