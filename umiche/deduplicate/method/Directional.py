@@ -213,3 +213,42 @@ class directional:
                 ccs[cc_cnt] = v2
                 cc_cnt += 1
         return ccs
+
+
+if __name__ == "__main__":
+    import pandas as pd
+    from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+
+    p = directional()
+
+    graph_adj = {
+        'A': ['B', 'C', 'D'],
+        'B': ['A', 'C'],
+        'C': ['A', 'B'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D'],
+        'F': ['D'],
+    }
+
+    node_val_sorted = pd.Series({
+        'A': 456,
+        'E': 90,
+        'D': 72,
+        'B': 2,
+        'C': 2,
+        'F': 1,
+    })
+    print(node_val_sorted)
+
+    ccs = umimonoclust().cc(graph_adj=graph_adj)
+    print(ccs)
+
+    nodes_adj = p.umi_tools(
+        connected_components=ccs,
+        df_umi_uniq_val_cnt=node_val_sorted,
+        graph_adj=graph_adj
+    )
+    print(nodes_adj)
+
+    t = p.decompose(nodes_adj['clusters'])
+    print(t)

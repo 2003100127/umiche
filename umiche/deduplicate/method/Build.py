@@ -83,10 +83,10 @@ class Build:
         # Name: count, Length: 1949, dtype: int64
         self.console.print('=========>umi keymap time: {:.3f}s'.format(time.time() - umi_keymap_stime))
 
-        self.umi_bam_ids = {}
-        self.umi_bam_ids1 = {}
+        self.uniq_umi_id_to_bam_id_dict = {}
+        # self.umi_bam_ids1 = {}
         for k, v in self.int_to_umi_dict.items():
-            self.umi_bam_ids[k] = self.umi_to_bamid_dict[v]
+            self.uniq_umi_id_to_bam_id_dict[k] = self.umi_to_bamid_dict[v]
             ### @@ self.umi_to_bamid_dict[v]
             # 0
             # 1
@@ -179,7 +179,7 @@ class Build:
             'graph_adj': self.graph_adj,
             'int_to_umi_dict': self.int_to_umi_dict,
             'df_umi_uniq_val_cnt': self.df_umi_uniq_val_cnt,
-            'umi_bam_ids': self.umi_bam_ids,
+            'uniq_umi_id_to_bam_id_dict': self.uniq_umi_id_to_bam_id_dict,
             'ave_ed': self.ave_ed if len(self.int_to_umi_dict) != 1 else -1,
             # 'fff': fff,
         }

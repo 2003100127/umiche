@@ -562,62 +562,33 @@ class OnePos:
         else:
             return 0
 
-    def length(self, df_val):
+    def umimax(
+            self,
+            df_row,
+            by_col,
+    ):
         """
+        It returns ids of UMIs (i.e., representatives in their groupped UMIs) that has the
+        highest count among all reads in their given genomic position.
+
+        Examples
+        --------
+        {0: [0, 77, 81, ..., 1016], 1: [42, 46, 12], ..., 100: [2, 3, 5]}
+        if no. 77 UMI has the highest count among all reads in 0, it will be added
+        to umi_maxval_ids.
 
         Parameters
         ----------
-        df_val
-            list - a python list
+        df_row
+            a row of a pandas dataframe
+        by_col
+            a name of a pandas dataframe column
 
         Returns
         -------
-            int - the length of the list
+        a list
 
         """
-        return len(df_val)
-
-    def correct(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
-        umi_trimers = [umi[v: v+3] for v in vernier]
-        # umi_trimers = textwrap.wrap(umi, 3)
-        t = []
-        for umi_trimer in umi_trimers:
-            s = set(umi_trimer)
-            if len(s) == 3:
-                rand_index = self.rannum.uniform(low=0, high=3, num=1, use_seed=False)[0]
-                t.append(umi_trimer[rand_index])
-            elif len(s) == 2:
-                sdict = {umi_trimer.count(i): i for i in s}
-                t.append(sdict[2])
-            else:
-                t.append(umi_trimer[0])
-        return ''.join(t)
-
-    def decompose(self, list_nd):
-        """
-
-        Parameters
-        ----------
-        x
-
-        Returns
-        -------
-
-        """
-        list_md = []
-        for i in list_nd:
-            list_md = list_md + i
-        self.console.print('======># of the total reads left after deduplication: {}'.format(len(list_md)))
-        return list_md
-
-    def bamids(self, df_row, by_col):
-        """"""
-        bam_id_maps = df_row['vignette']['umi_bam_ids']
-        list_1d = df_row[by_col]
-        return [bam_id_maps[node] for node in list_1d]
-
-    def umimax(self, df_row, by_col):
         umi_val_cnts = df_row['vignette']['df_umi_uniq_val_cnt']
         ### @@ umi_val_cnts
         # 2       55
@@ -645,6 +616,70 @@ class OnePos:
             umi_max = umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
             umi_maxval_ids.append(umi_max)
         return umi_maxval_ids
+
+    def length(self, df_val):
+        """
+
+        Parameters
+        ----------
+        df_val
+            a pandas dataframe row
+
+        Returns
+        -------
+            int - the length of the list
+
+        """
+        return len(df_val)
+
+    def decompose(self, list_nd):
+        """
+
+        Parameters
+        ----------
+        x
+
+        Returns
+        -------
+
+        """
+        print(list_nd)
+        print(len(list_nd))
+        list_md = []
+        for i in list_nd:
+            list_md = list_md + i
+        self.console.print('======># of the total reads left after deduplication: {}'.format(len(list_md)))
+        print(len(list_md))
+        return list_md
+
+    def bamids(
+            self,
+            df_row,
+            by_col,
+    ):
+        """
+        It outputs bamids of UMIs that are representative of all nodes in each group.
+
+        Parameters
+        ----------
+        df_row
+            a row of a pandas dataframe
+        by_col
+            a name of a pandas dataframe column
+
+        Returns
+        -------
+
+        """
+        uniq_umi_id_to_bam_id_dict = df_row['vignette']['uniq_umi_id_to_bam_id_dict']
+        ### @@ uniq_umi_id_to_bam_id_dict
+        # {0: 0, 1: 1, 2: 2, ..., 1948: 20609}
+        ### @@ len(uniq_umi_id_to_bam_id_dict)
+        # 1949
+        list_1d = df_row[by_col]
+        ### @@ list_1d
+        # [2, 780, 416, ..., 1761]
+        return [uniq_umi_id_to_bam_id_dict[node] for node in list_1d]
 
     def edave_deprecated(self, df_row, by_col):
         repr_nodes = df_row[by_col]
@@ -687,17 +722,14 @@ class OnePos:
         else:
             return -1
 
-    def evaluate(self, ):
-        return
-
 
 if __name__ == "__main__":
     from umiche.path import to
 
     umiche = OnePos(
         # method='unique',
-        method='cluster',
-        # method='adjacency',
+        # method='cluster',
+        method='adjacency',
         # method='directional',
         # method='mcl',
         # method='mcl_val',

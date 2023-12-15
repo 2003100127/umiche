@@ -41,7 +41,12 @@ class adjacency:
             'clusters': cc_subs,
         }
 
-    def umi_tools_(self, df_umi_uniq_val_cnt, cc, graph_adj):
+    def umi_tools_(
+            self,
+            df_umi_uniq_val_cnt,
+            cc,
+            graph_adj,
+    ):
         """
         umi_tools adjacency
 
@@ -59,7 +64,11 @@ class adjacency:
 
         """
         cc_umi_sorted = df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
+        ### @@ cc_umi_sorted
+        # {'A': 456, 'E': 90, 'D': 72, 'B': 2, 'C': 2, 'F': 1}
         cc_sorted = [*cc_umi_sorted.keys()]
+        ### @@ cc_sorted
+        # ['A', 'E', 'D', 'B', 'C', 'F']
         visited = set()
         step = 1
         subcomponents = {}
@@ -70,16 +79,37 @@ class adjacency:
             for node in graph_adj[e]:
                 if node not in visited:
                     subcomponents[e].append(node)
+                    # print(subcomponents)
+            ### @@ e, subcomponents[e]
+            # A ['B', 'C', 'D']
+            # E []
+            # D ['F']
             visited.add(e)
+            ### @@ e, visited
+            # A {'A'}
+            # E {'B', 'A', 'E', 'C', 'D'}
+            # D {'B', 'A', 'E', 'C', 'D'}
             visited.update(graph_adj[e])
+            ### @@ e, visited
+            # A {'B', 'D', 'A', 'C'}
+            # E {'B', 'A', 'E', 'C', 'D'}
+            # D {'B', 'F', 'A', 'E', 'C', 'D'}
             subcomponents[e] = graph_adj[e]
+            ### @@ e, subcomponents[e]
+            # A ['B', 'C', 'D']
+            # E ['D']
+            # D ['A', 'E', 'F']
             # print('the ccurent ele popping out: {} {}'.format(e, visited))
             if visited == cc_set:
                 # print(step)
                 break
             else:
                 step += 1
+        ### @@ subcomponents
+        # {'A': ['B', 'C', 'D'], 'E': ['D'], 'D': ['A', 'E', 'F']}
         vertex = [*subcomponents.keys()]
+        ### @@ vertex
+        # ['A', 'E', 'D']
         cc_sub = {}
         for k, v in subcomponents.items():
             cc_sub['node_' + str(k)] = [k]
@@ -122,6 +152,7 @@ if __name__ == "__main__":
         'E': ['D'],
         'F': ['D'],
     }
+    print("graph adjacency list:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
         'A': 456,
@@ -132,10 +163,16 @@ if __name__ == "__main__":
         'F': 1,
     })
     print(node_val_sorted)
+
     ccs = umimonoclust().cc(graph_adj=graph_adj)
-    print(p.umi_tools(
+    print(ccs)
+
+    nodes_adj = p.umi_tools(
         connected_components=ccs,
         df_umi_uniq_val_cnt=node_val_sorted,
         graph_adj=graph_adj
-    ))
+    )
+    print(nodes_adj)
 
+    t = p.decompose(nodes_adj['clusters'])
+    print(t)
