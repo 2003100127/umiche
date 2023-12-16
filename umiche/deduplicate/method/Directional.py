@@ -2,6 +2,8 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import sys
@@ -21,9 +23,17 @@ class Directional:
         Parameters
         ----------
         connected_components
+            {0: ['A', 'B', 'C', 'D', 'E', 'F']}
         df_umi_uniq_val_cnt
+            A    456
+            E     90
+            D     72
+            B      2
+            C      2
+            F      1
+            dtype: int64
         graph_adj
-
+            {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
         Returns
         -------
 
@@ -100,7 +110,7 @@ class Directional:
             if e in node_set_remaining:
                 seen, apv, disapv = self.dfs(
                     node=e,
-                    node_val_sorted=node_val_sorted,
+                    node_val_sorted=cc_node_sorted,
                     node_set_remaining=node_set_remaining,
                     graph_adj=graph_adj,
                 )
@@ -130,10 +140,20 @@ class Directional:
         Parameters
         ----------
         node
+            'A'
         node_val_sorted
+            A    456
+            E     90
+            D     72
+            B      2
+            C      2
+            F      1
+            dtype: int64
         node_set_remaining
+            {'F', 'A', 'D', 'C', 'E', 'B'}
+            {'E'}
         graph_adj
-
+            {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
         Returns
         -------
 
@@ -225,9 +245,10 @@ class Directional:
         Parameters
         ----------
         cc_sub_dict
-
+            input: {'cc_0': {'node_A': ['C', 'A', 'D', 'B', 'F'], 'node_E': ['E']}}
         Returns
         -------
+            output: {0: ['C', 'A', 'D', 'B', 'F'], 1: ['E']}
 
         """
         cc_cnt = 0

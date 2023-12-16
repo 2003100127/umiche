@@ -1,3 +1,11 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -37,7 +45,6 @@ class undirected:
         nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
 
         plt.axis('off')
-        plt.savefig("weight.jpg")
         plt.show()
 
 

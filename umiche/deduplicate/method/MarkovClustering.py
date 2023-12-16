@@ -2,6 +2,8 @@ __version__ = "v1.0"
 __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import numpy as np
@@ -11,15 +13,24 @@ from umiche.network.CC import cc as gbfscc
 from umiche.util.Hamming import hamming
 
 
-class markovClustering:
+class MarkovClustering:
 
-    def __init__(self, inflat_val, exp_val, iter_num):
+    def __init__(
+            self,
+            inflat_val,
+            exp_val,
+            iter_num,
+    ):
         self.gbfscc = gbfscc()
         self.inflat_val = inflat_val
         self.exp_val = exp_val
         self.iter_num = iter_num
 
-    def dfclusters(self, connected_components, graph_adj):
+    def dfclusters(
+            self,
+            connected_components,
+            graph_adj,
+    ):
         """
 
         Parameters
@@ -33,6 +44,10 @@ class markovClustering:
                 ...
                 'ccn': [...],
             }
+            e.g.
+            {
+                0: ['A', 'B', 'C', 'D', 'E', 'F'],
+            }
         graph_adj
             the adjacency list of a graph
 
@@ -42,20 +57,40 @@ class markovClustering:
             each connected component is decomposed into more connected subcomponents.
 
         """
-        # print([*connected_components.values])
-        df_ccs = pd.DataFrame({'cc': [*connected_components.values()]})
-        df_ccs['graph_cc_adj'] = df_ccs['cc'].apply(lambda x: self.graph_cc_adj(x, graph_adj))
-        df_ccs['keymap'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=False))
-        df_ccs['keymap_rev'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=True))
-        df_ccs['cc_adj_mat'] = df_ccs.apply(lambda x: self.matrix(graph_adj=x['graph_cc_adj'], key_map=x['keymap']), axis=1)
+        # print([*connected_components.values()])
+        df_ccs = pd.DataFrame({'cc_vertices': [*connected_components.values()]})
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.graph_cc_adj(x, graph_adj))
+        ### @@ graph_cc_adj
+        # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
+        df_ccs['nt_to_int_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=False))
+        df_ccs['int_to_nt_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=True))
+        ### @@ nt_to_int_map
+        # {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5}
+        ### @@ int_to_nt_map
+        # {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F'}
+        df_ccs['cc_adj_mat'] = df_ccs.apply(lambda x: self.matrix(graph_adj=x['graph_cc_adj'], key_map=x['nt_to_int_map']), axis=1)
+        ### @@ cc_adj_mat
+        # [[0. 1. 1. 1. 0. 0.]
+        #  [1. 0. 1. 0. 0. 0.]
+        #  [1. 1. 0. 0. 0. 0.]
+        #  [1. 0. 0. 0. 1. 1.]
+        #  [0. 0. 0. 1. 0. 0.]
+        #  [0. 0. 0. 1. 0. 0.]]
         df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.cluster(x))
-        df_ccs['clusters'] = df_ccs.apply(lambda x: self.keyToNode(list_2d=x['mcl_clusters'], keymap=x['keymap_rev']), axis=1)
+        df_ccs['clusters'] = df_ccs.apply(lambda x: self.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
+        ### @@ mcl_clusters
+        # [(0, 1, 2), (3, 4, 5)]
+        ### @@ clusters
+        # [['A', 'B', 'C'], ['D', 'E', 'F']]
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
-        # print(df_ccs[['graph_cc_adj', 'mcl_clusters', 'clusters']])
-        # print(df_ccs['clusters'])
+        ### @@ clust_num
+        # 2
         return df_ccs
 
-    def decompose(self, list_nd):
+    def decompose(
+            self,
+            list_nd,
+    ):
         """
 
         Parameters
@@ -94,7 +129,7 @@ class markovClustering:
         """
         return {node: graph_adj[node] for node in cc}
 
-    def keyToNode(self, list_2d, keymap):
+    def key2node(self, list_2d, keymap):
         """
 
         Parameters
@@ -108,12 +143,24 @@ class markovClustering:
         """
         return [[keymap[i] for i in lis] for lis in list_2d]
 
-    def cluster(self, cc_adj_mat):
+    def cluster(
+            self,
+            cc_adj_mat,
+    ):
         """
 
         Parameters
         ----------
         cc_adj_mat
+            [[0. 1. 1. 1. 0. 0.]
+             [1. 0. 1. 0. 0. 0.]
+             [1. 1. 0. 0. 0. 0.]
+             [1. 0. 0. 0. 1. 1.]
+             [0. 0. 0. 1. 0. 0.]
+             [0. 0. 0. 1. 0. 0.]]
+
+             # for {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
+
 
         Returns
         -------
@@ -335,7 +382,11 @@ class markovClustering:
         else:
             return {keys[k]: k for k in range(glen)}
 
-    def matrix(self, graph_adj, key_map):
+    def matrix(
+            self,
+            graph_adj,
+            key_map,
+    ):
         """
 
         Parameters
@@ -352,3 +403,66 @@ class markovClustering:
             for val in vals:
                 adj_mat[key_map[k], key_map[val]] = 1
         return adj_mat
+
+
+if __name__ == "__main__":
+    from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+
+    p = MarkovClustering(
+        inflat_val=1.6,
+        exp_val=2,
+        iter_num=100,
+    )
+
+    graph_adj = {
+        'A': ['B', 'C', 'D'],
+        'B': ['A', 'C'],
+        'C': ['A', 'B'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D'],
+        'F': ['D'],
+    }
+    print("An adjacency list of a graph:\n{}".format(graph_adj))
+
+    node_val_sorted = pd.Series({
+        'A': 456,
+        'E': 90,
+        'D': 72,
+        'B': 2,
+        'C': 2,
+        'F': 1,
+    })
+    print("Counts sorted:\n{}".format(node_val_sorted))
+
+    ccs = umimonoclust().cc(graph_adj=graph_adj)
+    print("Connected components:\n{}".format(ccs))
+
+    df = p.dfclusters(
+        connected_components=ccs,
+        graph_adj=graph_adj,
+    )
+    print(df.columns)
+    print(df.loc[0, 'cc_vertices'])
+    print(df.loc[0, 'graph_cc_adj'])
+    print(df.loc[0, 'nt_to_int_map'])
+    print(df.loc[0, 'int_to_nt_map'])
+    print(df.loc[0, 'cc_adj_mat'])
+    print(df.loc[0, 'mcl_clusters'])
+    print(df.loc[0, 'clusters'])
+    print(df.loc[0, 'clust_num'])
+
+    # dedup_res = p.umi_tools(
+    #     connected_components=ccs,
+    #     df_umi_uniq_val_cnt=node_val_sorted,
+    #     graph_adj=graph_adj
+    # )
+    # dedup_count = dedup_res['count']
+    # dedup_clusters = dedup_res['clusters']
+    # print("deduplicated count:\n{}".format(dedup_count))
+    # print("deduplicated clusters:\n{}".format(dedup_clusters))
+    #
+    # dedup_clusters_dc = p.decompose(dedup_clusters)
+    # print("deduplicated clusters decomposed:\n{}".format(dedup_clusters_dc))
+    #
+    # print(dedup_res['apv'])
+    # print(dedup_res['disapv'])

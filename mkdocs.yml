@@ -1,0 +1,62 @@
+site_name: UMIche
+
+repo_url: https://github.com/cribbslab/umiche
+repo_name: cribbslab/umiche
+
+
+theme:
+  name: material
+  features:
+    - content.code.select
+    - content.code.copy
+    - content.tabs.link
+    - content.code.annotate
+#    - navigation.tabs
+    - navigation.instant
+    - navigation.expand
+#    - toc.integrate
+  icon:
+    repo: fontawesome/brands/git-alt
+
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+
+markdown_extensions:
+  # icons
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+  - toc:
+      permalink: True
+      baselevel: 2
+      separator: "_"
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  # Admonitions
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+
+extra:
+  consent:
+    actions:
+      - accept
+      - manage
+
+plugins:
+  - tags
