@@ -13,8 +13,7 @@ from umiche.network.CC import cc as gbfscc
 
 class cluster:
 
-    def __init__(self, ):
-        pass
+
 
     def cc(self, graph_adj):
         """

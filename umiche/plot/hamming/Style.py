@@ -2,9 +2,6 @@
 
 class style:
 
-    def __init__(self, ):
-        pass
-
     def deephelicon(self, boxplot_handles, palette=[]):
         """
 

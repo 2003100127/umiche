@@ -6,7 +6,7 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
-from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
+from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from simreadflow.util.sequence.symbol.Single import single as dnasgl
 from sklearn.cluster import DBSCAN as skdbscan
 

@@ -5,10 +5,6 @@ from matplotlib import rcParams
 
 
 class ed:
-
-    def __init__(self, ):
-        pass
-
     def fa(self, umi_pool):
         eded = []
         for i, u1 in enumerate(umi_pool[:50]):

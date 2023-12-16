@@ -2,9 +2,6 @@
 
 class mcl:
 
-    def __init__(self, ):
-        pass
-
     def example(self, ):
         import markov_clustering as mc
         import networkx as nx

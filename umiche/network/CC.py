@@ -9,9 +9,6 @@ from collections import deque
 
 class cc:
 
-    def __init__(self, ):
-        pass
-
     def deque(self, graph):
         """
 

@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "Cribbslab"
 
 
-class adjacency:
+class Adjacency:
 
     def umi_tools(
             self,
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     import pandas as pd
     from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 
-    p = adjacency()
+    p = Adjacency()
 
     graph_adj = {
         'A': ['B', 'C', 'D'],

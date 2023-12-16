@@ -7,9 +7,6 @@ __lab__ = "Cribbslab"
 
 class hamming:
 
-    def __init__(self, ):
-        pass
-
     def general(self, s1, s2):
         """
 

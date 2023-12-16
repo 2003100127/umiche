@@ -9,9 +9,6 @@ import os
 
 class folder:
 
-    def __init__(self, ):
-        pass
-
     def osmkdir(self, DIRECTORY):
         """
 

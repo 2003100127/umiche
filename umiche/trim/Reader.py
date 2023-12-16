@@ -9,9 +9,6 @@ import time
 
 class reader:
 
-    def __init__(self, ):
-        pass
-
     def todf(self, seqs, names):
         import pandas as pd
         umi_df_stime = time.time()

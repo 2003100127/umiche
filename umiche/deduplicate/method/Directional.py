@@ -5,14 +5,10 @@ __developer__ = "Jianfeng Sun"
 __lab__ = "Cribbslab"
 
 import sys
-import pandas as pd
 sys.setrecursionlimit(15000000)
 
 
-class directional:
-
-    def __init__(self, ):
-        pass
+class Directional:
 
     def umi_tools(
             self,
@@ -52,10 +48,10 @@ class directional:
         # print(cc_apvs)
         # print(cc_disapvs)
         return {
-            'count': sum(cc_sub_cnt),
-            'clusters': cc_subs,
-            'apv': cc_apvs,
-            'disapv': cc_disapvs,
+            "count": sum(cc_sub_cnt),
+            "clusters": cc_subs,
+            "apv": cc_apvs,
+            "disapv": cc_disapvs,
         }
 
     def umi_tools_(
@@ -69,25 +65,48 @@ class directional:
         Parameters
         ----------
         df_umi_uniq_val_cnt
+            A    456
+            E     90
+            D     72
+            B      2
+            C      2
+            F      1
+            dtype: int64
         cc
+            {0: ['A', 'B', 'C', 'D', 'E', 'F']}
         graph_adj
+            {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
 
         Returns
         -------
 
         """
         cc_node_sorted = df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
+        ### @@ cc_umi_sorted
+        # {'A': 456, 'E': 90, 'D': 72, 'B': 2, 'C': 2, 'F': 1}
         nodes = [*cc_node_sorted.keys()]
         # print(nodes)
+        ### @@ cc_sorted
+        # ['A', 'E', 'D', 'B', 'C', 'F']
         node_cp = nodes.copy()
         node_set_remaining = set(node_cp)
+        ### @@ node_set_remaining
+        # {'C', 'F', 'E', 'B', 'D', 'A'}
         cc_sub = {}
         apv_node_nbr = {}
         disapv_node_nbr = {}
         while nodes:
             e = nodes.pop(0)
             if e in node_set_remaining:
-                seen, apv, disapv = self.dfs(e, cc_node_sorted, node_set_remaining, graph_adj)
+                seen, apv, disapv = self.dfs(
+                    node=e,
+                    node_val_sorted=node_val_sorted,
+                    node_set_remaining=node_set_remaining,
+                    graph_adj=graph_adj,
+                )
+                ### @@ e, seen
+                # A {'C', 'D', 'F', 'A', 'B'}
+                # E {'E'}
                 cc_sub['node_' + str(e)] = list(seen)
                 apv_node_nbr['node_' + str(e)] = apv
                 disapv_node_nbr['node_' + str(e)] = disapv
@@ -136,6 +155,10 @@ class directional:
                         else:
                             disapproval.append([node, neighbor])
         search(node)
+        ### @@ approval
+        # {'cc_0': {'node_A': [['A', 'B'], ['A', 'C'], ['A', 'D'], ['D', 'F']], 'node_E': []}}
+        ### @@ disapproval
+        # {'cc_0': {'node_A': [['B', 'C'], ['D', 'E']], 'node_E': []}}
         return visited, approval, disapproval
 
     def formatApvsDisapv(
@@ -143,7 +166,8 @@ class directional:
             cc_dict,
     ):
         """
-        input format for the Directional method in umi-tools
+        the format of input to the directional method in umi-tools
+
         Parameters
         ----------
         cc_dict
@@ -219,7 +243,7 @@ if __name__ == "__main__":
     import pandas as pd
     from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 
-    p = directional()
+    p = Directional()
 
     graph_adj = {
         'A': ['B', 'C', 'D'],
@@ -229,6 +253,7 @@ if __name__ == "__main__":
         'E': ['D'],
         'F': ['D'],
     }
+    print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
         'A': 456,
@@ -238,17 +263,23 @@ if __name__ == "__main__":
         'C': 2,
         'F': 1,
     })
-    print(node_val_sorted)
+    print("Counts sorted:\n{}".format(node_val_sorted))
 
     ccs = umimonoclust().cc(graph_adj=graph_adj)
-    print(ccs)
+    print("Connected components:\n{}".format(ccs))
 
-    nodes_adj = p.umi_tools(
+    dedup_res = p.umi_tools(
         connected_components=ccs,
         df_umi_uniq_val_cnt=node_val_sorted,
         graph_adj=graph_adj
     )
-    print(nodes_adj)
+    dedup_count = dedup_res['count']
+    dedup_clusters = dedup_res['clusters']
+    print("deduplicated count:\n{}".format(dedup_count))
+    print("deduplicated clusters:\n{}".format(dedup_clusters))
 
-    t = p.decompose(nodes_adj['clusters'])
-    print(t)
+    dedup_clusters_dc = p.decompose(dedup_clusters)
+    print("deduplicated clusters decomposed:\n{}".format(dedup_clusters_dc))
+
+    print(dedup_res['apv'])
+    print(dedup_res['disapv'])

@@ -7,10 +7,7 @@ __lab__ = "Cribbslab"
 from collections import deque
 
 
-class connectedComponent:
-
-    def __init__(self, ):
-        pass
+class ConnectedComponent:
 
     def deque(self, graph):
         visited = set()
@@ -114,7 +111,7 @@ if __name__ == "__main__":
         30: [26, 31],
         31: [26, 30],
     }
-    p = connectedComponent()
+    p = ConnectedComponent()
 
     print(list(p.deque(graph_adj)))
 

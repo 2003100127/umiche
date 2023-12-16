@@ -6,9 +6,6 @@ import networkx as nx
 
 class undirected:
 
-    def __init__(self, ):
-        pass
-
     def adaa(self, ):
         import matplotlib.pyplot as plt
         import networkx as nx

@@ -10,8 +10,7 @@ import networkx as nx
 
 class cluster:
 
-    def __init__(self, ):
-        pass
+
 
     def cc(self, graph_adj):
         connected_components = list(gbfscc().deque(graph_adj))

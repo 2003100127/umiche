@@ -10,9 +10,6 @@ from functools import wraps
 
 class writer:
 
-    def __init__(self, ):
-        pass
-
     def __call__(self, deal):
         generic = self.generic
         excel = self.excel

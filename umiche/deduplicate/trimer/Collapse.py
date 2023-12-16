@@ -19,8 +19,7 @@ from umiche.path import to
 
 class collapse:
 
-    def __init__(self, ):
-        pass
+
 
     def majorityVoting(self, umi, recur_len=3):
         vernier = [i for i in range(len(umi)) if i%recur_len == 0]

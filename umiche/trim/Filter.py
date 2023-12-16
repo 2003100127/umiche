@@ -9,9 +9,6 @@ from umiche.path import to
 
 class filter:
 
-    def __init__(self, ):
-        pass
-
     def method(self, ):
         return {
             'single_start': self.singleStart,

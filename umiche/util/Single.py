@@ -3,14 +3,8 @@ __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __author__ = "Adam Cribbs lab"
 
-import sys
-sys.path.append('../../../../../')
-
 
 class single:
-
-    def __init__(self, ):
-        pass
 
     def trim(action):
         def tube(deal):

@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 
 class valid:
 
-    def __init__(self, ):
-        pass
-
     def n1(self, df_disapv, df_apv):
         fig, ax = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
         ax[0].plot(

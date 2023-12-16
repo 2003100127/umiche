@@ -3,10 +3,16 @@ from collections import OrderedDict
 
 class visit:
 
-    def __init__(self, graph):
+    def __init__(
+            self,
+            graph,
+    ):
         self.graph = graph
 
-    def recursive(self, node):
+    def recursive(
+            self,
+            node,
+    ):
         visited = []
         def recur(node):
             visited.append(node)
@@ -18,7 +24,12 @@ class visit:
         recur(node)
         return visited
 
-    def d(self, node, node_val_sorted, node_set_remaining):
+    def d(
+            self,
+            node,
+            node_val_sorted,
+            node_set_remaining,
+    ):
         visited = set()
         def recur(node):
             visited.add(node)

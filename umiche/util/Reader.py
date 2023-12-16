@@ -4,17 +4,13 @@ __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
 __lab__ = "Cribbslab"
 
-import os
-import sys
-sys.path.append(os.path.abspath('../../../'))
 import pandas as pd
 from functools import wraps
 
 
 class reader:
 
-    def __init__(self, ):
-        pass
+
 
     def __call__(self, deal):
         generic = self.generic
@@ -100,8 +96,3 @@ class reader:
                 header=header,
                 engine='openpyxl',
             )
-
-
-if __name__ == "__main__":
-    p = reader()
-    print(p.generic('data/drug/similarity/drug_all_07-02.txt'))
