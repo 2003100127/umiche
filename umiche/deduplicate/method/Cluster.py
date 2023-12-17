@@ -10,7 +10,7 @@ import networkx as nx
 from umiche.network.CC import cc as gbfscc
 
 
-class cluster:
+class Cluster:
 
 
     def cc(
@@ -51,7 +51,7 @@ class cluster:
 
 
 if __name__ == "__main__":
-    p = cluster()
+    p = Cluster()
     # print(p.cc({0: [1,], 1: [0, 2], 2: [1]}))
     # print(p.cc({0: []}))
     asds = p.cc(

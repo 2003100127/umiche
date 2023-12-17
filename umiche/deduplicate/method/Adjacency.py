@@ -142,7 +142,7 @@ class Adjacency:
 
 if __name__ == "__main__":
     import pandas as pd
-    from umiche.deduplicate.method.Cluster import cluster as umiclust
+    from umiche.deduplicate.method.Cluster import Cluster as umiclust
 
     p = Adjacency()
 

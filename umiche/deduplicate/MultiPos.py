@@ -11,16 +11,16 @@ import time
 import numpy as np
 import pandas as pd
 from umiche.util.Writer import writer as gwriter
-from umiche.util.Hamming import hamming
+from umiche.util.Hamming import Hamming
 from umiche.util.Console import Console
 from umiche.util.Number import number as rannum
 from umiche.align.Read import read as aliread
 # from umiche.align.Write import write as aliwrite
 from umiche.deduplicate.method.Build import Build as umibuild
-from umiche.deduplicate.method.Cluster import cluster as umimonoclust
-from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
-from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
-from umiche.deduplicate.method.MarkovClustering import markovClustering as umimonomcl
+from umiche.deduplicate.method.Cluster import Cluster as umimonoclust
+from umiche.deduplicate.method.Adjacency import Adjacency as umitoolmonoadj
+from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec
+from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimonomcl
 from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
 
@@ -483,7 +483,7 @@ class MultiPos:
             ed_list = []
             for i in range(node_len):
                 for j in range(i + 1, node_len):
-                    ed_list.append(hamming().general(
+                    ed_list.append(Hamming().general(
                         s1=umi_maps[repr_nodes[i]],
                         s2=umi_maps[repr_nodes[j]],
                     ))
@@ -508,7 +508,7 @@ class MultiPos:
             for i in range(node_len):
                 for j in range(i + 1, node_len):
                     if repr_nodes[i] != repr_nodes[j]:
-                        ed_list = ed_list + [hamming().general(
+                        ed_list = ed_list + [Hamming().general(
                             umi_maps[repr_nodes[i]],
                             umi_maps[repr_nodes[j]])
                         ] * (umi_val_cnts.loc[repr_nodes[i]] * umi_val_cnts.loc[repr_nodes[j]])

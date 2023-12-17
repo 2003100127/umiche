@@ -15,13 +15,13 @@ from umiche.align.Read import read as aliread
 from umiche.align.Write import write as aliwrite
 from umiche.deduplicate.method.Build import Build as umibuild
 
-from umiche.deduplicate.method.Cluster import cluster as umiclust
-from umiche.deduplicate.method.Adjacency import adjacency as umiadj
-from umiche.deduplicate.method.Directional import directional as umidirec
-from umiche.deduplicate.method.MarkovClustering import markovClustering as umimcl
+from umiche.deduplicate.method.Cluster import Cluster as umiclust
+from umiche.deduplicate.method.Adjacency import Adjacency as umiadj
+from umiche.deduplicate.method.Directional import Directional as umidirec
+from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
 
 from umiche.util.Writer import writer as gwriter
-from umiche.util.Hamming import hamming
+from umiche.util.Hamming import Hamming
 from umiche.util.Number import number as rannum
 from umiche.util.Console import Console
 
@@ -691,7 +691,7 @@ class OnePos:
             ed_list = []
             for i in range(node_len):
                 for j in range(i + 1, node_len):
-                    ed_list.append(hamming().general(
+                    ed_list.append(Hamming().general(
                         s1=int_to_umi_dict[repr_nodes[i]],
                         s2=int_to_umi_dict[repr_nodes[j]],
                     ))
@@ -716,7 +716,7 @@ class OnePos:
             for i in range(node_len):
                 for j in range(i + 1, node_len):
                     if repr_nodes[i] != repr_nodes[j]:
-                        ed_list = ed_list + [hamming().general(
+                        ed_list = ed_list + [Hamming().general(
                             int_to_umi_dict[repr_nodes[i]],
                             int_to_umi_dict[repr_nodes[j]])
                         ] * (umi_val_cnts.loc[repr_nodes[i]] * umi_val_cnts.loc[repr_nodes[j]])

@@ -99,7 +99,7 @@ class Adjacency:
     def list(self, ):
         return [*self._graph.values()]
 
-    def matrix(self, ):
+    def to_matrix(self, ):
         adj_mat = np.zeros(shape=[self.glen, self.glen])
         for k, vals in self._graph.items():
             for val in vals:
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     print(p.list())
 
-    print(p.matrix())
+    print(p.to_matrix())
 
-    print(p.to_edge_list(rr=False))
-    print(p.to_edge_list(rr=True))
+    # print(p.to_edge_list(rr=False))
+    # print(p.to_edge_list(rr=True))
