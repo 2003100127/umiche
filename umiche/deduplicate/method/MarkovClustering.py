@@ -11,9 +11,9 @@ from typing import Dict
 # import numpy as np
 import pandas as pd
 import markov_clustering as mc
-from umiche.network.CC import cc as gbfscc
+from umiche.graph.CC import cc as gbfscc
 from umiche.util.Hamming import Hamming
-from umiche.network.Adjacency import Adjacency as netadj
+from umiche.graph.Adjacency import Adjacency as netadj
 
 
 class MarkovClustering:

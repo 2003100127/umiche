@@ -1,13 +1,25 @@
-from collections import OrderedDict
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__ = "jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
+from umiche.util.Console import Console
 
 
-class visit:
+class Visit:
 
     def __init__(
             self,
             graph,
+            verbose=False,
     ):
         self.graph = graph
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     def recursive(
             self,
@@ -72,7 +84,7 @@ if __name__ == "__main__":
         'F': 1,
     }
 
-    p = visit(graph)
+    p = Visit(graph)
     # print(p.recursive('A'))
 
     nodes = [*node_val_sorted.keys()]

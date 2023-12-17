@@ -7,6 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import numpy as np
+from umiche.util.Console import Console
 
 
 class Edge:
@@ -14,18 +15,22 @@ class Edge:
     def __init__(
             self,
             graph=None,
+            verbose=False,
     ):
         self._graph = graph
         self._graph_mapped = None
 
+        self.console = Console()
+        self.console.verbose = verbose
+
     @property
     def graph(self, ):
-        print('the current graph is {}'.format(self._graph))
+        self.console.print('============>the current graph is {}'.format(self._graph))
         return self._graph
 
     @property
     def glen(self, ):
-        print('the number of egdes in the current graph is {}'.format(len(self._graph)))
+        self.console.print('============>the number of egdes in the current graph is {}'.format(len(self._graph)))
         return len(self._graph)
 
     @property
@@ -60,17 +65,16 @@ class Edge:
             if tuple(reversed(edge)) in edges:
                 repeat.append(edge)
         edges = list(edge_set.difference(set(repeat)))
-        print(self._graph)
+        # print(self._graph)
         return edges
 
     def map(self, graph):
-        print('->the graph is being mapped')
-        print('===>key map: {}'.format(self.key_mapped))
+        self.console.print('============>>the graph is being mapped')
+        self.console.print('============>>key map:\n {}'.format(self.key_mapped))
         g_mapped = []
-        print(graph)
         for i, edge in enumerate(graph):
             g_mapped.append((self.key_mapped[edge[0]], self.key_mapped[edge[1]]))
-        print('===>the mapped graph: {}'.format(g_mapped))
+        self.console.print('============>>the mapped graph is\n {}'.format(g_mapped))
         return g_mapped
 
     def toAdjacencyDict(self, ):
@@ -129,27 +133,31 @@ if __name__ == "__main__":
         ('D', 'F'),
     ]
 
-    p = edge(
+    p = Edge(
         # graph=graph_edge_list,
     )
 
     p.graph = graph_edge_list
 
-    # p.graph = p.graph_mapped
+    print(p.graph)
+
+    print(p.graph_mapped)
+
+    p.graph = p.graph_mapped
+
+    print(p.graph)
+
+    print(p.key_mapped)
+
+    p.graph = p.rvredanduncy
 
     print(p.graph)
 
     # print(p.key_mapped)
 
-    # p.graph = p.rvredanduncy
-
-    # print(p.graph)
-
-    # print(p.key_mapped)
-
     # print(p.rvredanduncy)
 
-    # print('asd', p.toAdjacencyDict())
+    print('asd', p.toAdjacencyDict())
 
     # print(p.graph_mapped)
 

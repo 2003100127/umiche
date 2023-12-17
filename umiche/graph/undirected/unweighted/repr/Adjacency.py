@@ -7,13 +7,21 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import numpy as np
+from umiche.util.Console import Console
 
 
 class adjacency:
 
-    def __init__(self, graph=None):
+    def __init__(
+            self,
+            graph=None,
+            verbose=False,
+    ):
         self._graph = graph
         self._graph_mapped = None
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     @property
     def graph(self, ):
@@ -41,16 +49,16 @@ class adjacency:
         return {[*self._graph.keys()][k]: k for k in range(len([*self._graph.keys()]))}
 
     def map(self, graph):
-        print('->the graph is being mapped')
-        print('===>key map: {}'.format(self.key_mapped))
+        self.console.print('============>The graph is being mapped')
+        self.console.print('============>key map:\n {}'.format(self.key_mapped))
         if isinstance(graph, dict):
-            print('===>the graph is a dict')
+            self.console.print('============>The graph is a dict')
             g_mapped = {}
             for k, vals in self._graph.items():
                 g_mapped[self.key_mapped[k]] = []
                 for val in vals:
                     g_mapped[self.key_mapped[k]].append(self.key_mapped[val])
-            print('===>the mapped graph: {}'.format(g_mapped))
+            self.console.print('============>The mapped graph is\n {}'.format(g_mapped))
             return g_mapped
 
     def dict(self, ):

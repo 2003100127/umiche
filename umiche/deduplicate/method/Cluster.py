@@ -7,7 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import networkx as nx
-from umiche.network.CC import cc as gbfscc
+from umiche.graph.CC import cc as gbfscc
 
 
 class Cluster:

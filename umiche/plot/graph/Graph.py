@@ -10,7 +10,7 @@ import networkx as nx
 import seaborn as sns
 import matplotlib.pyplot as plt
 from umiche.plot.Element import Element as pele
-from umiche.network.Adjacency import Adjacency as netadj
+from umiche.graph.Adjacency import Adjacency as netadj
 
 
 class Graph:
@@ -48,22 +48,31 @@ class Graph:
         G.add_edges_from(el)
         print(G.nodes())
 
+        # pos = {
+        #     'A:120': (0, 0),
+        #     'B:2': (-1, 1),
+        #     'C:2': (1, 1),
+        #     'D:90': (0, -2.5),
+        #     'E:50': (-1, -4.5),
+        #     'F:1': (1, -4.5),
+        #     'G:5': (0, -6),
+        # }
+
         pos = {
-            'A:120': (0, 0),
-            'B:2': (-1, 1),
-            'C:2': (1, 1),
-            'D:90': (0, -2.5),
-            'E:50': (-1, -4.5),
-            'F:1': (1, -4.5),
-            'G:5': (0, -6),
+            'A': (0, 0),
+            'B': (-1, 1),
+            'C': (1, 1),
+            'D': (0, -2.5),
+            'E': (-1, -4.5),
+            'F': (1, -4.5),
         }
 
         options = {
             "font_size": 14,
             "node_size": 2000,
             "node_color": "white", # bisque
-            "edgecolors": color_per_subcc,
-            "edge_color": 'dimgray',
+            "edgecolors": color_per_subcc, # node edge color
+            "edge_color": 'dimgray', # simply edge color
             "linewidths": 3,
             "width": 4,
         }
@@ -75,15 +84,15 @@ class Graph:
 if __name__ == "__main__":
     import pandas as pd
 
-    graph_adj = {
-        'A:120': ['B:2', 'C:2', 'D:90'],
-        'B:2': ['A:120', 'C:2'],
-        'C:2': ['A:120', 'B:2'],
-        'D:90': ['A:120', 'E:50', 'F:1'],
-        'E:50': ['D:90', 'G:5'],
-        'F:1': ['D:90', 'G:5'],
-        'G:5': ['E:50', 'F:1'],
-    }
+    # graph_adj = {
+    #     'A:120': ['B:2', 'C:2', 'D:90'],
+    #     'B:2': ['A:120', 'C:2'],
+    #     'C:2': ['A:120', 'B:2'],
+    #     'D:90': ['A:120', 'E:50', 'F:1'],
+    #     'E:50': ['D:90', 'G:5'],
+    #     'F:1': ['D:90', 'G:5'],
+    #     'G:5': ['E:50', 'F:1'],
+    # }
 
     # graph_adj = {
     #     'A': ['B', 'C', 'D'],
@@ -96,14 +105,35 @@ if __name__ == "__main__":
     # }
     # print("An adjacency list of a graph:\n{}".format(graph_adj))
 
+    # node_val_sorted = pd.Series({
+    #     'A:120': 120,
+    #     'D:90': 90,
+    #     'E:50': 50,
+    #     'G:5': 5,
+    #     'B:2': 2,
+    #     'C:2': 2,
+    #     'F:1': 1,
+    # })
+    # print("Counts sorted:\n{}".format(node_val_sorted))
+
+    ### @@ data from UMI-tools
+    graph_adj = {
+        'A': ['B', 'C', 'D'],
+        'B': ['A', 'C'],
+        'C': ['A', 'B'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D'],
+        'F': ['D'],
+    }
+    print("An adjacency list of a graph:\n{}".format(graph_adj))
+
     node_val_sorted = pd.Series({
-        'A:120': 120,
-        'D:90': 90,
-        'E:50': 50,
-        'G:5': 5,
-        'B:2': 2,
-        'C:2': 2,
-        'F:1': 1,
+        'A': 456,
+        'E': 90,
+        'D': 72,
+        'B': 2,
+        'C': 2,
+        'F': 1,
     })
     print("Counts sorted:\n{}".format(node_val_sorted))
 
@@ -168,14 +198,22 @@ if __name__ == "__main__":
     print("deduplicated clusters decomposed full list(mcl_val):\n{}".format(dedup_res_mcl_val_dc_full))
 
     ### @@@ ******MCL mcl_ed******
+    # int_to_umi_dict = {
+    #     'A:120': 'AGATCTCGCA',
+    #     'B:2': 'AGATCCCGCA',
+    #     'C:2': 'AGATCACGCA',
+    #     'D:90': 'AGATCGCGCA',
+    #     'E:50': 'AGATCGCGGA',
+    #     'F:1': 'AGATCGCGTA',
+    #     'G:5': 'TGATCGCGAA',
+    # }
     int_to_umi_dict = {
-        'A:120': 'AGATCTCGCA',
-        'B:2': 'AGATCCCGCA',
-        'C:2': 'AGATCACGCA',
-        'D:90': 'AGATCGCGCA',
-        'E:50': 'AGATCGCGGA',
-        'F:1': 'AGATCGCGTA',
-        'G:5': 'TGATCGCGAA',
+        'A': 'ACGT',
+        'B': 'TCGT',
+        'C': 'CCGT',
+        'D': 'ACAT',
+        'E': 'ACAG',
+        'F': 'AAAT',
     }
     df_mcl_ed = mcl.maxval_ed(
         df_mcl_ccs=df_mcl,

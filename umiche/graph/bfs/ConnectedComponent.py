@@ -7,9 +7,17 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 from collections import deque
+from umiche.util.Console import Console
 
 
 class ConnectedComponent:
+
+    def __init__(
+            self,
+            verbose=False,
+    ):
+        self.console = Console()
+        self.console.verbose = verbose
 
     def deque(
             self,
@@ -55,40 +63,6 @@ class ConnectedComponent:
         """
         Examples
         --------
-        graph_adj = {
-            0: [4],
-            1: [2, 5],
-            2: [1, 3, 8],
-            3: [2, 14],
-            4: [0, 9],
-            5: [1],
-            6: [10, 12],
-            7: [13],
-            8: [2, 14],
-            9: [4, 10, 15],
-            10: [6, 9],
-            11: [17],
-            12: [6],
-            13: [7, 19, 20],
-            14: [3, 8],
-            15: [9, 21],
-            16: [22],
-            17: [11, 18],
-            18: [17, 19],
-            19: [13, 18, 26],
-            20: [13, 26],
-            21: [15, 27],
-            22: [16, 23],
-            23: [22, 24, 28],
-            24: [23, 25, 29],
-            25: [24],
-            26: [19, 20, 30, 31],
-            27: [21],
-            28: [23, 29],
-            29: [24, 28],
-            30: [26, 31],
-            31: [26, 30],
-        }
 
         ..  @ex:
             seen = set()
@@ -118,21 +92,21 @@ class ConnectedComponent:
                 visited.add(root)
                 component = []
                 queue = [root]
-                print('-> root {} has not been visited'.format(root))
-                print('===> a queue built by root {} is {}'.format(root, queue))
+                self.console.print('=========>root {} has not been visited'.format(root))
+                self.console.print('=========>a queue built by root {} is {}'.format(root, queue))
                 while queue:
-                    print('======> a queue built by each root node {}'.format(queue))
+                    self.console.print('============>a queue built by each root node {}'.format(queue))
                     node = queue.pop(0)
-                    print('======> node: {}'.format(node))
+                    self.console.print('============>node: {}'.format(node))
                     component.append(node)
                     for nbr in graph[node]:
                         if nbr not in visited:
                             visited.add(nbr)
                             queue.append(nbr)
-                print('======> visited nodes {}'.format(visited))
+                self.console.print('=========>visited nodes {}'.format(visited))
                 components.append(component)
             else:
-                print('-> root {} has been visited'.format(root))
+                self.console.print('=========>root {} has been visited'.format(root))
         return components
 
 
