@@ -6,7 +6,9 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
-import numpy as np
+from typing import Dict
+
+# import numpy as np
 import pandas as pd
 import markov_clustering as mc
 from umiche.network.CC import cc as gbfscc
@@ -95,31 +97,7 @@ class MarkovClustering:
         # 2
         return df_ccs
 
-    def decompose(
-            self,
-            list_nd,
-    ):
-        """
 
-        Parameters
-        ----------
-        df
-
-        Returns
-        -------
-        {
-
-        }
-
-        """
-        # print(list_nd)
-        list_md = []
-        for i in list_nd:
-            list_md = list_md + i
-        res = {}
-        for i, cc_sub_each_mcl in enumerate(list_md):
-            res[i] = cc_sub_each_mcl
-        return res
 
     def graph_cc_adj(self, cc, graph_adj):
         """
@@ -450,6 +428,46 @@ class MarkovClustering:
             return {k: keys[k] for k in range(glen)}
         else:
             return {keys[k]: k for k in range(glen)}
+
+    def decompose(
+            self,
+            list_nd,
+    ) -> Dict:
+        """
+
+        Parameters
+        ----------
+        df
+
+        Returns
+        -------
+        {
+
+        }
+
+        """
+        # print(list_nd)
+        list_md = []
+        for i in list_nd:
+            list_md = list_md + i
+        res = {}
+        for i, cc_sub_each_mcl in enumerate(list_md):
+            res[i] = cc_sub_each_mcl
+        return res
+
+    def get_full_subcc(
+            self,
+            ccs_dict : Dict,
+            mcl_ccs_dict : Dict,
+    ) -> Dict:
+        d = {}
+        for ccid2, cc in ccs_dict.items():
+            d[ccid2] = []
+            for i in cc:
+                for ccid1, mcl_cc in mcl_ccs_dict.items():
+                    if i in mcl_cc:
+                        d[ccid2] = d[ccid2] + mcl_cc
+        return d
 
 
 if __name__ == "__main__":
