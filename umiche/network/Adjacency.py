@@ -6,17 +6,22 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../..'))
 import numpy as np
+from umiche.util.Console import Console
 
 
-class adjacency:
+class Adjacency:
 
-    def __init__(self, graph=None):
+    def __init__(
+            self,
+            graph=None,
+            verbose=False,
+    ):
         self._graph = graph
         self._graph_mapped = None
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     @property
     def graph(self, ):
@@ -24,7 +29,10 @@ class adjacency:
         return self._graph
 
     @graph.setter
-    def graph(self, value):
+    def graph(
+            self,
+            value,
+    ):
         """
 
         Parameters
@@ -53,7 +61,10 @@ class adjacency:
     def key_mapped(self, ):
         return {[*self._graph.keys()][k]: k for k in range(len([*self._graph.keys()]))}
 
-    def map(self, graph):
+    def map(
+            self,
+            graph,
+    ):
         """
 
         Parameters
@@ -98,12 +109,20 @@ class adjacency:
     def hash(self, ):
         return
 
-    def toEdgeList(self, rr=True):
+    def to_edge_list(
+            self,
+            rr=True,
+    ):
         """
 
         Parameters
         ----------
         rr
+            if it is not symmetry.
+            False
+            [(0, 1), (0, 2), (0, 3), (1, 0), (1, 2), (2, 0), (2, 1), (3, 0), (3, 4), (3, 5), (4, 3), (4, 6), (5, 3), (5, 6), (6, 4), (6, 5)]
+            True
+            [(2, 1), (6, 5), (4, 3), (2, 0), (6, 4), (3, 0), (1, 0), (5, 3)]
 
         Returns
         -------
@@ -125,51 +144,28 @@ class adjacency:
 
 
 if __name__ == "__main__":
-    graph_adj_dict = {
-        'A': ['B', 'C'],
-        'B': ['A', 'C'],
-        'C': ['A', 'B'],
-        'D': ['E', 'F'],
-        'E': ['D'],
-        'F': ['D'],
-    }
-
+    # ### @@ data from UMI-tools
     # graph_adj_dict = {
-    #     0: [4],
-    #     1: [2, 5],
-    #     2: [1, 3, 8],
-    #     3: [2, 14],
-    #     4: [0, 9],
-    #     5: [1],
-    #     6: [10, 12],
-    #     7: [13],
-    #     8: [2, 14],
-    #     9: [4, 10, 15],
-    #     10: [6, 9],
-    #     11: [17],
-    #     12: [6],
-    #     13: [7, 19, 20],
-    #     14: [3, 8],
-    #     15: [9, 21],
-    #     16: [22],
-    #     17: [11, 18],
-    #     18: [17, 19],
-    #     19: [13, 18, 26],
-    #     20: [13, 26],
-    #     21: [15, 27],
-    #     22: [16, 23],
-    #     23: [22, 24, 28],
-    #     24: [23, 25, 29],
-    #     25: [24],
-    #     26: [19, 20, 30, 31],
-    #     27: [21],
-    #     28: [23, 29],
-    #     29: [24, 28],
-    #     30: [26, 31],
-    #     31: [26, 30],
+    #     'A': ['B', 'C'],
+    #     'B': ['A', 'C'],
+    #     'C': ['A', 'B'],
+    #     'D': ['E', 'F'],
+    #     'E': ['D'],
+    #     'F': ['D'],
     # }
 
-    p = adjacency(graph_adj_dict)
+    ### @@ data from mine
+    graph_adj = {
+        'A': ['B', 'C', 'D'],
+        'B': ['A', 'C'],
+        'C': ['A', 'B'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D', 'G'],
+        'F': ['D', 'G'],
+        'G': ['E', 'F'],
+    }
+
+    p = Adjacency(graph_adj)
 
     p.graph = p.graph_mapped
 
@@ -183,5 +179,5 @@ if __name__ == "__main__":
 
     print(p.matrix())
 
-    print(p.toEdgeList(rr=False))
-    print(p.toEdgeList(rr=True))
+    print(p.to_edge_list(rr=False))
+    print(p.to_edge_list(rr=True))

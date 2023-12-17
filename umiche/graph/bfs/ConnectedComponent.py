@@ -11,7 +11,20 @@ from collections import deque
 
 class ConnectedComponent:
 
-    def deque(self, graph):
+    def deque(
+            self,
+            graph,
+    ):
+        """
+
+        Parameters
+        ----------
+        graph
+
+        Returns
+        -------
+
+        """
         visited = set()
         for root, nbrs in graph.items():
             if root not in visited:
@@ -35,8 +48,47 @@ class ConnectedComponent:
                 continue
                 # print('-> root {} has been visited'.format(root))
 
-    def set(self, graph):
+    def set(
+            self,
+            graph,
+    ):
         """
+        Examples
+        --------
+        graph_adj = {
+            0: [4],
+            1: [2, 5],
+            2: [1, 3, 8],
+            3: [2, 14],
+            4: [0, 9],
+            5: [1],
+            6: [10, 12],
+            7: [13],
+            8: [2, 14],
+            9: [4, 10, 15],
+            10: [6, 9],
+            11: [17],
+            12: [6],
+            13: [7, 19, 20],
+            14: [3, 8],
+            15: [9, 21],
+            16: [22],
+            17: [11, 18],
+            18: [17, 19],
+            19: [13, 18, 26],
+            20: [13, 26],
+            21: [15, 27],
+            22: [16, 23],
+            23: [22, 24, 28],
+            24: [23, 25, 29],
+            25: [24],
+            26: [19, 20, 30, 31],
+            27: [21],
+            28: [23, 29],
+            29: [24, 28],
+            30: [26, 31],
+            31: [26, 30],
+        }
 
         ..  @ex:
             seen = set()
@@ -50,8 +102,14 @@ class ConnectedComponent:
             for node in neighbors:
                 if node not in seen:
                     yield component(node)
-        :param graph:
-        :return:
+
+        Parameters
+        ----------
+        graph
+
+        Returns
+        -------
+
         """
         visited = set()
         components = []
@@ -80,41 +138,18 @@ class ConnectedComponent:
 
 if __name__ == "__main__":
     graph_adj = {
-        0: [4],
-        1: [2, 5],
-        2: [1, 3, 8],
-        3: [2, 14],
-        4: [0, 9],
-        5: [1],
-        6: [10, 12],
-        7: [13],
-        8: [2, 14],
-        9: [4, 10, 15],
-        10: [6, 9],
-        11: [17],
-        12: [6],
-        13: [7, 19, 20],
-        14: [3, 8],
-        15: [9, 21],
-        16: [22],
-        17: [11, 18],
-        18: [17, 19],
-        19: [13, 18, 26],
-        20: [13, 26],
-        21: [15, 27],
-        22: [16, 23],
-        23: [22, 24, 28],
-        24: [23, 25, 29],
-        25: [24],
-        26: [19, 20, 30, 31],
-        27: [21],
-        28: [23, 29],
-        29: [24, 28],
-        30: [26, 31],
-        31: [26, 30],
+        'A': ['B', 'C', 'D'],
+        'B': ['A', 'C'],
+        'C': ['A', 'B'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D', 'G'],
+        'F': ['D', 'G'],
+        'G': ['E', 'F'],
     }
     p = ConnectedComponent()
 
-    print(list(p.deque(graph_adj)))
+    ccs = list(p.deque(graph_adj))
+
+    print(ccs)
 
     # print(p.set(graph_adj))

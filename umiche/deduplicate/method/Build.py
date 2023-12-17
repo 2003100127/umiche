@@ -9,8 +9,8 @@ __lab__ = "Cribbslab"
 import time
 import numpy as np
 import pandas as pd
-from umiche.network.Edge import edge as guuedge
-from umiche.util.Hamming import hamming
+from umiche.network.Edge import Edge as guuedge
+from umiche.util.Hamming import Hamming
 from umiche.util.Console import Console
 
 
@@ -31,8 +31,8 @@ class Build:
         """
         self.df = df
         # print(df)
-        self.hamming = hamming()
-        self.guuedge = guuedge()
+        self.hamming = Hamming()
+        self.guuedge = guuedge(verbose=False)
         self.console = Console()
         self.console.verbose = verbose
 
@@ -142,7 +142,7 @@ class Build:
         ### @@ self.graph_adj
         # {0: [], 1: [], 2: [], ..., 1948: []}
         self.guuedge.graph = self.edge_list
-        self.graph_adj_edges = self.guuedge.toAdjacencyDict()
+        self.graph_adj_edges = self.guuedge.to_adj_dict()
         ### @@ self.graph_adj_edges
         # {0: [77, 81, 97, 153, 205, 228, 239, 433, 518, 562, 602, 728, 791, 839, 930],
         # 1: [111, 328, 348, 472, 494, 779, 789, 927, 945, 946, 1029, 1055, 1210, 1345, 1398],

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from umiche.fastq.Read import read as rfastq
 from umiche.fastq.Write import write as wfastq
-from umiche.util.Hamming import hamming
+from umiche.util.Hamming import Hamming
 from umiche.graph.undirected.unweighted.repr.Edge import edge as guuedge
 
 
@@ -20,7 +20,7 @@ class relation:
     def __init__(self, fastq_path, fastq_name, ed_thres):
         self.rfastq = rfastq
         self.wfastq = wfastq
-        self.hamming = hamming()
+        self.hamming = Hamming()
         self.guuedge = guuedge()
         print('===>read the fastq file {}.fastq.gz'.format(fastq_name))
         read_stime = time.time()
@@ -70,7 +70,7 @@ class relation:
         graph_adj_stime = time.time()
         self.graph_adj = {i: [] for i in [*self.umi_uniq_mapped.values()]}
         self.guuedge.graph = self.edge_list
-        self.graph_adj_edges = self.guuedge.toAdjacencyDict()
+        self.graph_adj_edges = self.guuedge.to_adj_dict()
         for k, v in self.graph_adj_edges.items():
             self.graph_adj[k] += v
         print('===>graph adjacency construction time: {:.3f}s'.format(time.time() - graph_adj_stime))

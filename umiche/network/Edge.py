@@ -1,20 +1,36 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import numpy as np
+from umiche.util.Console import Console
 
 
-class edge():
+class Edge:
 
-    def __init__(self, graph=None):
+    def __init__(
+            self,
+            graph=None,
+            verbose=False,
+    ):
         self._graph = graph
         self._graph_mapped = None
 
+        self.console = Console()
+        self.console.verbose = verbose
+
     @property
     def graph(self, ):
-        # print('======>the current graph is {}'.format(self._graph))
+        self.console.print('======>the current graph is {}'.format(self._graph))
         return self._graph
 
     @property
     def glen(self, ):
-        # print('======>the number of egdes in the current graph is {}'.format(len(self._graph)))
+        self.console.print('======>the number of egdes in the current graph is {}'.format(len(self._graph)))
         return len(self._graph)
 
     @property
@@ -33,7 +49,10 @@ class edge():
         return {k: id for id, k in enumerate(self.nodes)}
 
     @graph.setter
-    def graph(self, value):
+    def graph(
+            self,
+            value,
+    ):
         """
 
         Parameters
@@ -49,7 +68,7 @@ class edge():
     @property
     def graph_mapped(self, ):
         if self._graph == None:
-            raise 'go set your graph'
+            raise 'please set your graph using an edge list'
         else:
             return self.map(self._graph)
 
@@ -66,7 +85,10 @@ class edge():
         # print(self._graph)
         return edges
 
-    def map(self, graph):
+    def map(
+            self,
+            graph,
+    ):
         """
 
         Parameters
@@ -85,7 +107,7 @@ class edge():
         # print('======>the mapped graph: {}'.format(g_mapped))
         return g_mapped
 
-    def toAdjacencyDict(self, ):
+    def to_adj_dict(self, ):
         adj_list = {}
         # scan the arrays edge_u and edge_v
         # print('nodes are {}'.format(self.nodes))
@@ -99,7 +121,10 @@ class edge():
         # print(adj_list)
         return adj_list
 
-    def fromlist(self, list_2d):
+    def fromlist(
+            self,
+            list_2d,
+    ):
         """
 
         Parameters
@@ -115,7 +140,13 @@ class edge():
             tuples.append((e[0], e[1]))
         return tuples
 
-    def fromdf(self, df, col_name1='node_1', col_name2='node_2', to_tuple=False):
+    def fromdf(
+            self,
+            df,
+            col_name1='node_1',
+            col_name2='node_2',
+            to_tuple=False,
+    ):
         """
 
         Parameters
@@ -147,7 +178,7 @@ if __name__ == "__main__":
         ('D', 'F'),
     ]
 
-    p = edge(graph_edge_list)
+    p = Edge(graph_edge_list)
 
     # p.graph = p.graph_mapped
 
@@ -161,7 +192,7 @@ if __name__ == "__main__":
 
     # print(p.rvredanduncy)
 
-    print('asd', p.toAdjacencyDict())
+    print('asd', p.to_adj_dict())
     print(p.graph_mapped)
 
     # print(p.nodes)

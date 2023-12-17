@@ -262,31 +262,55 @@ class Directional:
 
 if __name__ == "__main__":
     import pandas as pd
-    from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+    from umiche.deduplicate.method.Cluster import cluster as umiclust
 
     p = Directional()
 
+    ### @@ data from UMI-tools
+    # graph_adj = {
+    #     'A': ['B', 'C', 'D'],
+    #     'B': ['A', 'C'],
+    #     'C': ['A', 'B'],
+    #     'D': ['A', 'E', 'F'],
+    #     'E': ['D'],
+    #     'F': ['D'],
+    # }
+    # print("An adjacency list of a graph:\n{}".format(graph_adj))
+    #
+    # node_val_sorted = pd.Series({
+    #     'A': 456,
+    #     'E': 90,
+    #     'D': 72,
+    #     'B': 2,
+    #     'C': 2,
+    #     'F': 1,
+    # })
+    # print("Counts sorted:\n{}".format(node_val_sorted))
+
+    ### @@ data from mine
     graph_adj = {
         'A': ['B', 'C', 'D'],
         'B': ['A', 'C'],
         'C': ['A', 'B'],
         'D': ['A', 'E', 'F'],
-        'E': ['D'],
-        'F': ['D'],
+        'E': ['D', 'G'],
+        'F': ['D', 'G'],
+        'G': ['E', 'F'],
     }
     print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
-        'A': 456,
-        'E': 90,
-        'D': 72,
+        'A': 120,
+        'D': 90,
+        'E': 50,
+        'G': 5,
         'B': 2,
         'C': 2,
         'F': 1,
     })
     print("Counts sorted:\n{}".format(node_val_sorted))
 
-    ccs = umimonoclust().cc(graph_adj=graph_adj)
+    ccs = umiclust().cc(graph_adj=graph_adj)
     print("Connected components:\n{}".format(ccs))
 
     dedup_res = p.umi_tools(

@@ -1,9 +1,20 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import numpy as np
 
 
-class edge():
+class Edge:
 
-    def __init__(self, graph=None):
+    def __init__(
+            self,
+            graph=None,
+    ):
         self._graph = graph
         self._graph_mapped = None
 
@@ -87,6 +98,25 @@ class edge():
         else:
             return edge_list
 
+    def toEdgeList(
+            self,
+            graph_adj,
+            rr=True,
+    ):
+        edges = []
+        for k, vals in graph_adj.items():
+            for val in vals:
+                edges.append((k, val))
+        if rr:
+            repeat = []
+            edge_set = set(edges)
+            while edges:
+                edge = edges.pop(0)
+                if tuple(reversed(edge)) in edges:
+                    repeat.append(edge)
+            edges = list(edge_set.difference(set(repeat)))
+        return edges
+
 
 if __name__ == "__main__":
     graph_edge_list = [
@@ -99,21 +129,28 @@ if __name__ == "__main__":
         ('D', 'F'),
     ]
 
-    p = edge(graph_edge_list)
+    p = edge(
+        # graph=graph_edge_list,
+    )
+
+    p.graph = graph_edge_list
 
     # p.graph = p.graph_mapped
 
     print(p.graph)
-    print(p.key_mapped)
 
-    p.graph = p.rvredanduncy
+    # print(p.key_mapped)
 
-    print(p.graph)
-    print(p.key_mapped)
+    # p.graph = p.rvredanduncy
+
+    # print(p.graph)
+
+    # print(p.key_mapped)
 
     # print(p.rvredanduncy)
 
-    print('asd', p.toAdjacencyDict())
-    print(p.graph_mapped)
+    # print('asd', p.toAdjacencyDict())
+
+    # print(p.graph_mapped)
 
     # print(p.nodes)

@@ -142,39 +142,66 @@ class Adjacency:
 
 if __name__ == "__main__":
     import pandas as pd
-    from umiche.deduplicate.method.Cluster import cluster as umimonoclust
+    from umiche.deduplicate.method.Cluster import cluster as umiclust
 
     p = Adjacency()
 
+    # ### @@ data from UMI-tools
+    # graph_adj = {
+    #     'A': ['B', 'C', 'D'],
+    #     'B': ['A', 'C'],
+    #     'C': ['A', 'B'],
+    #     'D': ['A', 'E', 'F'],
+    #     'E': ['D'],
+    #     'F': ['D'],
+    # }
+    # print("An adjacency list of a graph:\n{}".format(graph_adj))
+    #
+    # node_val_sorted = pd.Series({
+    #     'A': 456,
+    #     'E': 90,
+    #     'D': 72,
+    #     'B': 2,
+    #     'C': 2,
+    #     'F': 1,
+    # })
+    # print("Counts sorted:\n{}".format(node_val_sorted))
+
+    ### @@ data from mine
     graph_adj = {
         'A': ['B', 'C', 'D'],
         'B': ['A', 'C'],
         'C': ['A', 'B'],
         'D': ['A', 'E', 'F'],
-        'E': ['D'],
-        'F': ['D'],
+        'E': ['D', 'G'],
+        'F': ['D', 'G'],
+        'G': ['E', 'F'],
     }
-    print("graph adjacency list:\n{}".format(graph_adj))
+    print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
-        'A': 456,
-        'E': 90,
-        'D': 72,
+        'A': 120,
+        'D': 90,
+        'E': 50,
+        'G': 5,
         'B': 2,
         'C': 2,
         'F': 1,
     })
-    print(node_val_sorted)
+    print("Counts sorted:\n{}".format(node_val_sorted))
 
-    ccs = umimonoclust().cc(graph_adj=graph_adj)
-    print(ccs)
+    ccs = umiclust().cc(graph_adj=graph_adj)
+    print("Connected components:\n{}".format(ccs))
 
-    nodes_adj = p.umi_tools(
+    dedup_res = p.umi_tools(
         connected_components=ccs,
         df_umi_uniq_val_cnt=node_val_sorted,
         graph_adj=graph_adj
     )
-    print(nodes_adj)
+    dedup_count = dedup_res['count']
+    dedup_clusters = dedup_res['clusters']
+    print("deduplicated count:\n{}".format(dedup_count))
+    print("deduplicated clusters:\n{}".format(dedup_clusters))
 
-    t = p.decompose(nodes_adj['clusters'])
-    print(t)
+    dedup_clusters_dc = p.decompose(dedup_clusters)
+    print("deduplicated clusters decomposed:\n{}".format(dedup_clusters_dc))
