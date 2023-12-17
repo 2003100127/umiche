@@ -16,7 +16,7 @@ from umiche.util.Console import Console
 from umiche.util.Number import number as rannum
 from umiche.align.Read import read as aliread
 # from umiche.align.Write import write as aliwrite
-from umiche.deduplicate.method.Build import Build as umibuild
+from umiche.deduplicate.Build import Build as umibuild
 from umiche.deduplicate.method.Cluster import Cluster as umimonoclust
 from umiche.deduplicate.method.Adjacency import Adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec

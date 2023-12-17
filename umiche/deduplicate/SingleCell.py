@@ -7,19 +7,16 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import os
-import sys
 import time
 import numpy as np
 import pandas as pd
 from umiche.align.Read import read as aliread
 from umiche.align.Write import write as aliwrite
-from umiche.fastq.Read import read as rfastq
-from umiche.fastq.Write import write as wfastq
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
 from umiche.util.Number import number as rannum
 from umiche.util.Console import Console
-from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.Build import build as umibuild
 from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import directional as umitoolmonodirec

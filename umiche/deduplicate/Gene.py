@@ -17,7 +17,7 @@ from umiche.util.Writer import writer as gwriter
 from umiche.util.Hamming import hamming
 from umiche.util.Number import number as rannum
 from umiche.util.Console import Console
-from umiche.deduplicate.method.Build import build as umibuild
+from umiche.deduplicate.Build import build as umibuild
 from umiche.deduplicate.method.Cluster import cluster as umimonoclust
 from umiche.deduplicate.method.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import directional as umitoolmonodirec
