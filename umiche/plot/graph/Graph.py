@@ -7,6 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import networkx as nx
+import seaborn as sns
 import matplotlib.pyplot as plt
 from umiche.plot.Element import Element as pele
 from umiche.network.Adjacency import Adjacency as netadj
@@ -17,7 +18,7 @@ class Graph:
     def __init__(
             self,
             graph,
-            which_color="ccs4",
+            which_color="tableau",
     ):
         self.pele = pele()
         self.netadj = netadj()
@@ -25,63 +26,50 @@ class Graph:
         self.netadj.graph = self.graph
         self.color_list = self.pele.color(which=which_color, is_random=True)
 
+        sns.set(font="Helvetica")
+        sns.set_style("ticks")
+
     def draw(
             self,
-            ccs,
+            cc_dict,
+            title,
             ax,
     ):
         el = self.netadj.to_edge_list()
-        color_per_subcc = [self.color_list[i] for i, cc in enumerate(ccs)]
-        # print(color_per_subcc)
-
-        # relationships = pd.DataFrame({'from': ['10', '10', '10', '5000', '10000'],
-        #                               'to':   ['100', '500', '1000', '500', '500']})
+        color_per_subcc = {}
+        for cc_i, (cc_id, cc) in enumerate(cc_dict.items()):
+            for node_j, node in enumerate(cc):
+                color_per_subcc[node] = self.color_list[cc_i]
+        print(color_per_subcc)
+        color_per_subcc = [color_per_subcc[k] for k in self.graph.keys()]
 
         G = nx.Graph()
         G.add_nodes_from(self.graph.keys())
         G.add_edges_from(el)
         print(G.nodes())
 
-        # explicitly set positions
         pos = {
             'A:120': (0, 0),
             'B:2': (-1, 1),
             'C:2': (1, 1),
-            'D:90': (0, -2),
+            'D:90': (0, -2.5),
             'E:50': (-1, -4.5),
             'F:1': (1, -4.5),
             'G:5': (0, -6),
         }
 
         options = {
-            # "font_size": 36,
-            "font_size": 16,
-            "node_size": 3000,
-            "node_color": "bisque",
+            "font_size": 14,
+            "node_size": 2000,
+            "node_color": "white", # bisque
             "edgecolors": color_per_subcc,
-            # "edgecolors": ['firebrick', 'firebrick', 'firebrick', 'royalblue', 'springgreen', 'royalblue', 'springgreen'],
-            "linewidths": 5,
-            "width": 5,
-
+            "edge_color": 'dimgray',
+            "linewidths": 3,
+            "width": 4,
         }
         nx.draw_networkx(G, pos, ax=ax, **options)
-
-        # Set margins for the axes so that nodes aren't clipped
-        ac = plt.gca()
-        ac.margins(0.20)
-        plt.axis("off")
-        plt.show()
-
-        # # Create graph object
-        # G = nx.Graph(el)
-
-        # # Manually set each nodes size
-        # node_sizes = [4560, 20, 20, 720, 900, 10,]
-
-        # # Draw graph
-        # nx.draw(G, with_labels=True, node_size=node_sizes)
-
-        # plt.show()
+        ax.set_title(title, fontsize=18)
+        ax.set_axis_off()
 
 
 if __name__ == "__main__":
@@ -200,8 +188,22 @@ if __name__ == "__main__":
     dedup_res_mcl_ed_dc_full = mcl.get_full_subcc(ccs_dict=dedup_res_mcl_ed_dc, mcl_ccs_dict=dedup_res_mcl_dc)
     print("deduplicated clusters decomposed full list(mcl_ed):\n{}".format(dedup_res_mcl_ed_dc_full))
 
-    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(12, 10))
+    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(14, 9.5))
     p = Graph(graph=graph_adj)
-    p.draw(ccs, ax=ax[0, 1])
+    p.color_list = ['cornflowerblue', 'lightcoral', 'mediumseagreen',]
+    p.draw(ccs, ax=ax[0, 0], title='Cluster')
+    p.draw(dedup_res_adj_dc, title='Adjacent', ax=ax[0, 1])
+    p.draw(dedup_res_direc_dc, title='Directional', ax=ax[0, 2])
+    p.draw(dedup_res_mcl_dc, title='MCL', ax=ax[1, 0])
+    p.draw(dedup_res_mcl_val_dc_full, title='MCL-val', ax=ax[1, 1])
+    p.draw(dedup_res_mcl_ed_dc_full, title='MCL-ed', ax=ax[1, 2])
+
+    plt.subplots_adjust(
+        top=0.92,
+        bottom=0.04,
+        left=0.04,
+        right=0.98,
+        hspace=0.10,
+        wspace=0.15,
+    )
     plt.show()
-    # print()
