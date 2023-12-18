@@ -41,7 +41,7 @@ class Gadgetry:
             int - the sum of deduplicated unique UMI counts per position
 
         """
-        return df_row['uniq_umi_len'] - len(df_row[by_col])
+        return df_row['num_uniq_umis'] - len(df_row[by_col])
 
     def num_removed_reads(
             self,
