@@ -7,6 +7,8 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import numpy as np
+import pandas as pd
+
 from umiche.util.Hamming import Hamming
 from umiche.util.Console import Console
 
@@ -171,13 +173,13 @@ class Gadgetry:
         -------
 
         """
-        print(list_nd)
-        print(len(list_nd))
+        # print(list_nd)
+        # print(len(list_nd))
         list_md = []
         for i in list_nd:
             list_md = list_md + i
         self.console.print('======># of the total reads left after deduplication: {}'.format(len(list_md)))
-        print(len(list_md))
+        # print(len(list_md))
         return list_md
 
     def bamids(
@@ -209,12 +211,13 @@ class Gadgetry:
         # [2, 780, 416, ..., 1761]
         return [uniq_umi_id_to_bam_id_dict[node] for node in list_1d]
 
-    def edave_deprecated(
+    def ed_ave(
             self,
             df_row,
             by_col,
     ):
         repr_nodes = df_row[by_col]
+        print(repr_nodes)
         node_len = len(repr_nodes)
         int_to_umi_dict = df_row['vignette']['int_to_umi_dict']
         if node_len != 1:
@@ -225,6 +228,7 @@ class Gadgetry:
                         s1=int_to_umi_dict[repr_nodes[i]],
                         s2=int_to_umi_dict[repr_nodes[j]],
                     ))
+            print(pd.Series(ed_list).value_counts())
             return np.ceil(sum(ed_list) / (len(ed_list)))
         else:
             return -1
@@ -235,7 +239,7 @@ class Gadgetry:
             by_col,
     ):
         """"""
-        print(df_row.index)
+        # print(df_row.index)
         repr_nodes = df_row[by_col]
         int_to_umi_dict = df_row['vignette']['int_to_umi_dict']
         umi_val_cnts = df_row['vignette']['df_umi_uniq_val_cnt']

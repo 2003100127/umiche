@@ -16,6 +16,7 @@ from umiche.deduplicate.Gadgetry import Gadgetry as umigadgetry
 from umiche.deduplicate.method.Adjacency import Adjacency as umiadj
 from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
+from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Console import Console
@@ -42,11 +43,24 @@ class Tabulate:
 
         self.umiadj = umiadj()
         self.umidirec = umidirec()
+        self.umiscp = umiscp()
 
         self.gwriter = gwriter()
 
         self.console = Console()
         self.console.verbose = verbose
+
+    def set_cover(self, ):
+        dedup_umi_stime = time.time()
+        self.dedup_num = self.umiscp.count(
+            inbam=self.bam_fpn,
+            tag=self.pos_tag,
+            sep='_',
+        )
+        print(self.dedup_num)
+        # print(self.df_bam.columns)
+        # print(self.df_bam)
+        return
 
     def unique(self, ):
         dedup_umi_stime = time.time()
@@ -59,8 +73,8 @@ class Tabulate:
         ### @@ self.df['ave_ed']
         # 1    5.0
         # Name: ave_eds, dtype: float64
-        # self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='uniq_repr_nodes'), axis=1)
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='uniq_repr_nodes'), axis=1)
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='uniq_repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='uniq_repr_nodes'),
@@ -107,14 +121,14 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['cc_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        # self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='cc_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='cc_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='cc_repr_nodes'),
                                                        axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='cc_repr_nodes'),
                                                        axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,
@@ -161,7 +175,7 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['adj_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        #             self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='adj_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='adj_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(
                 x,
@@ -178,7 +192,7 @@ class Tabulate:
         )
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,
@@ -221,18 +235,21 @@ class Tabulate:
             axis=1,
         )
         self.df['direc_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='direc'), axis=1)
+        print(self.df['direc_repr_nodes'])
         self.df['direc_umi_len'] = self.df['direc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['direc_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        #             self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='direc_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='direc_repr_nodes'), axis=1)
+        print(self.df['ave_eds'])
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),
                                                        axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
+        print(self.ave_ed_bins)
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,
@@ -289,14 +306,14 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['mcl_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        #             self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),
                                                        axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),
                                                        axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,
@@ -357,14 +374,14 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['mcl_val_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        #             self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_val_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_val_repr_nodes'),
                                                        axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,
@@ -426,14 +443,14 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['mcl_ed_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        #             self.df['ave_ed'] = self.df.apply(lambda x: self.edave(x, by_col='mcl_ed_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_ed_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_ed_repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_ed_repr_nodes'),
                                                        axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.ave_ed_bins = self.df['ave_ed'].value_counts().sort_index().to_frame().reset_index()
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.gwriter.generic(
             df=self.ave_ed_bins,

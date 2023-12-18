@@ -121,6 +121,8 @@ class Build:
         # 1898325    1947    1948   4
         # [1898326 rows x 3 columns]
         self.df_ed_sel = self.df_eds.loc[self.df_eds['ed'] == ed_thres]
+        # print(self.df_ed_sel['ed'].value_counts())
+
         ### @@ self.df_ed_sel
         #          node_1  node_2  ed
         # 76            0      77   1
