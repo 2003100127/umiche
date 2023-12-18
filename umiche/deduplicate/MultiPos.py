@@ -183,7 +183,6 @@ class MultiPos:
             verbose=False,
         ).cluster()
 
-
     def adjacency(self, ) -> pd.DataFrame:
         return umitab(
             df=self.df,

@@ -109,8 +109,11 @@ class Build:
         # self.ed_list = self.calc_ed()
         # print(self.ed_list)
         self.df_eds = pd.DataFrame(self.ed_list, columns=['node_1', 'node_2', 'ed'])
-        self.ave_ed = np.ceil(sum(self.df_eds['ed']) / (len(self.df_eds['ed'])))
-        ### @@ self.ave_ed
+        if len(self.df_eds['ed']):
+            self.ave_ed = np.ceil(sum(self.df_eds['ed']) / (len(self.df_eds['ed'])))
+        else:
+            self.ave_ed = -1
+            ### @@ self.ave_ed
         # 5.0
         ### @@ self.df_eds
         #          node_1  node_2  ed
