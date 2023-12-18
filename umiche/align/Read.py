@@ -207,8 +207,8 @@ if __name__ == "__main__":
     from umiche.path import to
 
     umiche = read(
-        bam_fpn=to('data/example.bam'),
-        # bam_fpn=to('example/data/example_buddle.bam'),
+        # bam_fpn=to('data/example.bam'),
+        bam_fpn=to('data/example_bundle1.bam'),
         # to('example/data/assigned_sorted_dedup.bam')
         # bam_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0.bam'),
         # bam_fpn=to('data/simu/umi/seq_errs/trimer/permute_0/bam/bipartite/seq_err_0.bam'),

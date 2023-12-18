@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
     umiche = MultiPos(
         # bam_fpn=to('data/example.bam'),
-        bam_fpn=to('data/example_bundle.bam'),
+        bam_fpn=to('data/example_bundle1.bam'),
         pos_tag='PO',
         mcl_fold_thres=1.5,
         inflat_val=1.6,
