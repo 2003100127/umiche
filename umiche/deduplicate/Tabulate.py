@@ -235,13 +235,13 @@ class Tabulate:
             axis=1,
         )
         self.df['direc_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='direc'), axis=1)
-        print(self.df['direc_repr_nodes'])
+        # print(self.df['direc_repr_nodes'])
         self.df['direc_umi_len'] = self.df['direc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['direc_umi_len'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='direc_repr_nodes'), axis=1)
-        print(self.df['ave_eds'])
+        # print(self.df['ave_eds'])
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),

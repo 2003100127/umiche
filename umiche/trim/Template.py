@@ -16,7 +16,7 @@ from umiche.trim.SeqRuleOut import seqRuleOut as seqro
 from umiche.util.Console import Console
 
 
-class template:
+class Template:
 
     def __init__(
             self,

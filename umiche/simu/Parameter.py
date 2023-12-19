@@ -7,7 +7,6 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import yaml
-import numpy as np
 from umiche.util.Console import Console
 
 
@@ -25,7 +24,7 @@ class Parameter:
             for i, (k, item) in enumerate(self.params.items()):
                 self.console.print("======>key {}: {}".format(i+1, k))
                 self.console.print("=========>value: {}".format(item))
-        print(np.arange(self.params['varied']['sd']))
+
     @property
     def fixed(self, ):
         return self.params['fixed']
@@ -33,6 +32,18 @@ class Parameter:
     @property
     def varied(self, ):
         return self.params['varied']
+
+    @property
+    def trimmed(self, ):
+        return self.params['trimmed']
+
+    @property
+    def dedup(self, ):
+        return self.params['dedup']
+
+    @property
+    def work_dir(self, ):
+        return self.params['work_dir']
 
     @property
     def file_names(self, ):

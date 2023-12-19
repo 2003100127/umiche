@@ -11,16 +11,25 @@ import pysam
 # import bamnostic as bs
 from umiche.fastq.Read import read as fastqread
 from umiche.util.Folder import folder as crtfolder
+from umiche.util.Console import Console
 
 
-class convert:
+class Convert:
 
-    def __init__(self, fastq_fpn, bam_fpn):
+    def __init__(
+            self,
+            fastq_fpn,
+            bam_fpn,
+            verbose=False,
+    ):
         self.fastq_fpn = fastq_fpn
         self.bam_fpn = bam_fpn
         self.names, self.seqs, placeholders, qualities = fastqread().fromgz(fastq_fpn=fastq_fpn)
         # print(self.names)
         # print(self.seqs)
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     def tobam(self, ):
         header = {
@@ -28,7 +37,7 @@ class convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
+        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 a = pysam.AlignedSegment()
                 a.query_name = name
@@ -52,7 +61,7 @@ class convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
+        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 a = pysam.AlignedSegment()
                 a.query_name = name
@@ -79,7 +88,7 @@ class convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
+        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 asterisk_split = name.split('*')
                 a = pysam.AlignedSegment()
@@ -108,7 +117,7 @@ class convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn + '.bam', "wb", header=header) as outf:
+        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 asterisk_split = name.split('*')
                 a = pysam.AlignedSegment()
@@ -134,11 +143,11 @@ class convert:
 
 if __name__ == "__main__":
     from umiche.path import to
-    p = convert(
+    p = Convert(
         # fastq_fpn=to('data/simu/transloc/trimer/bulk/seq_errs/permute_0/seq_err_0.fastq.gz'),
         # bam_fpn=to('data/simu/transloc/trimer/'),
         fastq_fpn=to('data/simu/trimer/pcr8/seq_errs/permute_0/trimmed/seq_err_18.fastq.gz'),
-        bam_fpn=to('data/simu/trimer/pcr8/seq_errs/permute_0/trimmed/seq_err_18'),
+        bam_fpn=to('data/simu/trimer/pcr8/seq_errs/permute_0/trimmed/seq_err_18.bam'),
     )
     print(p.tobam())
     # print(p.tobamsc())
