@@ -16,10 +16,7 @@ class read():
 
     def fromgz(self, fastq_fpn):
         """
-
-        Note
-        ----
-        read and parse a Fastq file.
+        read and parse a Fastq file with pyfastx.
 
         Parameters
         ----------
@@ -34,7 +31,7 @@ class read():
         placeholders = []
         qualities = []
         fq = pyfastx.Fastx(fastq_fpn)
-        print(seqs)
+        # print(seqs)
         for name, seq, qual in fq:
             seqs.append(''.join(seq))
             names.append(''.join(name))

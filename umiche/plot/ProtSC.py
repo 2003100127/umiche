@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from umiche.util.Reader import reader as greader
-from umiche.deduplicate.method.pipeline import Config
+from umiche.deduplicate.pipeline import Config
 
 
 class protSC(Config.config):

@@ -7,12 +7,11 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import time
-import numpy as np
 import pandas as pd
 from umiche.fastq.Read import read as rfastq
 from umiche.fastq.Write import write as wfastq
 from umiche.util.Hamming import Hamming
-from umiche.graph.undirected.unweighted.repr.Edge import edge as guuedge
+from umiche.graph.Edge import Edge as guuedge
 
 
 class relation:
@@ -24,7 +23,7 @@ class relation:
         self.guuedge = guuedge()
         print('===>read the fastq file {}.fastq.gz'.format(fastq_name))
         read_stime = time.time()
-        self.names, self.seqs, _, _ = self.rfastq().fromgz(fastq_path + fastq_name + '.fasta')
+        self.names, self.seqs, _, _ = self.rfastq().fromgz(fastq_path + fastq_name + '.fastq.gz')
         print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
 
         umi_df_stime = time.time()
@@ -53,7 +52,7 @@ class relation:
         self.umi_trace_dict = {}
         self.df_fastq_umi_gp = self.df_fastq.groupby(['umi'])
         for uniq_umi in self.uniq_umis:
-            self.umi_trace_dict[self.umi_uniq_mapped[uniq_umi]] = self.df_fastq_umi_gp.get_group(uniq_umi)['umi#'].unique().astype(np.int).tolist()
+            self.umi_trace_dict[self.umi_uniq_mapped[uniq_umi]] = self.df_fastq_umi_gp.get_group(uniq_umi)['umi#'].unique().astype(int).tolist()
         # print(self.umi_trace)
         print('===>umi trace dict time: {:.3f}s'.format(time.time() - umi_trace_dict_stime))
 

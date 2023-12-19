@@ -11,8 +11,8 @@ from umiche.fastq.Convert import convert as fas2bam
 from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
-from umiche.deduplicate.method.pipeline import Config
-from umiche.deduplicate.Gene import dedupGene
+from umiche.deduplicate.pipeline import Config
+from umiche.deduplicate.SingleCell import dedupSC
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 
@@ -28,7 +28,6 @@ class umi(Config.config):
         self.plotv = plotv()
         df_dedup = pd.DataFrame()
         for i_pn in range(self.permutation_num):
-            dedup_arr = []
             for id, i_metric in enumerate(self.metric_vals[self.metric]):
                 if self.metric == 'pcr_nums':
                     print('=>at PCR {}'.format(i_metric))
@@ -42,7 +41,7 @@ class umi(Config.config):
                     self.umi_len = self.umi_unit_len_fixed
                 elif self.metric == 'seq_errs':
                     print('=>No.{} sequencing error: {}'.format(id, i_metric))
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    self.mcl_inflat = 1.4 if i_metric > 0.005 else 2.7
                     self.mcl_exp = 3
                     fn_surf = str(id)
                     self.umi_len = self.umi_unit_len_fixed
@@ -75,8 +74,8 @@ class umi(Config.config):
                         bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
                     ).tobamsc()
                 if is_dedup:
-                    if self.metric == 'seq_errs':
-                        dedup_ob = dedupGene(
+                    # if self.metric == 'seq_errs':
+                        dedup_ob = dedupSC(
                             mode='internal',
                             method=self.method,
 
@@ -121,8 +120,8 @@ class umi(Config.config):
 if __name__ == "__main__":
     p = umi(
         # metric='pcr_nums',
-        metric='pcr_errs',
-        # metric='seq_errs',
+        # metric='pcr_errs',
+        metric='seq_errs',
         # metric='ampl_rates',
         # metric='umi_lens',
 
@@ -134,13 +133,13 @@ if __name__ == "__main__":
         # method='mcl_val',
         method='mcl_ed',
 
-        is_trim=True,
-        is_tobam=True,
-        is_dedup=False,
+        # is_trim=True,
+        # is_tobam=True,
+        # is_dedup=False,
 
-        # is_trim=False,
-        # is_tobam=False,
-        # is_dedup=True,
-        fastq_fp=to('data/simu/monomer/bulk/'),
+        is_trim=False,
+        is_tobam=False,
+        is_dedup=True,
+        fastq_fp=to('data/simu/monomer/sc/'),
     )
     # print(p.evaluate())

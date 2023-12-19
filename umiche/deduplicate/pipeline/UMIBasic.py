@@ -8,9 +8,14 @@ __lab__ = "Cribbslab"
 
 import time
 import pandas as pd
+from umiche.fastq.Convert import convert as fas2bam
+from umiche.trim.Template import template as umitrim
+from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
+from umiche.deduplicate.pipeline import Config
 from umiche.deduplicate.method.Relation import relation as umimonorel
 from umiche.deduplicate.method.Trace import trace as umimonotrace
+from umiche.deduplicate.MultiPos import dedupPos
 from umiche.deduplicate.method.old.Cluster import cluster as umimonoclust
 from umiche.deduplicate.method.old.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.old.Directional import directional as umitoolmonodirec
@@ -19,27 +24,170 @@ from umiche.deduplicate.method.DBSCAN import dbscan as dbsc
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 
-from simreadflow.read.umi.Filter import filter
-from simreadflow.simulate.dispatcher.batch.General import general as simugeneralstarter
-from simreadflow.read.similarity.distance.Hamming import hamming
-from simreadflow.util.sequence.fastq.Read import read as rfastq
-from simreadflow.util.sequence.fastq.Write import write as wfastq
 
+class umi(Config.config):
 
-class batch(simugeneralstarter):
-
-    def __init__(self, metric):
-        super(batch, self).__init__()
-        self.filter = filter()
-        self.rfastq = rfastq
-        self.wfastq = wfastq
-        self.gbfscc = gbfscc()
-        self.hamming = hamming()
-        self.umimonorel = umimonorel
-        self.plotv = plotv()
-        # print(self.pcr_errs, self.seq_errs)
-
+    def __init__(self, metric, method, fastq_fp=None, is_trim=False, is_tobam=False, is_dedup=False):
+        super(umi, self).__init__()
         self.metric = metric
+        self.gbfscc = gbfscc()
+        self.umimonorel = umimonorel
+        self.method = method
+        self.gwriter = gwriter()
+        self.plotv = plotv()
+        df_dedup = pd.DataFrame()
+        for i_pn in range(10):
+            dedup_arr = []
+            for id, i_metric in enumerate(self.metric_vals[self.metric]):
+                if self.metric == 'pcr_nums':
+                    print('=>at PCR {}'.format(i_metric))
+                    fn_surf = str(i_metric)
+                    self.mcl_inflat = 2.3
+                    self.mcl_exp = 2
+                    self.mcl_fold_thres = 1
+                    self.umi_len = self.umi_unit_len_fixed
+                elif self.metric == 'pcr_errs':
+                    self.mcl_inflat = i_metric
+                    print('=>No.{} PCR error: {}'.format(id, i_metric))
+                    fn_surf = str(id)
+                    # # /*** mcl_ed params ***/
+                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.7
+                    # self.mcl_exp = 2
+                    # self.mcl_fold_thres = 1
+
+                    # # /*** mcl_val params ***/
+                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
+                    self.mcl_exp = 2
+                    self.mcl_fold_thres = 2
+                    self.umi_len = self.umi_unit_len_fixed
+                elif self.metric == 'seq_errs':
+                    print('=>No.{} sequencing error: {}'.format(id, i_metric))
+                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    # self.mcl_exp = 3
+
+                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    self.mcl_exp = 2
+                    fn_surf = str(id)
+                    self.umi_len = self.umi_unit_len_fixed
+                elif self.metric == 'ampl_rates':
+                    print('=>No.{} amplification rate: {}'.format(id, i_metric))
+                    fn_surf = str(id)
+                    # self.mcl_inflat = 1.3 if i_metric > 0.5 else 2
+                    # # /*** mcl_ed params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 4
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 3
+                    # self.mcl_fold_thres = 1
+
+                    # /*** mcl_val params ***/
+                    if i_metric < 8:
+                        self.mcl_inflat = 2
+                    if i_metric >= 0.9:
+                        self.mcl_inflat = 1.8
+                    self.mcl_exp = 4
+                    self.mcl_fold_thres = 11
+
+                    self.umi_len = self.umi_unit_len_fixed
+                elif self.metric == 'umi_lens':
+                    print('=>No.{} UMI length: {}'.format(id, i_metric))
+                    fn_surf = str(i_metric)
+                    # self.mcl_inflat = 1.1 if i_metric > 11 else 2.3
+                    # # /*** mcl_ed params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 4
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 3
+                    # self.mcl_fold_thres = 1
+
+                    # # # /*** mcl_val params ***/
+                    # if i_metric < 8:
+                    #     self.mcl_inflat = 6
+                    # if i_metric >= 8 and i_metric <= 11:
+                    #     self.mcl_inflat = 2.3
+                    # if i_metric > 11:
+                    #     self.mcl_inflat = 1.1
+                    # self.mcl_exp = 4
+                    # self.mcl_fold_thres = 11
+
+                    # # /*** mcl_val params ***/
+                    if i_metric < 8:
+                        self.mcl_inflat = 5.8
+                        self.mcl_exp = 6
+                    if i_metric >= 8 and i_metric <= 11:
+                        self.mcl_inflat = 2.3
+                        self.mcl_exp = 4
+                    if i_metric > 11:
+                        self.mcl_inflat = 1.1
+                        self.mcl_exp = 4
+                    self.mcl_fold_thres = 11
+
+                    self.umi_len = i_metric
+                else:
+                    fn_surf = str(i_metric)
+                    self.umi_len = self.umi_unit_len_fixed
+                fn = self.fn_pref[self.metric] + fn_surf
+                if is_trim:
+                    self.trim(
+                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + fn,
+                        fastq_trimmed_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn,
+                        umi_len=self.umi_len,
+                    )
+                if is_tobam:
+                    fas2bam(
+                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn + '.fastq.gz',
+                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn,
+                    ).tobam()
+                if is_dedup:
+                    # if self.metric == 'seq_errs':
+                    #     if i_metric == 0.125 or i_metric == 0.15:
+                    #         continue
+                    #     else:
+                            dedup_ob = dedupPos(
+                                mode='internal',
+                                method=self.method,
+                                # bam_fpn=to('example/data/example.bam'),
+                                bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/bam/' + fn + '.bam',
+                                pos_tag='PO',
+                                mcl_fold_thres=self.mcl_fold_thres,
+                                inflat_val=self.mcl_inflat,
+                                exp_val=self.mcl_exp,
+                                iter_num=100,
+                                verbose=False,
+                                ed_thres=1,
+                                is_sv=False,
+                                sv_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/summary/' + fn,
+                            )
+                            dedup_arr.append(dedup_ob.dedup_num)
+            df_dedup['pn' + str(i_pn)] = dedup_arr
+            print(df_dedup)
+        self.gwriter.generic(
+            df=df_dedup,
+            sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '.txt',
+            header=True,
+        )
+
+    def trim(self, fastq_fpn, fastq_trimmed_fpn, umi_len):
+        trim_params = {
+            'read_struct': 'umi_1',
+            'umi_1': {
+                'len': umi_len,
+            },
+            'fastq': {
+                'fpn': fastq_fpn + '.fastq.gz',
+                'trimmed_fpn': fastq_trimmed_fpn + '.fastq.gz',
+            },
+        }
+        umitrim_parser = umitrim(trim_params)
+        df = umitrim_parser.todf()
+        umitrim_parser.togz(df)
+        return 0
 
     def statistics(self, ):
         return {
@@ -84,23 +232,23 @@ class batch(simugeneralstarter):
         stat = self.statistics()
         for id, i_metric in enumerate(self.metrics[self.metric]):
             if self.metric == 'pcr_nums':
-                print('->at PCR {}'.format(i_metric))
+                print('=>at PCR {}'.format(i_metric))
                 fastq_fn_surf = str(i_metric)
             elif self.metric == 'pcr_errs':
-                print('->No.{} PCR error: {}'.format(id, i_metric))
+                print('=>No.{} PCR error: {}'.format(id, i_metric))
                 fastq_fn_surf = str(id)
             elif self.metric == 'seq_errs':
-                print('->No.{} sequencing error: {}'.format(id, i_metric))
+                print('=>No.{} sequencing error: {}'.format(id, i_metric))
                 fastq_fn_surf = str(id)
             elif self.metric == 'ampl_rates':
-                print('->No.{} amplification rate: {}'.format(id, i_metric))
+                print('=>No.{} amplification rate: {}'.format(id, i_metric))
                 fastq_fn_surf = str(id)
             elif self.metric == 'umi_lens':
-                print('->No.{} UMI length: {}'.format(id, i_metric))
+                print('=>No.{} UMI length: {}'.format(id, i_metric))
                 fastq_fn_surf = str(i_metric)
             else:
                 fastq_fn_surf = i_metric
-            fastq_fn = self.fastq_fn_pref[self.metric] + fastq_fn_surf
+            fastq_fn = self.fn_pref[self.metric] + fastq_fn_surf
             umiche = self.umimonorel(
                 fastq_path=to('data/simu/') + self.metric + '/trimmed/',
                 # fastq_path=to('data/simu/') + self.metric + '/spacer/trimmed/',
@@ -243,12 +391,29 @@ class batch(simugeneralstarter):
 
 
 if __name__ == "__main__":
-    p = batch(
-        # metric='pcr_nums',
+    p = umi(
+        metric='pcr_nums',
         # metric='pcr_errs',
-        metric='seq_errs',
+        # metric='seq_errs',
         # metric='ampl_rates',
         # metric='umi_lens',
-    )
-    print(p.evaluate())
 
+        # method='unique',
+        # method='cluster',
+        # method='adjacency',
+        # method='directional',
+        # method='mcl',
+        # method='mcl_val',
+        method='mcl_ed',
+
+        # is_trim=True,
+        # is_tobam=True,
+        # is_dedup=False,
+
+        is_trim=False,
+        is_tobam=False,
+        is_dedup=True,
+        fastq_fp=to('data/simu/monomer/general/ar1/'),
+        # fastq_fp=to('data/simu/monomer/general/ar1_3/'),
+    )
+    # print(p.evaluate())

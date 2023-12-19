@@ -21,8 +21,6 @@ from umiche.path import to
 
 class collapse:
 
-
-
     def majorityVoting(self, umi, recur_len=3):
         vernier = [i for i in range(len(umi)) if i%recur_len == 0]
         umi_oligomers = [umi[v: v+recur_len] for v in vernier]

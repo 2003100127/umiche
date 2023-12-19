@@ -10,10 +10,10 @@ import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
 from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
-from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
+from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.deduplicate.trimer.pipeline import Config
 from umiche.deduplicate.method.Relation import relation as umimonorel
-from umiche.deduplicate.MultiPos import Position as deduppos
+from umiche.deduplicate.MultiPos import MultiPos as deduppos
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 

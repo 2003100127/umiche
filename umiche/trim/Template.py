@@ -14,12 +14,15 @@ from umiche.trim.BCRuleOut import bcRuleOut as bcro
 from umiche.trim.UMIRuleOut import umiRuleOut as umiro
 from umiche.trim.SeqRuleOut import seqRuleOut as seqro
 from umiche.util.Console import Console
-from umiche.path import to
 
 
 class template:
 
-    def __init__(self, params, verbose=True):
+    def __init__(
+            self,
+            params,
+            verbose=True,
+    ):
         self.params = params
         self.verbose = verbose
         self.filter = filter()
@@ -28,6 +31,7 @@ class template:
         self.seqro = seqro(read_summary=self.params, verbose=self.verbose)
         self.rfastq = rfastq
         self.wfastq = wfastq
+
         self.console = Console()
         self.console.verbose = self.verbose
 
@@ -178,6 +182,7 @@ class template:
 
 
 if __name__ == "__main__":
+    from umiche.path import to
 
     params = {
         'umi_1': {

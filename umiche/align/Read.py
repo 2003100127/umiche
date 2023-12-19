@@ -94,9 +94,9 @@ class read:
         self.console.print('=========>start converting bam to df...')
         stime = time.time()
         for id, read in enumerate(self.pysam_bam):
-            # print(read)
+            print(read)
             read_tags = read.get_tags()
-            # print(read_tags)
+            print(read_tags)
             rt_dict = {k: v for k, v in read_tags}
             rt_keys = [*rt_dict.keys()]
             ### @@ read_tags | per read
@@ -208,7 +208,8 @@ if __name__ == "__main__":
 
     umiche = read(
         # bam_fpn=to('data/example.bam'),
-        bam_fpn=to('data/example_bundle1.bam'),
+        # bam_fpn=to('data/example_bundle1.bam'),
+        bam_fpn=to('data/hgmm_100_STAR_FC_sorted.bam'),
         # to('example/data/assigned_sorted_dedup.bam')
         # bam_fpn=to('data/simu/monomer/sc/seq_err/permute_0/trimmed/seq_err_0.bam'),
         # bam_fpn=to('data/simu/umi/seq_errs/trimer/permute_0/bam/bipartite/seq_err_0.bam'),
