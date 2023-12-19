@@ -9,153 +9,155 @@ __lab__ = "Cribbslab"
 import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
 from umiche.trim.Template import template as umitrim
-from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
-from umiche.deduplicate.trimer.pipeline import Config
+from umiche.simu.Parameter import Parameter as params
+
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
 from umiche.plot.Valid import valid as plotv
-from umiche.path import to
+from umiche.util.Writer import writer as gwriter
+from umiche.util.Console import Console
 
 
-class umi(Config.Config):
+class umi:
 
     def __init__(
             self,
-            metric,
+            scenario,
             method,
             comp_cat,
-            fastq_fp=None,
+            param_fpn=None,
             is_trim=False,
             is_tobam=False,
             is_dedup=False,
+            verbose=False,
     ):
-        super(umi, self).__init__()
-        self.metric = metric
+        self.scenario = scenario
         self.comp_cat = comp_cat
-        self.gbfscc = gbfscc()
         self.method = method
+
+        self.params = params(param_fpn=param_fpn)
+        self.gbfscc = gbfscc()
         self.gwriter = gwriter()
         self.plotv = plotv()
+
+        self.console = Console()
+        self.console.verbose = verbose
+
         df_dedup = pd.DataFrame()
-        for i_pn in range(self.permutation_num):
+        for perm_num_i in range(self.params.fixed['permutation_num']):
             dedup_arr = []
-            for id, i_metric in enumerate(self.metric_vals[self.metric]):
-                if self.metric == 'pcr_nums':
-                    print('=>at PCR {}'.format(i_metric))
-                    fn_surf = str(i_metric)
+            for id, scenario_i in enumerate(self.params.varied[self.scenario]):
+                if self.scenario == 'pcr_nums':
+                    self.console.print('===========>at PCR {}'.format(scenario_i))
+                    fn_surf = str(scenario_i)
                     self.mcl_inflat = 2.3
                     self.mcl_exp = 2
                     self.mcl_fold_thres = 1
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                elif self.metric == 'pcr_errs':
-                    self.mcl_inflat = i_metric
-                    print('=>No.{} PCR error: {}'.format(id, i_metric))
+                elif self.scenario == 'pcr_errs':
+                    self.mcl_inflat = scenario_i
+                    self.console.print('===========>No.{} PCR error: {}'.format(id, scenario_i))
                     fn_surf = str(id)
                     # # /*** mcl_ed params ***/
-                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.7
+                    # self.mcl_inflat = 1.1 if scenario_i > 0.005 else 1.7
                     # self.mcl_exp = 2
                     # self.mcl_fold_thres = 1
 
                     # # /*** mcl_val params ***/
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 1.8
+                    self.mcl_inflat = 1.1 if scenario_i > 0.005 else 1.8
                     self.mcl_exp = 2
                     self.mcl_fold_thres = 2
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                elif self.metric == 'seq_errs':
-                    print('=>No.{} sequencing error: {}'.format(id, i_metric))
-                    # self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                elif self.scenario == 'seq_errs':
+                    self.console.print('===========>No.{} sequencing error: {}'.format(id, scenario_i))
+                    # self.mcl_inflat = 1.1 if scenario_i > 0.005 else 2.7
                     # self.mcl_exp = 3
                     self.mcl_fold_thres = 1.6
-                    self.mcl_inflat = 1.1 if i_metric > 0.005 else 2.7
+                    self.mcl_inflat = 1.1 if scenario_i > 0.005 else 2.7
                     self.mcl_exp = 2
                     fn_surf = str(id)
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                elif self.metric == 'ampl_rates':
-                    print('=>No.{} amplification rate: {}'.format(id, i_metric))
+                elif self.scenario == 'ampl_rates':
+                    self.console.print('===========>No.{} amplification rate: {}'.format(id, scenario_i))
                     fn_surf = str(id)
-                    # self.mcl_inflat = 1.3 if i_metric > 0.5 else 2
+                    # self.mcl_inflat = 1.3 if scenario_i > 0.5 else 2
                     # # /*** mcl_ed params ***/
-                    # if i_metric < 8:
+                    # if scenario_i < 8:
                     #     self.mcl_inflat = 4
-                    # if i_metric >= 8 and i_metric <= 11:
+                    # if scenario_i >= 8 and scenario_i <= 11:
                     #     self.mcl_inflat = 2.3
-                    # if i_metric > 11:
+                    # if scenario_i > 11:
                     #     self.mcl_inflat = 1.1
                     # self.mcl_exp = 3
                     # self.mcl_fold_thres = 1
 
                     # /*** mcl_val params ***/
-                    if i_metric < 8:
+                    if scenario_i < 8:
                         self.mcl_inflat = 2
-                    if i_metric >= 0.9:
+                    if scenario_i >= 0.9:
                         self.mcl_inflat = 1.8
                     self.mcl_exp = 4
                     self.mcl_fold_thres = 11
 
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                elif self.metric == 'umi_lens':
-                    print('=>No.{} UMI length: {}'.format(id, i_metric))
-                    fn_surf = str(i_metric)
-                    # self.mcl_inflat = 1.1 if i_metric > 11 else 2.3
+                elif self.scenario == 'umi_lens':
+                    self.console.print('===========>No.{} UMI length: {}'.format(id, scenario_i))
+                    fn_surf = str(scenario_i)
+                    # self.mcl_inflat = 1.1 if scenario_i > 11 else 2.3
                     # # /*** mcl_ed params ***/
-                    # if i_metric < 8:
+                    # if scenario_i < 8:
                     #     self.mcl_inflat = 4
-                    # if i_metric >= 8 and i_metric <= 11:
+                    # if scenario_i >= 8 and scenario_i <= 11:
                     #     self.mcl_inflat = 2.3
-                    # if i_metric > 11:
+                    # if scenario_i > 11:
                     #     self.mcl_inflat = 1.1
                     # self.mcl_exp = 3
                     # self.mcl_fold_thres = 1
 
                     # # # /*** mcl_val params ***/
-                    # if i_metric < 8:
+                    # if scenario_i < 8:
                     #     self.mcl_inflat = 6
-                    # if i_metric >= 8 and i_metric <= 11:
+                    # if scenario_i >= 8 and scenario_i <= 11:
                     #     self.mcl_inflat = 2.3
-                    # if i_metric > 11:
+                    # if scenario_i > 11:
                     #     self.mcl_inflat = 1.1
                     # self.mcl_exp = 4
                     # self.mcl_fold_thres = 11
 
                     # # /*** mcl_val params ***/
-                    if i_metric < 8:
+                    if scenario_i < 8:
                         self.mcl_inflat = 5.8
                         self.mcl_exp = 6
-                    if i_metric >= 8 and i_metric <= 11:
+                    if scenario_i >= 8 and scenario_i <= 11:
                         self.mcl_inflat = 2.3
                         self.mcl_exp = 4
-                    if i_metric > 11:
+                    if scenario_i > 11:
                         self.mcl_inflat = 1.1
                         self.mcl_exp = 4
                     self.mcl_fold_thres = 11
 
-                    self.umi_len = i_metric
+                    self.umi_len = scenario_i
                 else:
-                    fn_surf = str(i_metric)
-                    self.umi_len = self.umi_unit_len_fixed * self.umi_unit_pattern
-                fn = self.fn_pref[self.metric] + fn_surf
+                    fn_surf = str(scenario_i)
+                fn = self.fn_pref[self.scenario] + fn_surf
                 if is_trim:
                     self.trim(
-                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + fn,
-                        fastq_trimmed_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn,
+                        fastq_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/' + fn,
+                        fastq_trimmed_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/trimmed/' + fn,
                         umi_len=self.umi_len,
                     )
                 if is_tobam:
                     fas2bam(
-                        fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/trimmed/' + fn + '.fastq.gz',
-                        # fastq_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/' + fn + '.fastq.gz',
-                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn,
+                        fastq_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/trimmed/' + fn + '.fastq.gz',
+                        # fastq_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/' + self.comp_cat + '/' + fn + '.fastq.gz',
+                        bam_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/' + self.comp_cat + '/bam/' + fn,
                     ).tobam()
                 if is_dedup:
-                    # if self.metric == 'seq_errs':
-                    #     if i_metric == 0.125 or i_metric == 0.15:
+                    # if self.scenario == 'seq_errs':
+                    #     if scenario_i == 0.125 or scenario_i == 0.15:
                     #         continue
                     #     else:
                     dedup_ob = deduppos(
                         mode='internal',
                         method=self.method,
                         # bam_fpn=to('example/data/example.bam'),
-                        bam_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/bam/' + fn + '.bam',
+                        bam_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/' + self.comp_cat + '/bam/' + fn + '.bam',
                         pos_tag='PO',
                         mcl_fold_thres=self.mcl_fold_thres,
                         inflat_val=self.mcl_inflat,
@@ -164,14 +166,14 @@ class umi(Config.Config):
                         verbose=False,
                         ed_thres=1,
                         is_sv=False,
-                        sv_fpn=fastq_fp + self.metric + '/permute_' + str(i_pn) + '/' + self.comp_cat + '/' + fn,
+                        sv_fpn=fastq_fp + self.scenario + '/permute_' + str(perm_num_i) + '/' + self.comp_cat + '/' + fn,
                     )
                     dedup_arr.append(dedup_ob.dedup_num)
-            df_dedup['pn' + str(i_pn)] = dedup_arr
+            df_dedup['pn' + str(perm_num_i)] = dedup_arr
             print(df_dedup)
         self.gwriter.generic(
             df=df_dedup,
-            sv_fpn=fastq_fp + self.metric + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
+            sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
             header=True,
         )
 
@@ -193,12 +195,14 @@ class umi(Config.Config):
 
 
 if __name__ == "__main__":
+    from umiche.path import to
+
     p = umi(
-        # metric='pcr_nums',
-        # metric='pcr_errs',
-        metric='seq_errs',
-        # metric='ampl_rates',
-        # metric='umi_lens',
+        # scenario='pcr_nums',
+        # scenario='pcr_errs',
+        scenario='seq_errs',
+        # scenario='ampl_rates',
+        # scenario='umi_lens',
 
         # method='unique',
         # method='cluster',
@@ -229,10 +233,5 @@ if __name__ == "__main__":
         is_tobam=False,
         is_dedup=True,
 
-        fastq_fp=to('data/simu/tree/trimer/'),
-        # fastq_fp=to('data/simu/monomer/pcr8/'),
-        # fastq_fp=to('data/simu/trimer/pcr8/'),
-        # fastq_fp=to('data/simu/dimer/pcr8/'),
-        # fastq_fp=to('data/simu/dimer/treepcr22_250/'),
-        # fastq_fp=to('data/simu/dimer/pcr8_mono24/'),
+        param_fpn=to('data/seqerr_sl.yml')
     )

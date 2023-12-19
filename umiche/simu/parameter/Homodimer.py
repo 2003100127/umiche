@@ -51,8 +51,8 @@ class Homodimer:
             'seq_errs': self.errors(),
             'ampl_rates': np.linspace(0.1, 1, 10),
             'umi_lens': np.arange(6, 36 + 2, 2),
-            'seq_dep': np.arange(100, 1000 + 100, 100),
-            'umi_nums': np.arange(20, 140 + 20, 20),
+            'seq_deps': np.arange(100, 1000 + 100, 100),
+            'umi_nums': np.arange(50, 1000 + 200, 200),
         }
 
     def errors(self, ):

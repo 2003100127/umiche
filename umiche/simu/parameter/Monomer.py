@@ -11,8 +11,45 @@ import numpy as np
 
 class Monomer:
 
-    def __init__(self, ):
-        pass
+    def __init__(
+            self,
+            param_fpn=None,
+    ):
+        if param_fpn:
+            import yaml
+            with open(param_fpn, "r") as f:
+                configs = yaml.safe_load(f)
+                for k, item in configs.items():
+                    print(k, item)
+            # len_params = configs['len_params']
+            # kwargs['seq_params'] = configs['seq_params']
+            # kwargs['material_params'] = configs['material_params']
+            # condis = configs['condis']
+            #
+            # ampl_rate = configs['ampl_rate']
+            # err_route = configs['err_route']
+            # pcr_error = configs['pcr_error']
+            # pcr_num = configs['pcr_num']
+            # err_num_met = configs['err_num_met']
+            # seq_errors = configs['seq_errors']
+            # seq_sub_spl_number = configs['seq_sub_spl_number']
+            # seq_sub_spl_rate = configs['seq_sub_spl_rate']
+            # if "pcr_deletion" in configs.keys():
+            #     pcr_deletion = configs['pcr_deletion']
+            # if "pcr_insertion" in configs.keys():
+            #     pcr_insertion = configs['pcr_insertion']
+            # if "pcr_del_rate" in configs.keys():
+            #     pcr_del_rate = configs['pcr_del_rate']
+            # if "pcr_ins_rate" in configs.keys():
+            #     pcr_ins_rate = configs['pcr_ins_rate']
+            # if "seq_deletion" in configs.keys():
+            #     seq_deletion = configs['seq_deletion']
+            # if "seq_insertion" in configs.keys():
+            #     seq_insertion = configs['seq_insertion']
+            # if "seq_del_rate" in configs.keys():
+            #     seq_del_rate = configs['seq_del_rate']
+            # if "seq_ins_rate" in configs.keys():
+            #     seq_ins_rate = configs['seq_ins_rate']
 
     @property
     def file_names(self, ):
@@ -51,8 +88,8 @@ class Monomer:
             'seq_errs': self.errors(),
             'ampl_rates': np.linspace(0.1, 1, 10),
             'umi_lens': np.arange(6, 36 + 1, 1),
-            'seq_dep': np.arange(100, 1000 + 100, 100),
-            'umi_nums': np.arange(20, 140 + 20, 20),
+            'seq_deps': np.arange(100, 1000 + 100, 100),
+            'umi_nums': np.arange(50, 1000 + 200, 200),
         }
 
     def errors(self, ):
