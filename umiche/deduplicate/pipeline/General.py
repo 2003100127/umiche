@@ -19,82 +19,91 @@ from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimc
 from umiche.plot.Valid import valid as plotv
 from umiche.path import to
 
-from umiche.deduplicate.pipeline.Config import config as simugeneralstarter
+from umiche.simu.parameter.Monomer import Monomer as monoparam
+from umiche.util.Console import Console
 
 
-class batch(simugeneralstarter):
+class batch():
 
-    def __init__(self, metric):
-        super(batch, self).__init__()
+    def __init__(
+            self,
+            scenario,
+            work_dir='./',
+            verbose=False,
+    ):
+        self.scenario = scenario
+        self.work_dir = work_dir
+
+        self.monoparam = monoparam()
         self.gbfscc = gbfscc()
         self.umirel = umirel
         self.plotv = plotv()
-        # print(self.pcr_errs, self.seq_errs)
 
-        self.metric = metric
+        self.console = Console()
+        self.console.verbose = verbose
 
     def statistics(self, ):
         return {
             'ccs': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'metric', 'method']),
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
             },
             'adj': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'metric', 'method']),
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
             },
             'direc': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'metric', 'method']),
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
             },
             'mcl_val': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'metric', 'method']),
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
             },
             'mcl_ed': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'metric', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'metric', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'metric', 'method']),
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
             },
         }
 
     def evaluate(self, ):
         stat = self.statistics()
-        for id, i_metric in enumerate(self.metrics[self.metric]):
-            if self.metric == 'pcr_nums':
-                print('->at PCR {}'.format(i_metric))
-                fastq_fn_surf = str(i_metric)
-            elif self.metric == 'pcr_errs':
-                print('->No.{} PCR error: {}'.format(id, i_metric))
+        for id, scenario_i in enumerate(self.monoparam.varied[self.scenario]):
+            if self.scenario == 'pcr_nums':
+                self.console.print('===========>at PCR {}'.format(scenario_i))
+                fastq_fn_surf = str(scenario_i)
+            elif self.scenario == 'pcr_errs':
+                self.console.print('===========>No.{} PCR error: {}'.format(id, scenario_i))
                 fastq_fn_surf = str(id)
-            elif self.metric == 'seq_errs':
-                print('->No.{} sequencing error: {}'.format(id, i_metric))
+            elif self.scenario == 'seq_errs':
+                self.console.print('===========>No.{} sequencing error: {}'.format(id, scenario_i))
                 fastq_fn_surf = str(id)
-            elif self.metric == 'ampl_rates':
-                print('->No.{} amplification rate: {}'.format(id, i_metric))
+            elif self.scenario == 'ampl_rates':
+                self.console.print('===========>No.{} amplification rate: {}'.format(id, scenario_i))
                 fastq_fn_surf = str(id)
-            elif self.metric == 'umi_lens':
-                print('->No.{} UMI length: {}'.format(id, i_metric))
-                fastq_fn_surf = str(i_metric)
+            elif self.scenario == 'umi_lens':
+                self.console.print('===========>No.{} UMI length: {}'.format(id, scenario_i))
+                fastq_fn_surf = str(scenario_i)
             else:
-                fastq_fn_surf = i_metric
-            fastq_fn = self.fastq_fn_pref[self.metric] + fastq_fn_surf
+                fastq_fn_surf = scenario_i
+            fastq_fn = self.monoparam.file_names[self.scenario] + fastq_fn_surf
             umiche = self.umirel(
-                fastq_path=to('data/simu/general/') + self.metric + '/trimmed/',
+                fastq_path=self.work_dir + self.scenario + '/trimmed/',
                 fastq_name=fastq_fn,
                 ed_thres=1,
             )
@@ -187,72 +196,74 @@ class batch(simugeneralstarter):
             # print('time for using DBSCAN: {time:.3f}s'.format(time=time.time() - dbscan_stime))
             # print('DBSCAN cluster number: {}'.format(t))
 
-            # print(stat['ccs']['df_dedup_cnt'])
-            #
-            # stat['ccs']['df_dedup_cnt'].loc[i_metric] = [ccs_net_num] + [str(i_metric)] + ['ccs']
-            # stat['adj']['df_dedup_cnt'].loc[i_metric] = [adj_net_num] + [str(i_metric)] + ['adj']
+            print(stat['ccs']['df_dedup_cnt'])
 
-            # df_direc_apv = umitooldirec.formatApvsDisapv(direc_cc_apvs)
-            # df_direc_disapv = umitooldirec.formatApvsDisapv(direc_cc_disapvs)
-            # stat['direc']['df_apv_cnt'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(i_metric)] + ['direc']
-            # stat['direc']['df_disapv_cnt'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=df_direc_disapv, sort='cnt')) + [str(i_metric)] + ['direc']
-            # stat['direc']['df_apv_pct'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='pct')) + [str(i_metric)] + ['direc']
-            # stat['direc']['df_disapv_pct'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='pct')) + [str(i_metric)] + ['direc']
-            # stat['direc']['df_dedup_cnt'].loc[i_metric] = [direc_net_num] + [str(i_metric)] + ['direc']
-            #
-            # stat['mcl_val']['df_dedup_cnt'].loc[i_metric] = [mscmv_val_dedup_cnt] + [str(i_metric)] + ['mcl_val']
-            #
-            # stat['mcl_ed']['df_apv_cnt'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_apv, sort='cnt')) + [str(i_metric)] + ['mcl_ed']
-            # stat['mcl_ed']['df_disapv_cnt'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='cnt')) + [str(i_metric)] + ['mcl_ed']
-            # stat['mcl_ed']['df_apv_pct'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_apv, sort='pct')) + [str(i_metric)] + ['mcl_ed']
-            # stat['mcl_ed']['df_disapv_pct'].loc[i_metric] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='pct')) + [str(i_metric)] + ['mcl_ed']
-            # stat['mcl_ed']['df_dedup_cnt'].loc[i_metric] = [mscmv_ed_dedup_cnt] + [str(i_metric)] + ['mcl_ed']
+            stat['ccs']['df_dedup_cnt'].loc[scenario_i] = [ccs_net_num] + [str(scenario_i)] + ['ccs']
+            stat['adj']['df_dedup_cnt'].loc[scenario_i] = [adj_net_num] + [str(scenario_i)] + ['adj']
 
-            # if id == len(self.metrics[self.metric])-1:
-            # # if id == 5:
-            #     df_dedup_cnt = pd.concat([
-            #         # stat['ccs']['df_dedup_cnt'],
-            #         # stat['adj']['df_dedup_cnt'],
-            #         stat['direc']['df_dedup_cnt'],
-            #         stat['mcl_val']['df_dedup_cnt'],
-            #         stat['mcl_ed']['df_dedup_cnt'],
-            #     ]).reset_index(drop=True)
-            #     # print(df_dedup_cnt)
-            #     # self.plotv.n1(df_disapv=stat['direc']['df_disapv_cnt'], df_apv=stat['direc']['df_apv_cnt'])
-            #     # self.plotv.n1(df_disapv=stat['mcl_ed']['df_disapv_cnt'], df_apv=stat['mcl_ed']['df_apv_cnt'])
-            #     self.plotv.n2(df=df_dedup_cnt)
-            #     self.plotv.n2dist(df=df_dedup_cnt)
-            #     tt[2] = tt1[0]
-            #     sns.set_theme(style="ticks")
-            #     tt = tt.reset_index(drop=True)
-            #     # print(tt.)
-            #     # sns.boxplot(x=0, y=1, data=tt,
-            #     #             whis=[0, 100], width=.6, palette="vlag")
-            #     # sns.stripplot(x=0, y=1, data=tt,
-            #     #               size=4, color=".3", linewidth=0)
-            #     # sns.jointplot(
-            #     #     data=tt,
-            #     #     x=0, y=2, hue=1,
-            #     #     kind="kde",
-            #     #     # palette='Paired'
-            #     # )
-            #     sd = tt.dropna()
-            #
-            #     print(sd)
-            #     g = sns.lmplot(
-            #         data=sd,
-            #         x=0, y=2, hue=1,
-            #         height=5
-            #     )
+            df_direc_apv = umitooldirec.formatApvsDisapv(direc_cc_apvs)
+            df_direc_disapv = umitooldirec.formatApvsDisapv(direc_cc_disapvs)
+            stat['direc']['df_apv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(scenario_i)] + ['direc']
+            stat['direc']['df_disapv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_disapv, sort='cnt')) + [str(scenario_i)] + ['direc']
+            stat['direc']['df_apv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='pct')) + [str(scenario_i)] + ['direc']
+            stat['direc']['df_disapv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='pct')) + [str(scenario_i)] + ['direc']
+            stat['direc']['df_dedup_cnt'].loc[scenario_i] = [direc_net_num] + [str(scenario_i)] + ['direc']
+
+            stat['mcl_val']['df_dedup_cnt'].loc[scenario_i] = [mscmv_val_dedup_cnt] + [str(scenario_i)] + ['mcl_val']
+
+            stat['mcl_ed']['df_apv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_apv, sort='cnt')) + [str(scenario_i)] + ['mcl_ed']
+            stat['mcl_ed']['df_disapv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='cnt')) + [str(scenario_i)] + ['mcl_ed']
+            stat['mcl_ed']['df_apv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_apv, sort='pct')) + [str(scenario_i)] + ['mcl_ed']
+            stat['mcl_ed']['df_disapv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='pct')) + [str(scenario_i)] + ['mcl_ed']
+            stat['mcl_ed']['df_dedup_cnt'].loc[scenario_i] = [mscmv_ed_dedup_cnt] + [str(scenario_i)] + ['mcl_ed']
+
+            if id == len(self.monoparam.varied[self.scenario])-1:
+            # if id == 5:
+                df_dedup_cnt = pd.concat([
+                    # stat['ccs']['df_dedup_cnt'],
+                    # stat['adj']['df_dedup_cnt'],
+                    stat['direc']['df_dedup_cnt'],
+                    stat['mcl_val']['df_dedup_cnt'],
+                    stat['mcl_ed']['df_dedup_cnt'],
+                ]).reset_index(drop=True)
+                # print(df_dedup_cnt)
+                # self.plotv.n1(df_disapv=stat['direc']['df_disapv_cnt'], df_apv=stat['direc']['df_apv_cnt'])
+                # self.plotv.n1(df_disapv=stat['mcl_ed']['df_disapv_cnt'], df_apv=stat['mcl_ed']['df_apv_cnt'])
+                self.plotv.n2(df=df_dedup_cnt)
+                self.plotv.n2dist(df=df_dedup_cnt)
+                # tt[2] = tt1[0]
+                # sns.set_theme(style="ticks")
+                # tt = tt.reset_index(drop=True)
+                # # print(tt.)
+                # # sns.boxplot(x=0, y=1, data=tt,
+                # #             whis=[0, 100], width=.6, palette="vlag")
+                # # sns.stripplot(x=0, y=1, data=tt,
+                # #               size=4, color=".3", linewidth=0)
+                # # sns.jointplot(
+                # #     data=tt,
+                # #     x=0, y=2, hue=1,
+                # #     kind="kde",
+                # #     # palette='Paired'
+                # # )
+                # sd = tt.dropna()
+                #
+                # print(sd)
+                # g = sns.lmplot(
+                #     data=sd,
+                #     x=0, y=2, hue=1,
+                #     height=5
+                # )
 
 
 if __name__ == "__main__":
     p = batch(
-        # metric='pcr_nums',
-        # metric='pcr_errs',
-        metric='seq_errs',
-        # metric='ampl_rates',
-        # metric='umi_lens',
+        # scenario='pcr_nums',
+        # scenario='pcr_errs',
+        scenario='seq_errs',
+        # scenario='ampl_rates',
+        # scenario='umi_lens',
+
+        work_dir=to('data/simu/general/')
     )
     print(p.evaluate())
 

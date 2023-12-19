@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import numpy as np
 
 
-class Monomer:
+class Homotrimer:
 
     def __init__(self, ):
         pass
@@ -93,7 +93,7 @@ class Monomer:
 
 
 if __name__ == "__main__":
-    p = Monomer()
+    p = Homotrimer()
 
     print(p.file_names)
 
