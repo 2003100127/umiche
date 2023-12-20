@@ -12,7 +12,7 @@ from umiche.trim.Template import Template as trimmer
 from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
-from umiche.deduplicate.MultiPos import MultiPos as deduppos
+from umiche.deduplicate.OnePos import OnePos as dedupop
 from umiche.plot.Valid import valid as plotv
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Console import Console
@@ -76,17 +76,20 @@ class Simulation:
                     ).tobam()
                 if is_dedup:
                     self.console.print("======>reads are being deduplicated.")
-                    dedup_ob = deduppos(
-                        bam_fpn=self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam',                        pos_tag='PO',
+                    dedup_ob = dedupop(
+                        bam_fpn=self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam',
+                        # pos_tag='PO',
                         mcl_fold_thres=self.params.dedup['mcl_fold_thres'],
                         inflat_val=self.params.dedup['inflat_val'],
                         exp_val=self.params.dedup['exp_val'],
                         iter_num=self.params.dedup['iter_num'],
                         ed_thres=self.params.dedup['ed_thres'],
                         work_dir=self.params.work_dir,
+                        heterogeneity=True,
                         verbose=False,
                     )
-                    print(dedup_ob.directional().columns)
+                    # print(dedup_ob.directional())
+                    print(dedup_ob.mcl_val())
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)

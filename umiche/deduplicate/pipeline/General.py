@@ -9,8 +9,8 @@ __lab__ = "Cribbslab"
 import time
 import pandas as pd
 from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
-from umiche.deduplicate.method.Relation import relation as umirel
-from umiche.deduplicate.method.Trace import trace as umitrace
+from umiche.deduplicate.heterogeneity.Relation import relation as umirel
+from umiche.deduplicate.heterogeneity.Trace import trace as umitrace
 from umiche.deduplicate.method.Cluster import Cluster as umiclust
 from umiche.deduplicate.method.Adjacency import Adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec

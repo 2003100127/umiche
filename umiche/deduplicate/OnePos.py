@@ -35,6 +35,9 @@ class OnePos:
             iter_num=100,
             umi_='_',
             work_dir='./',
+
+            heterogeneity=False,
+
             verbose=False,
     ):
         """

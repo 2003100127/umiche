@@ -3,8 +3,9 @@ __copyright__ = "Copyright 2024"
 __license__ = "MIT"
 __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
-__email__ = "jianfeng.sunmt@gmail.com"
+__email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
+
 
 import time
 
@@ -76,11 +77,9 @@ class Tabulate:
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='uniq_repr_nodes'), axis=1)
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='uniq_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='uniq_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='uniq_repr_nodes'), axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='uniq_repr_nodes'),
+                                                       axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.gwriter.generic(
@@ -124,12 +123,10 @@ class Tabulate:
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_cc'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='cc_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='cc_repr_nodes'),
-            axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='cc_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='cc_repr_nodes'),
+                                                       axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='cc_repr_nodes'),
+                                                       axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -257,9 +254,8 @@ class Tabulate:
         # print(self.df['ave_eds'])
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),
+                                                       axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -284,8 +280,7 @@ class Tabulate:
         # )
         self.console.print('======>start writing deduplicated reads to BAM...')
         dedup_reads_write_stime = time.time()
-        self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='direc_repr_nodes'),
-                                                 axis=1)
+        self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='direc_repr_nodes'), axis=1)
         # self.aliwriter.tobam(
         #     tobam_fpn=self.work_dir + 'directional_dedup.bam',
         #     tmpl_bam_fpn=self.bam_fpn,
@@ -322,12 +317,10 @@ class Tabulate:
         #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_mcl'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),
-            axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),
+                                                       axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),
+                                                       axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -404,8 +397,7 @@ class Tabulate:
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_val_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_val_repr_nodes'), axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -429,8 +421,7 @@ class Tabulate:
         )
         self.console.print('======>start writing deduplicated reads to BAM...')
         dedup_reads_write_stime = time.time()
-        self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_val_repr_nodes'),
-                                                   axis=1)
+        self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.aliwriter.tobam(
             tobam_fpn=self.work_dir + 'mcl_val_dedup.bam',
             tmpl_bam_fpn=self.bam_fpn,
@@ -484,9 +475,8 @@ class Tabulate:
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_ed_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_ed_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_ed_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_ed_repr_nodes'),
+                                                       axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -510,8 +500,7 @@ class Tabulate:
         )
         self.console.print('======>start writing deduplicated reads to BAM...')
         dedup_reads_write_stime = time.time()
-        self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_ed_repr_nodes'),
-                                                  axis=1)
+        self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_ed_repr_nodes'), axis=1)
         self.aliwriter.tobam(
             tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
             tmpl_bam_fpn=self.bam_fpn,

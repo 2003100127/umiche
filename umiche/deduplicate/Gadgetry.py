@@ -217,7 +217,7 @@ class Gadgetry:
             by_col,
     ):
         repr_nodes = df_row[by_col]
-        print(repr_nodes)
+        # print(repr_nodes)
         node_len = len(repr_nodes)
         int_to_umi_dict = df_row['vignette']['int_to_umi_dict']
         if node_len != 1:
@@ -228,7 +228,7 @@ class Gadgetry:
                         s1=int_to_umi_dict[repr_nodes[i]],
                         s2=int_to_umi_dict[repr_nodes[j]],
                     ))
-            print(pd.Series(ed_list).value_counts())
+            # print(pd.Series(ed_list).value_counts())
             return np.ceil(sum(ed_list) / (len(ed_list)))
         else:
             return -1
