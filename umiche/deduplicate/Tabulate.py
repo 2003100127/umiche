@@ -471,6 +471,7 @@ class Tabulate:
             iter_num=iter_num,
             heterogeneity=self.heterogeneity,
         )
+        # self.df[['count', 'clusters', 'apv', 'disapv']]
         self.df['count'], self.df['clusters'], self.df['apv'], self.df['disapv'] = zip(
             *self.df.apply(
                 lambda x: self.umimcl.maxval_ed(
@@ -479,7 +480,7 @@ class Tabulate:
                         graph_adj=x['vignette']['graph_adj'],
                     ),
                     df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
-                    umi_uniq_mapped_rev=x['vignette']['int_to_umi_dict'],
+                    int_to_umi_dict=x['vignette']['int_to_umi_dict'],
                     thres_fold=mcl_fold_thres,
                 ),
                 axis=1,
@@ -487,15 +488,21 @@ class Tabulate:
         )
         # print(self.df.columns)
         # print(self.df['count'])
-        # print(self.df['clusters'])
+        # print(self.df['clusters'].values[0])
+        # print(self.df['clusters'].values[0].tolist())
+        # print(self.df['apv'].values[0])
+        # print(self.df['disapv'].values[0])
         self.df['mcl_ed'] = self.df.apply(
             lambda x: self.umimcl.decompose(
                 list_nd=x['clusters'].values,
+                # list_nd=x['clusters'].values[0].tolist(),
             ),
             axis=1,
         )
+        # print(self.df['mcl_ed'])
         self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_ed'), axis=1)
         self.df['dedup_cnt'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        # print(self.df['dedup_cnt'])
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')

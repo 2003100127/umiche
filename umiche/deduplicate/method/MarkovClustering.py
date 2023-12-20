@@ -273,7 +273,7 @@ class MarkovClustering:
             self,
             df_mcl_ccs,
             df_umi_uniq_val_cnt,
-            umi_uniq_mapped_rev,
+            int_to_umi_dict,
             thres_fold,
     ):
         """
@@ -282,7 +282,7 @@ class MarkovClustering:
         ----------
         df_mcl_ccs
         df_umi_uniq_val_cnt
-        umi_uniq_mapped_rev
+        int_to_umi_dict
         thres_fold
 
         Returns
@@ -293,7 +293,7 @@ class MarkovClustering:
             lambda x: self.maxval_ed_(
                 mcl_clusters_per_cc=x,
                 df_umi_uniq_val_cnt=df_umi_uniq_val_cnt,
-                umi_uniq_mapped_rev=umi_uniq_mapped_rev,
+                int_to_umi_dict=int_to_umi_dict,
                 thres_fold=thres_fold,
             )
         )
@@ -303,12 +303,15 @@ class MarkovClustering:
         df_mcl_ccs['mscmv_ed_disapv'] = df_mcl_ccs['mscmv_ed'].apply(lambda x: x[3])
         # print(df_mcl_ccs['mscmv_ed_len'].sum())
         # print(df_mcl_ccs[['mscmv_ed_clusters', 'mscmv_ed_disapv', ]])
+        # print(df_mcl_ccs['mscmv_ed_clusters'])
+        # print('mscmv_ed_apv', df_mcl_ccs['mscmv_ed_apv'])
+        # print('mscmv_ed_disapv', df_mcl_ccs['mscmv_ed_disapv'])
         if self.heterogeneity:
             return (
                 df_mcl_ccs['mscmv_ed_len'],
                 df_mcl_ccs['mscmv_ed_clusters'],
                 df_mcl_ccs['mscmv_ed_apv'],
-                df_mcl_ccs['mscmv_ed_disapv'],
+                df_mcl_ccs['mscmv_ed_disapv']
             )
         else:
             return {
@@ -322,7 +325,7 @@ class MarkovClustering:
             self,
             mcl_clusters_per_cc,
             df_umi_uniq_val_cnt,
-            umi_uniq_mapped_rev,
+            int_to_umi_dict,
             thres_fold,
     ):
         """
@@ -330,8 +333,8 @@ class MarkovClustering:
         #     for k2, v2 in mcl_sub_clust_max_val_weights.items():
         #         if k1 != k2:
         #             edh = Hamming().general(
-        #                 umi_uniq_mapped_rev[k1],
-        #                 umi_uniq_mapped_rev[k2],
+        #                 int_to_umi_dict[k1],
+        #                 int_to_umi_dict[k2],
         #             )
         #             if edh <= thres_fold:
         #                 mcl_sub_clust_max_val_graph[k1].add(k2)
@@ -353,7 +356,7 @@ class MarkovClustering:
             C      2
             F      1
             dtype: int64
-        umi_uniq_mapped_rev
+        int_to_umi_dict
             {'A': 'AGATCTCGCA', 'B': 'AGATCCCGCA', 'C': 'AGATCACGCA', 'D': 'AGATCGCGCA', 'E': 'AGATCGCGGA', 'F': 'AGATCGCGTA', 'G': 'TGATCGCGAA'}
         thres_fold
             1
@@ -373,7 +376,7 @@ class MarkovClustering:
         # C      2
         # F      1
         # dtype: int64
-        ### @@ umi_uniq_mapped_rev
+        ### @@ int_to_umi_dict
         # {'A': 'AGATCTCGCA', 'B': 'AGATCCCGCA', 'C': 'AGATCACGCA', 'D': 'AGATCGCGCA', 'E': 'AGATCGCGGA', 'F': 'AGATCGCGTA', 'G': 'TGATCGCGAA'}
         ### @@ thres_fold
         # 1
@@ -397,8 +400,8 @@ class MarkovClustering:
                 node_i = mscmv_nodes[i]
                 node_j = mscmv_nodes[j]
                 edh = Hamming().general(
-                    umi_uniq_mapped_rev[node_i],
-                    umi_uniq_mapped_rev[node_j],
+                    int_to_umi_dict[node_i],
+                    int_to_umi_dict[node_j],
                 )
                 if edh <= thres_fold:
                     mcl_sub_clust_max_val_graph[node_i].add(node_j)
@@ -478,6 +481,7 @@ class MarkovClustering:
         res = {}
         for i, cc_sub_each_mcl in enumerate(list_md):
             res[i] = cc_sub_each_mcl
+        # print(res)
         return res
 
     def get_full_subcc(
@@ -595,10 +599,12 @@ if __name__ == "__main__":
         df_mcl_ccs=df,
         df_umi_uniq_val_cnt=node_val_sorted,
         thres_fold=1,
-        umi_uniq_mapped_rev=int_to_umi_dict,
+        int_to_umi_dict=int_to_umi_dict,
     )
     dedup_count = df_mcl_ed['count']
     dedup_clusters = df_mcl_ed['clusters']
+    print('asdasd',df_mcl_ed['apv'])
+
     print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
     print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
 

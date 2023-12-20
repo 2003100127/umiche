@@ -99,6 +99,10 @@ class Simulation:
                     # print(df.dedup_cnt.values[0])
                     # print(df.apv.values)
 
+                    # print(df.apv)
+                    # print(df.apv.values[0])
+                    # df.apv.tolist()[0].to_csv('./asdsad', sep='\t', index=False)
+
                     from umiche.bam.Relation import Relation as umirel
                     umiold = umirel(
                         df=dedup_ob.df_bam,
@@ -111,23 +115,24 @@ class Simulation:
                         umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
                     )
 
-                    series_2d_arr_apv = umiidtrace.format_apv_disapv(df.apv.values[0])
-                    series_2d_arr_disapv = umiidtrace.format_apv_disapv(df.disapv.values[0])
+                    # series_2d_arr_apv = umiidtrace.format_apv_disapv(df.apv.values[0])
+                    # series_2d_arr_disapv = umiidtrace.format_apv_disapv(df.disapv.values[0])
+                    series_2d_arr_apv = df.apv.values[0]
+                    series_2d_arr_disapv = df.disapv.values[0]
                     # print(series_2d_arr_apv)
                     # print(series_2d_arr_disapv)
 
-                    ttt1 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt').values()] + [str(scenario_i)] + ['direc']
-                    ttt2 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt').values()] + [str(scenario_i)] + ['direc']
+                    ttt1 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt').values()] + [str(scenario_i)] + [self.method]
+                    ttt2 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt').values()] + [str(scenario_i)] + [self.method]
 
-                    stat['direc']['df_apv_cnt'].loc[scenario_i] = ttt1
-                    stat['direc']['df_disapv_cnt'].loc[scenario_i] = ttt1
+                    stat[self.method]['df_apv_cnt'].loc[scenario_i] = ttt1
+                    stat[self.method]['df_disapv_cnt'].loc[scenario_i] = ttt2
 
-                    print(stat['direc']['df_apv_cnt'])
-                    # print('12312', ttt1)
-                    # print('12312', ttt2)
+                    print(stat[self.method]['df_apv_cnt'])
+
                     self.plotv.n1(
-                        df_apv=stat['direc']['df_apv_cnt'],
-                        df_disapv=stat['direc']['df_disapv_cnt'],
+                        df_apv=stat[self.method]['df_apv_cnt'],
+                        df_disapv=stat[self.method]['df_disapv_cnt'],
                     )
 
                     # print(list())
@@ -157,35 +162,7 @@ class Simulation:
 
     def statistics(self, ):
         return {
-            'ccs': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
-            },
-            'adj': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
-            },
-            'direc': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
-            },
-            'mcl_val': {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
-            },
-            'mcl_ed': {
+            self.method: {
                 'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
                 'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
                 'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
@@ -199,18 +176,18 @@ if __name__ == "__main__":
     from umiche.path import to
 
     p = Simulation(
-        # scenario='pcr_nums',
+        scenario='pcr_nums',
         # scenario='pcr_errs',
-        scenario='seq_errs',
+        # scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
 
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
-        # method='mcl_val',
+        method='mcl_val',
         # method='mcl_ed',
         # method='set_cover',
 

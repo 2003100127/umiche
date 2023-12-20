@@ -219,7 +219,7 @@ if __name__ == "__main__":
         df_mcl_ccs=df_mcl,
         df_umi_uniq_val_cnt=node_val_sorted,
         thres_fold=1,
-        umi_uniq_mapped_rev=int_to_umi_dict,
+        int_to_umi_dict=int_to_umi_dict,
     )
     dedup_res_mcl_ed_dc = mcl.decompose(list_nd=df_mcl_ed['clusters'].values)
     print("deduplicated clusters decomposed (mcl_ed):\n{}".format(dedup_res_mcl_ed_dc))

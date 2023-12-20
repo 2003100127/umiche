@@ -200,7 +200,7 @@ class Trace:
         # cc_47    {'node_59': [[59, 106], [59, 133], [59, 180], ...
         # cc_48       {'node_63': [[63, 101], [63, 219], [63, 238]]}
         cc_decomposed_2d_series  = cc_series.apply(lambda x: self.dictTo2d(x))
-        ### @@ cc_2d_series
+        ### @@ cc_decomposed_2d_series
         # cc_0     [[0, 65], [65, 55], [65, 188], [65, 190], [0, ...
         # cc_1     [[36, 1], [36, 46], [46, 183], [36, 103], [103...
         # cc_2     [[33, 2], [33, 30], [30, 215], [33, 73], [73, ...
@@ -227,7 +227,10 @@ class Trace:
             within which 2D lists of different nodes are decomposed into 1d list.
 
         """
-        node_list_3d = [*x.values()]
+        if isinstance(x , dict):
+            node_list_3d = [*x.values()]
+        else:
+            node_list_3d = []
         ### @@ node_list_3d
         # [[[0, 65], [65, 55], [65, 188], [65, 190], [0, 76], [0, 162], [0, 237], [0, 256]]]
         # [[[36, 1], [36, 46], [46, 183], [36, 103], [103, 216], [36, 108], [36, 121], [121, 142], [36, 197]]]
