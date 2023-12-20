@@ -138,9 +138,24 @@ class Directional:
                 node_set_remaining = node_set_remaining - seen
                 # print('remaining: {}'.format(node_set_remaining))
                 # print('disapproval {}'.format(disapv))
+                ### @@ print('disapproval {}'.format(disapv))
+                # disapproval []
+                # disapproval [[183, 103]]
+                # disapproval [[131, 4], [131, 147]]
+                # ...
+                # disapproval [[133, 194]]
+                # disapproval []
             else:
                 continue
-        # print(disapv_node_nbr)
+        ### @@ disapv_node_nbr
+        # {'node_0': []}
+        # {'node_36': [[183, 103]]}
+        # {'node_29': [[131, 4], [131, 147]], 'node_4': []}
+        # {'node_7': []}
+        # {'node_28': [[8, 57]]}
+        # ...
+        # {'node_59': [[133, 194]]}
+        # {'node_63': []}
         return cc_sub, apv_node_nbr, disapv_node_nbr
 
     def dfs(

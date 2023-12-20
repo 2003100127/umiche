@@ -45,7 +45,7 @@ class valid:
 
         # ax[1].set_xlabel('Time (ps)', fontsize=14)
         ax[1].set_xticks(df_apv.index)
-        ax[1].set_xticklabels(df_apv['metric'].apply(lambda x: 'PCR #' + x), fontsize=7, rotation=30)
+        # ax[1].set_xticklabels(df_apv['metric'].apply(lambda x: 'PCR #' + x), fontsize=7, rotation=30)
         ax[1].set_ylabel('number of pairwise \nunique UMIs', fontsize=11)
         ax[1].set_title('Merged', fontsize=12)
         ax[1].spines['right'].set_visible(False)

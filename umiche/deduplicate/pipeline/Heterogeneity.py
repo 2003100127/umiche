@@ -43,10 +43,14 @@ class Simulation:
         self.console = Console()
         self.console.verbose = self.verbose
 
+
         df_dedup = pd.DataFrame()
         for perm_num_i in range(self.params.fixed['permutation_num']):
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
+
+            stat = self.statistics()
+
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 if self.scenario == 'pcr_nums':
                     self.fn_mark = str(scenario_i)
@@ -104,20 +108,29 @@ class Simulation:
 
                     umiidtrace = umitrace(
                         df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
-                        umi_trace_dict=umiold.umi_id_to_origin_id_dict,
+                        umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
                     )
 
-                    df_direc_apv = umiidtrace.formatApvsDisapv(df.apv.values[0])
-                    df_direc_disapv = umiidtrace.formatApvsDisapv(df.disapv.values[0])
-                    # print(df_direc_apv)
-                    # print(df_direc_disapv)
+                    series_2d_arr_apv = umiidtrace.format_apv_disapv(df.apv.values[0])
+                    series_2d_arr_disapv = umiidtrace.format_apv_disapv(df.disapv.values[0])
+                    # print(series_2d_arr_apv)
+                    # print(series_2d_arr_disapv)
 
-                    ttt = umiidtrace.edge_class(df_list_2d=df_direc_apv, sort='cnt')
-                    print(ttt)
+                    ttt1 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt').values()] + [str(scenario_i)] + ['direc']
+                    ttt2 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt').values()] + [str(scenario_i)] + ['direc']
 
-                    # umiidtrace.edge_class(df_list_2d=df_direc_disapv, sort='cnt')
+                    stat['direc']['df_apv_cnt'].loc[scenario_i] = ttt1
+                    stat['direc']['df_disapv_cnt'].loc[scenario_i] = ttt1
 
-                    # print(list() + [str(scenario_i)] + ['direc'])
+                    print(stat['direc']['df_apv_cnt'])
+                    # print('12312', ttt1)
+                    # print('12312', ttt2)
+                    self.plotv.n1(
+                        df_apv=stat['direc']['df_apv_cnt'],
+                        df_disapv=stat['direc']['df_disapv_cnt'],
+                    )
+
+                    # print(list())
                     # print(list() + [str(scenario_i)] + ['direc'])
                     # print(df.disapv.values)
                     # print(df.direc.values)
