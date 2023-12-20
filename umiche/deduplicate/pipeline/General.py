@@ -9,8 +9,8 @@ __lab__ = "Cribbslab"
 import time
 import pandas as pd
 from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
-from umiche.deduplicate.heterogeneity.Relation import relation as umirel
-from umiche.deduplicate.heterogeneity.Trace import trace as umitrace
+from umiche.align.Relation import relation as umirel
+from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
 from umiche.deduplicate.method.Cluster import Cluster as umiclust
 from umiche.deduplicate.method.Adjacency import Adjacency as umitoolmonoadj
 from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec
@@ -109,9 +109,7 @@ class batch():
             )
 
             umiidtrace = umitrace(
-                df_fastq=umiche.df_fastq,
                 df_umi_uniq_val_cnt=umiche.df_umi_uniq_val_cnt,
-                umi_uniq_mapped_rev=umiche.umi_uniq_mapped_rev,
                 umi_trace_dict=umiche.umi_trace_dict,
             )
 
@@ -204,6 +202,7 @@ class batch():
             df_direc_apv = umitooldirec.formatApvsDisapv(direc_cc_apvs)
             df_direc_disapv = umitooldirec.formatApvsDisapv(direc_cc_disapvs)
             stat['direc']['df_apv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(scenario_i)] + ['direc']
+            print('1123', list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(scenario_i)] + ['direc'])
             stat['direc']['df_disapv_cnt'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_disapv, sort='cnt')) + [str(scenario_i)] + ['direc']
             stat['direc']['df_apv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='pct')) + [str(scenario_i)] + ['direc']
             stat['direc']['df_disapv_pct'].loc[scenario_i] = list(umiidtrace.edgecls(df_list_2d=mscmv_ed_disapv, sort='pct')) + [str(scenario_i)] + ['direc']

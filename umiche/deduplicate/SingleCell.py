@@ -10,9 +10,9 @@ import time
 import sys
 import pandas as pd
 
-from umiche.align.Read import read as aliread
+from umiche.bam.Reader import Reader as alireader
 
-from umiche.deduplicate.Build import Build as umibuild
+from umiche.bam.Build import Build as umibuild
 from umiche.deduplicate.Gadgetry import Gadgetry as umigadgetry
 from umiche.deduplicate.Tabulate import Tabulate as umitab
 
@@ -88,7 +88,7 @@ class SingleCell:
 
         # sys.stdout = open(self.work_dir + self.method + '_log.txt', 'w')
 
-        self.alireader = aliread(bam_fpn=self.bam_fpn, verbose=self.verbose)
+        self.alireader = alireader(bam_fpn=self.bam_fpn, verbose=self.verbose)
         self.df_bam = self.alireader.todf(tags=[self.gene_assigned_tag, self.gene_is_assigned_tag, 'BC'])
         ### @@ self.df_bam
         #           id  ... query_qualities

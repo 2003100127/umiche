@@ -1,12 +1,22 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import time
 import numpy as np
 
 
-class trace:
+class Trace:
 
-    def __init__(self, df_fastq, df_umi_uniq_val_cnt, umi_uniq_mapped_rev, umi_trace_dict):
-        self.df_fastq = df_fastq
-        self.umi_uniq_mapped_rev = umi_uniq_mapped_rev
+    def __init__(
+            self,
+            df_umi_uniq_val_cnt,
+            umi_trace_dict,
+    ):
         self.df_umi_uniq_val_cnt = df_umi_uniq_val_cnt
         self.umi_trace_dict = umi_trace_dict
 
@@ -16,7 +26,7 @@ class trace:
         res = df_list_2d.apply(
             lambda list_2d: self.by01(list_2d),
         )
-        # print(res)
+        print(res)
         if sort == 'cnt':
             total = res.apply(lambda x: len(x))
             total_0 = res.apply(lambda x: sum(1 for ele in x if ele == 0))

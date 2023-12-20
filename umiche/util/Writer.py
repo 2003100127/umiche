@@ -10,7 +10,7 @@ import pandas as pd
 from functools import wraps
 
 
-class writer:
+class Writer:
 
     def __call__(self, deal):
         generic = self.generic

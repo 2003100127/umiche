@@ -13,7 +13,7 @@ from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.pipeline import Config
-from umiche.deduplicate.heterogeneity.Relation import relation as umimonorel
+from umiche.align.Relation import relation as umimonorel
 from umiche.deduplicate.heterogeneity.Trace import trace as umimonotrace
 from umiche.deduplicate.MultiPos import dedupPos
 from umiche.deduplicate.method.old.Cluster import cluster as umimonoclust

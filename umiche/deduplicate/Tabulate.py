@@ -8,7 +8,7 @@ __lab__ = "Cribbslab"
 
 import time
 
-from umiche.align.Write import write as aliwrite
+from umiche.bam.Writer import Writer as aliwriter
 
 from umiche.deduplicate.Gadgetry import Gadgetry as umigadgetry
 
@@ -18,7 +18,7 @@ from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
 from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
-from umiche.util.Writer import writer as gwriter
+from umiche.util.Writer import Writer as gwriter
 from umiche.util.Console import Console
 
 
@@ -39,7 +39,7 @@ class Tabulate:
         self.work_dir = work_dir
         self.heterogeneity = heterogeneity
 
-        self.aliwriter = aliwrite(df=self.df_bam)
+        self.aliwriter = aliwriter(df=self.df_bam)
 
         self.umigadgetry = umigadgetry()
 

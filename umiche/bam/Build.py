@@ -246,20 +246,3 @@ class Build:
                 ])
         # print(len(eds))
         return eds
-
-    def pcrnum(self, x):
-        """
-
-        Parameters
-        ----------
-        x
-
-        Returns
-        -------
-
-        """
-        c = x.split('_')[0].split('-')
-        if c[1] == 'init':
-            return -1
-        else:
-            return c[2]

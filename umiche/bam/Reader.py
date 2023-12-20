@@ -13,9 +13,13 @@ from umiche.util.Console import Console
 # import bamnostic as bs
 
 
-class read:
+class Reader:
 
-    def __init__(self, bam_fpn, verbose=False):
+    def __init__(
+            self,
+            bam_fpn,
+            verbose=False,
+    ):
         """
         # pos_last = 0
         # chr_last = 0
@@ -206,7 +210,7 @@ class read:
 if __name__ == "__main__":
     from umiche.path import to
 
-    umiche = read(
+    umiche = Reader(
         # bam_fpn=to('data/example.bam'),
         # bam_fpn=to('data/example_bundle1.bam'),
         bam_fpn=to('data/hgmm_100_STAR_FC_sorted.bam'),

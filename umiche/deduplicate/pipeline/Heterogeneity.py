@@ -14,9 +14,10 @@ from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.OnePos import OnePos as dedupop
 from umiche.plot.Valid import valid as plotv
-from umiche.util.Writer import writer as gwriter
+from umiche.util.Writer import Writer as gwriter
 from umiche.util.Console import Console
 
+from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
 
 class Simulation:
 
@@ -90,17 +91,30 @@ class Simulation:
                     )
                     df = self.tool(dedup_ob)[self.method]()
                     # print(dedup_ob.directional())
-                    print(df.columns)
-                    print(df.dedup_cnt.values[0])
+                    # print(df.columns)
+                    # print(df.dedup_cnt.values[0])
 
-                    print(df.apv.values)
+                    # print(df.apv.values)
                     from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec
 
                     umitooldirec = umitoolmonodirec()
 
                     df_direc_apv = umitooldirec.formatApvsDisapv(df.apv.values[0])
-                    print(df_direc_apv)
+                    df_direc_disapv = umitooldirec.formatApvsDisapv(df.disapv.values[0])
+                    # print(df_direc_apv)
 
+                    from umiche.bam.Relation import Relation as umirel
+                    umiold = umirel(
+                        df=dedup_ob.df_bam
+                    )
+                    # print('jsun', umiold.umi_trace_dict)
+                    umiidtrace = umitrace(
+                        df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
+                        umi_trace_dict=umiold.umi_id_to_origin_id_dict,
+                    )
+                    print(dedup_ob.df_bam.columns)
+                    print(list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(scenario_i)] + ['direc'])
+                    print(list(umiidtrace.edgecls(df_list_2d=df_direc_disapv, sort='cnt')) + [str(scenario_i)] + ['direc'])
                     # print(df.disapv.values)
                     # print(df.direc.values)
                     # dedup_arr.append(dedup_ob.dedup_num)

@@ -10,7 +10,7 @@ import pysam
 from umiche.util.Console import Console
 
 
-class write:
+class Writer:
 
     def __init__(
             self,
