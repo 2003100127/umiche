@@ -1,36 +1,43 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
 
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-class valid:
+class Heterogeneity:
 
     def n1(self, df_disapv, df_apv):
         fig, ax = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
         ax[0].plot(
             df_disapv.index,
-            df_disapv['0'],
+            df_disapv['diff_origin'],
             label='different',
             color='cornflowerblue',
             lw=3,
         )
         ax[0].plot(
             df_disapv.index,
-            df_disapv['1'],
+            df_disapv['same_origin'],
             label='same',
             color='salmon',
             lw=3,
         )
         ax[1].plot(
             df_apv.index,
-            df_apv['0'],
+            df_apv['diff_origin'],
             label='different',
             color='cornflowerblue',
             lw=3,
         )
         ax[1].plot(
             df_apv.index,
-            df_apv['1'],
+            df_apv['same_origin'],
             label='same',
             color='salmon',
             lw=3,

@@ -13,7 +13,7 @@ from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
-from umiche.plot.Valid import valid as plotv
+from umiche.plot.Heterogeneity import valid as plotv
 from umiche.util.Writer import writer as gwriter
 from umiche.util.Console import Console
 

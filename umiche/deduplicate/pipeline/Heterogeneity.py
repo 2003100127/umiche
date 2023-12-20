@@ -12,7 +12,7 @@ from umiche.trim.Template import Template as trimmer
 from umiche.fastq.Convert import Convert as fastqconverter
 
 from umiche.deduplicate.OnePos import OnePos as dedupop
-from umiche.plot.Valid import valid as plotv
+from umiche.plot.Heterogeneity import Heterogeneity as plothetero
 from umiche.util.Writer import Writer as fwriter
 
 from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
@@ -37,20 +37,21 @@ class Simulation:
 
         self.params = params(param_fpn=param_fpn)
         self.fwriter = fwriter()
-        self.plotv = plotv()
+        self.plothetero = plothetero()
 
         self.verbose = verbose
         self.console = Console()
         self.console.verbose = self.verbose
 
-
         df_dedup = pd.DataFrame()
+        columns = ['diff_origin', 'same_origin', 'total', 'scenario', 'method', 'permutation']
+        self.df_apv_cnt = pd.DataFrame(columns=columns)
+        self.df_disapv_cnt = pd.DataFrame(columns=columns)
+        self.df_apv_pct = pd.DataFrame(columns=columns)
+        self.df_disapv_pct = pd.DataFrame(columns=columns)
         for perm_num_i in range(self.params.fixed['permutation_num']):
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
-
-            stat = self.statistics()
-
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 if self.scenario == 'pcr_nums':
                     self.fn_mark = str(scenario_i)
@@ -121,24 +122,32 @@ class Simulation:
                     series_2d_arr_disapv = df.disapv.values[0]
                     # print(series_2d_arr_apv)
                     # print(series_2d_arr_disapv)
+                    apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
+                    disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')
+                    apv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='pct')
+                    disapv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='pct')
+                    apv_cnt_dict['permutation'], apv_cnt_dict['method'], apv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    disapv_cnt_dict['permutation'], disapv_cnt_dict['method'], disapv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    apv_pct_dict['permutation'], apv_pct_dict['method'], apv_pct_dict[
+                        'scenario'] = perm_num_i, self.method, scenario_i
+                    disapv_pct_dict['permutation'], disapv_pct_dict['method'], disapv_pct_dict[
+                        'scenario'] = perm_num_i, self.method, scenario_i
 
-                    ttt1 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt').values()] + [str(scenario_i)] + [self.method]
-                    ttt2 = [*umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt').values()] + [str(scenario_i)] + [self.method]
+                    # print(self.df_stat)
+                    self.df_apv_cnt = pd.concat([self.df_apv_cnt, pd.DataFrame.from_dict(apv_cnt_dict, orient='index').T])
+                    self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T])
+                    self.df_apv_pct = pd.concat([self.df_apv_pct, pd.DataFrame.from_dict(apv_pct_dict, orient='index').T])
+                    self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T])
+                    print(self.df_apv_pct)
+                    # self.df_stat['df_apv_cnt'].loc[scenario_i] = ttt1
+                    # self.df_stat['df_disapv_cnt'].loc[scenario_i] = ttt2
+                    #
+                    # print(self.df_stat['df_apv_cnt'])
 
-                    stat[self.method]['df_apv_cnt'].loc[scenario_i] = ttt1
-                    stat[self.method]['df_disapv_cnt'].loc[scenario_i] = ttt2
-
-                    print(stat[self.method]['df_apv_cnt'])
-
-                    self.plotv.n1(
-                        df_apv=stat[self.method]['df_apv_cnt'],
-                        df_disapv=stat[self.method]['df_disapv_cnt'],
-                    )
-
-                    # print(list())
-                    # print(list() + [str(scenario_i)] + ['direc'])
-                    # print(df.disapv.values)
-                    # print(df.direc.values)
+                    # self.plothetero.n1(
+                    #     df_apv=self.df_stat['df_apv_cnt'],
+                    #     df_disapv=self.df_stat['df_apv_cnt'],
+                    # )
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
@@ -159,17 +168,15 @@ class Simulation:
             'mcl_ed': dedup_ob.mcl_ed,
             # 'set_cover': dedup_ob.set_cover,
         }
-
-    def statistics(self, ):
+    @property
+    def df_stat(self, ):
         return {
-            self.method: {
-                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
-                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
-                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
-            },
-        }
+            i: pd.DataFrame(columns=['diff_origin', 'same_origin', 'total']) for i in [
+                'df_apv_cnt',
+                'df_disapv_cnt',
+                'df_disapv_pct',
+                'df_disapv_pct',
+            ]}
 
 
 if __name__ == "__main__":

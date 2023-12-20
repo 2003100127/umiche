@@ -13,7 +13,7 @@ from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.pipeline import Config
 from umiche.deduplicate.Gene import dedupGene
-from umiche.plot.Valid import valid as plotv
+from umiche.plot.Heterogeneity import valid as plotv
 from umiche.path import to
 
 

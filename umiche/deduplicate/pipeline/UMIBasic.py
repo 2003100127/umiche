@@ -21,7 +21,7 @@ from umiche.deduplicate.method.old.Adjacency import adjacency as umitoolmonoadj
 from umiche.deduplicate.method.old.Directional import directional as umitoolmonodirec
 from umiche.deduplicate.method.old.MarkovClustering import markovClustering as umimonomcl
 from umiche.deduplicate.method.DBSCAN import dbscan as dbsc
-from umiche.plot.Valid import valid as plotv
+from umiche.plot.Heterogeneity import valid as plotv
 from umiche.path import to
 
 

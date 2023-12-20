@@ -63,26 +63,32 @@ class Trace:
         # cc_47                [1, 1, 1, 1, 1]
         # cc_48                      [1, 1, 1]
         if sort == 'cnt':
-            total = series_origin.apply(lambda x: len(x))
-            total_0 = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0))
-            total_1 = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1))
-            total_lens = total.sum()
-            total_0_lens = total_0.sum()
-            total_1_lens = total_1.sum()
+            total_len = series_origin.apply(lambda x: len(x))
+            series_diff_cnt = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0))
+            series_same_cnt = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1))
+            cnt_total = total_len.sum()
+            cnt_diff_origin = series_diff_cnt.sum()
+            cnt_same_origin = series_same_cnt.sum()
             self.console.print('==================>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
             return {
-                'total_0_lens': total_0_lens,
-                'total_1_lens': total_1_lens,
-                'total_lens': total_lens,
+                'diff_origin': cnt_diff_origin,
+                'same_origin': cnt_same_origin,
+                'total': cnt_total,
             }
         elif sort == 'pct':
-            total_0_pcts = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else None)
-            total_1_pcts = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1) / len(x) if len(x) != 0 else None)
-            print(total_0_pcts)
-            # print(total_0_pcts.loc[total_0_pcts != None])
-            # print(total_1_pcts.loc[total_1_pcts != None])
+            series_diff_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else None)
+            series_same_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1) / len(x) if len(x) != 0 else None)
+            # print(series_diff_pct)
+            series_diff_pct = series_diff_pct.loc[series_diff_pct != None]
+            series_same_pct = series_same_pct.loc[series_same_pct != None]
+            pct_diff_origin = series_diff_pct.mean()
+            pct_same_origin = series_same_pct.mean()
             self.console.print('==================>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
-            return total_0_pcts, total_1_pcts
+            return {
+                'diff_origin': pct_diff_origin,
+                'same_origin': pct_same_origin,
+                'total': 1,
+            }
 
     def is_same_origin(self, arr_2d):
         """
