@@ -196,62 +196,6 @@ class Directional:
         # {'cc_0': {'node_A': [['B', 'C'], ['D', 'E']], 'node_E': []}}
         return visited, approval, disapproval
 
-    def formatApvsDisapv(
-            self,
-            cc_dict,
-    ):
-        """
-        the format of input to the directional method in umi-tools
-
-        Parameters
-        ----------
-        cc_dict
-
-        Returns
-        -------
-
-        """
-        cc_lvl_df = pd.Series(cc_dict)
-        return cc_lvl_df.apply(lambda x: self.dictTo2d(x))
-
-    def dictTo2d(
-            self,
-            x,
-    ):
-        """
-
-        Parameters
-        ----------
-        x
-
-        Returns
-        -------
-
-        """
-        node_list_3d = [*x.values()]
-        # print(node_list_3d)
-        res_2d = []
-        for i in node_list_3d:
-            res_2d = res_2d + i
-        return res_2d
-
-    def formatCCS(
-            self,
-            cc_dict,
-    ):
-        """
-
-        Parameters
-        ----------
-        cc_dict
-
-        Returns
-        -------
-
-        """
-        cc_lvl_df = pd.Series(cc_dict)
-        return cc_lvl_df.apply(lambda x: [*x.values()])
-
     def decompose(
             self,
             cc_sub_dict,

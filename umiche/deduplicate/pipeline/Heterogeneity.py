@@ -7,17 +7,18 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import pandas as pd
-from umiche.fastq.Convert import Convert as fastqconverter
-from umiche.trim.Template import Template as trimmer
-from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
+from umiche.trim.Template import Template as trimmer
+from umiche.fastq.Convert import Convert as fastqconverter
 
 from umiche.deduplicate.OnePos import OnePos as dedupop
 from umiche.plot.Valid import valid as plotv
-from umiche.util.Writer import Writer as gwriter
-from umiche.util.Console import Console
+from umiche.util.Writer import Writer as fwriter
 
 from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
+
+from umiche.util.Console import Console
+
 
 class Simulation:
 
@@ -35,8 +36,7 @@ class Simulation:
         self.method = method
 
         self.params = params(param_fpn=param_fpn)
-        self.gbfscc = gbfscc()
-        self.gwriter = gwriter()
+        self.fwriter = fwriter()
         self.plotv = plotv()
 
         self.verbose = verbose
@@ -93,34 +93,38 @@ class Simulation:
                     # print(dedup_ob.directional())
                     # print(df.columns)
                     # print(df.dedup_cnt.values[0])
-
                     # print(df.apv.values)
-                    from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec
-
-                    umitooldirec = umitoolmonodirec()
-
-                    df_direc_apv = umitooldirec.formatApvsDisapv(df.apv.values[0])
-                    df_direc_disapv = umitooldirec.formatApvsDisapv(df.disapv.values[0])
-                    # print(df_direc_apv)
 
                     from umiche.bam.Relation import Relation as umirel
                     umiold = umirel(
-                        df=dedup_ob.df_bam
+                        df=dedup_ob.df_bam,
+                        verbose=self.verbose,
                     )
                     # print('jsun', umiold.umi_trace_dict)
+
                     umiidtrace = umitrace(
                         df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
                         umi_trace_dict=umiold.umi_id_to_origin_id_dict,
                     )
-                    print(dedup_ob.df_bam.columns)
-                    print(list(umiidtrace.edgecls(df_list_2d=df_direc_apv, sort='cnt')) + [str(scenario_i)] + ['direc'])
-                    print(list(umiidtrace.edgecls(df_list_2d=df_direc_disapv, sort='cnt')) + [str(scenario_i)] + ['direc'])
+
+                    df_direc_apv = umiidtrace.formatApvsDisapv(df.apv.values[0])
+                    df_direc_disapv = umiidtrace.formatApvsDisapv(df.disapv.values[0])
+                    # print(df_direc_apv)
+                    # print(df_direc_disapv)
+
+                    ttt = umiidtrace.edge_class(df_list_2d=df_direc_apv, sort='cnt')
+                    print(ttt)
+
+                    # umiidtrace.edge_class(df_list_2d=df_direc_disapv, sort='cnt')
+
+                    # print(list() + [str(scenario_i)] + ['direc'])
+                    # print(list() + [str(scenario_i)] + ['direc'])
                     # print(df.disapv.values)
                     # print(df.direc.values)
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
-        # self.gwriter.generic(
+        # self.fwriter.generic(
         #     df=df_dedup,
         #     sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
         #     header=True,
@@ -137,7 +141,6 @@ class Simulation:
             'mcl_ed': dedup_ob.mcl_ed,
             # 'set_cover': dedup_ob.set_cover,
         }
-
 
     def statistics(self, ):
         return {

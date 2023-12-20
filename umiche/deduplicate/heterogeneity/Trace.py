@@ -7,7 +7,8 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import time
-import numpy as np
+import pandas as pd
+from umiche.util.Console import Console
 
 
 class Trace:
@@ -16,17 +17,25 @@ class Trace:
             self,
             df_umi_uniq_val_cnt,
             umi_trace_dict,
+            verbose=False,
     ):
         self.df_umi_uniq_val_cnt = df_umi_uniq_val_cnt
         self.umi_trace_dict = umi_trace_dict
 
-    def edgecls(self, df_list_2d, sort='cnt'):
+        self.console = Console()
+        self.console.verbose = verbose
+
+    def edge_class(
+            self,
+            df_list_2d,
+            sort='cnt',
+    ):
         stime = time.time()
-        print('======>edges to be traced is {}'.format(df_list_2d.shape[0]))
+        self.console.print('==================>edges to be traced is {}'.format(df_list_2d.shape[0]))
         res = df_list_2d.apply(
-            lambda list_2d: self.by01(list_2d),
+            lambda x: self.by01(x),
         )
-        print(res)
+        print('res',res)
         if sort == 'cnt':
             total = res.apply(lambda x: len(x))
             total_0 = res.apply(lambda x: sum(1 for ele in x if ele == 0))
@@ -34,13 +43,14 @@ class Trace:
             total_lens = total.sum()
             total_0_lens = total_0.sum()
             total_1_lens = total_1.sum()
-            print('======>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
+            self.console.print('==================>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
             return total_0_lens, total_1_lens, total_lens
         elif sort == 'pct':
             total_0_pcts = res.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else None)
             total_1_pcts = res.apply(lambda x: sum(1 for ele in x if ele == 1) / len(x) if len(x) != 0 else None)
             # print(total_0_pcts.loc[total_0_pcts != None])
             # print(total_1_pcts.loc[total_1_pcts != None])
+            self.console.print('==================>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
             return total_0_pcts, total_1_pcts
 
     def by01(self, list_2d):
@@ -104,3 +114,59 @@ class Trace:
                 repr_max_nodes = repr_max_nodes + umi_ori_max_nodes
         # print(len(repr_max_nodes))
         return repr_max_nodes
+
+    def formatApvsDisapv(
+            self,
+            cc_dict,
+    ):
+        """
+        the format of input to the directional method in umi-tools
+
+        Parameters
+        ----------
+        cc_dict
+
+        Returns
+        -------
+
+        """
+        cc_lvl_df = pd.Series(cc_dict)
+        return cc_lvl_df.apply(lambda x: self.dictTo2d(x))
+
+    def dictTo2d(
+            self,
+            x,
+    ):
+        """
+
+        Parameters
+        ----------
+        x
+
+        Returns
+        -------
+
+        """
+        node_list_3d = [*x.values()]
+        # print(node_list_3d)
+        res_2d = []
+        for i in node_list_3d:
+            res_2d = res_2d + i
+        return res_2d
+
+    def formatCCS(
+            self,
+            cc_dict,
+    ):
+        """
+
+        Parameters
+        ----------
+        cc_dict
+
+        Returns
+        -------
+
+        """
+        cc_lvl_df = pd.Series(cc_dict)
+        return cc_lvl_df.apply(lambda x: [*x.values()])
