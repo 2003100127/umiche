@@ -23,11 +23,13 @@ class MarkovClustering:
             inflat_val,
             exp_val,
             iter_num,
+            heterogeneity=False,
     ):
         self.gbfscc = gbfscc()
         self.inflat_val = inflat_val
         self.exp_val = exp_val
         self.iter_num = iter_num
+        self.heterogeneity = heterogeneity
 
     def dfclusters(
             self,
@@ -193,12 +195,27 @@ class MarkovClustering:
         df_mcl_ccs['mscmv_val_disapv'] = df_mcl_ccs['mscmv_val'].apply(lambda x: x[3])
         # print(df_mcl_ccs['mscmv_val_len'].sum())
         # print(df_mcl_ccs[['mscmv_val_clusters', 'mscmv_val_disapv', ]])
-        return {
-            'count': df_mcl_ccs['mscmv_val_len'],
-            'clusters': df_mcl_ccs['mscmv_val_clusters'],
-            'apv': df_mcl_ccs['mscmv_val_apv'],
-            'disapv': df_mcl_ccs['mscmv_val_disapv'],
-        }
+        # print(df_mcl_ccs['mscmv_val_disapv'],)
+        # return {
+        #     'count': df_mcl_ccs['mscmv_val_len'],
+        #     'clusters': df_mcl_ccs['mscmv_val_clusters'],
+        #     'apv': df_mcl_ccs['mscmv_val_apv'],
+        #     'disapv': df_mcl_ccs['mscmv_val_disapv'],
+        # }
+        if self.heterogeneity:
+            return (
+                df_mcl_ccs['mscmv_val_len'],
+                df_mcl_ccs['mscmv_val_clusters'],
+                df_mcl_ccs['mscmv_val_apv'],
+                df_mcl_ccs['mscmv_val_disapv'],
+            )
+        else:
+            return {
+                "count":  df_mcl_ccs['mscmv_val_len'],
+                "clusters": df_mcl_ccs['mscmv_val_clusters'],
+                "apv": df_mcl_ccs['mscmv_val_apv'],
+                "disapv": df_mcl_ccs['mscmv_val_disapv'],
+            }
 
     def maxval_val_(
             self,
@@ -286,12 +303,20 @@ class MarkovClustering:
         df_mcl_ccs['mscmv_ed_disapv'] = df_mcl_ccs['mscmv_ed'].apply(lambda x: x[3])
         # print(df_mcl_ccs['mscmv_ed_len'].sum())
         # print(df_mcl_ccs[['mscmv_ed_clusters', 'mscmv_ed_disapv', ]])
-        return {
-            'count': df_mcl_ccs['mscmv_ed_len'],
-            'clusters': df_mcl_ccs['mscmv_ed_clusters'],
-            'apv': df_mcl_ccs['mscmv_ed_apv'],
-            'disapv': df_mcl_ccs['mscmv_ed_disapv'],
-        }
+        if self.heterogeneity:
+            return (
+                df_mcl_ccs['mscmv_ed_len'],
+                df_mcl_ccs['mscmv_ed_clusters'],
+                df_mcl_ccs['mscmv_ed_apv'],
+                df_mcl_ccs['mscmv_ed_disapv'],
+            )
+        else:
+            return {
+                'count': df_mcl_ccs['mscmv_ed_len'],
+                'clusters': df_mcl_ccs['mscmv_ed_clusters'],
+                'apv': df_mcl_ccs['mscmv_ed_apv'],
+                'disapv': df_mcl_ccs['mscmv_ed_disapv'],
+            }
 
     def maxval_ed_(
             self,

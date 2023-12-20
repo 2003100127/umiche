@@ -72,6 +72,7 @@ class OnePos:
         self.exp_val = exp_val
         self.iter_num = iter_num
         self.work_dir = work_dir
+        self.heterogeneity = heterogeneity
         self.verbose = verbose
 
         self.umiclust = umiclust()
@@ -172,6 +173,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).unique()
 
@@ -181,6 +183,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).cluster()
 
@@ -191,6 +194,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).adjacency()
 
@@ -200,6 +204,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).directional()
 
@@ -209,6 +214,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl(
             inflat_val=self.inflat_val,
@@ -222,6 +228,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_val(
             inflat_val=self.inflat_val,
@@ -236,6 +243,7 @@ class OnePos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_ed(
             inflat_val=self.inflat_val,

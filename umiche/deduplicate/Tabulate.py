@@ -30,19 +30,21 @@ class Tabulate:
             df_bam,
             bam_fpn,
             work_dir,
+            heterogeneity,
             verbose=False,
     ):
         self.df = df
         self.df_bam = df_bam
         self.bam_fpn = bam_fpn
         self.work_dir = work_dir
+        self.heterogeneity = heterogeneity
 
         self.aliwriter = aliwrite(df=self.df_bam)
 
         self.umigadgetry = umigadgetry()
 
         self.umiadj = umiadj()
-        self.umidirec = umidirec()
+        self.umidirec = umidirec(self.heterogeneity)
         self.umiscp = umiscp()
 
         self.gwriter = gwriter()
@@ -83,31 +85,32 @@ class Tabulate:
             axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'unique_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'unique_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='uniq_repr_nodes'), axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'unique_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['uniq_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'unique_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'unique_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='uniq_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'unique_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['uniq_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def cluster(self, ):
@@ -116,12 +119,12 @@ class Tabulate:
         ### @@ self.df['cc_repr_nodes']
         # 1    [2]
         # Name: cc_repr_nodes, dtype: object
-        self.df['dedup_cnt_cc'] = self.df['cc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
-        ### @@ self.df['dedup_cnt_cc']
+        self.df['dedup_cnt'] = self.df['cc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        ### @@ self.df['dedup_cnt']
         # 1    1
-        # Name: dedup_cnt_cc, dtype: int64
+        # Name: dedup_cnt, dtype: int64
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_cc'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='cc_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
@@ -134,32 +137,33 @@ class Tabulate:
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'cluster_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'dedup_cnt_cc',
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'cluster_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['cc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='cc_repr_nodes'), axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'cluster_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['cc_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'cluster_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'cluster_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['cc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='cc_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'cluster_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['cc_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def adjacency(self, ):
@@ -175,9 +179,9 @@ class Tabulate:
             axis=1,
         )
         self.df['adj_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='adj'), axis=1)
-        self.df['dedup_cnt_adj'] = self.df['adj_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['dedup_cnt'] = self.df['adj_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_adj'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='adj_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
@@ -198,48 +202,60 @@ class Tabulate:
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'adjacency_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'dedup_cnt_adj',
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'adjacency_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='adj_repr_nodes'), axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'adjacency_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'adjacency_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='adj_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def directional(self, ):
         dedup_umi_stime = time.time()
-        self.df[['count', 'clusters', 'apv', 'disapv']] = self.df.apply(
-            lambda x: self.umidirec.umi_tools(
-                connected_components=x['cc'],
-                df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
-                graph_adj=x['vignette']['graph_adj'],
-            ),
-            axis=1,
-            result_type='expand',
+        # self.df[['count', 'clusters', 'apv', 'disapv']] = self.df.apply(
+        #     lambda x: self.umidirec.umi_tools(
+        #         connected_components=x['cc'],
+        #         df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+        #         graph_adj=x['vignette']['graph_adj'],
+        #     ),
+        #     axis=1,
+        #     result_type='expand',
+        # )
+        self.df['count'], self.df['clusters'], self.df['apv'], self.df['disapv'] = zip(
+            *self.df.apply(
+                lambda x: self.umidirec.umi_tools(
+                    connected_components=x['cc'],
+                    df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+                    graph_adj=x['vignette']['graph_adj'],
+                ),
+                axis=1,
+            )
         )
         # print(self.df.columns)
         # print(self.df['count'])
         # print(self.df['clusters'])
+        print(self.df['apv'])
         self.df['direc'] = self.df.apply(
             lambda x: self.umidirec.decompose(
                 cc_sub_dict=x['clusters'],
@@ -249,9 +265,9 @@ class Tabulate:
         # print(self.df['direc'])
         self.df['direc_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='direc'), axis=1)
         # print(self.df['direc_repr_nodes'])
-        self.df['dedup_cnt_direc'] = self.df['direc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['dedup_cnt'] = self.df['direc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_direc'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='direc_repr_nodes'), axis=1)
         # print(self.df['ave_eds'])
@@ -265,33 +281,33 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         # print(self.ave_ed_bins)
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        # self.gwriter.generic(
-        #     df=self.ave_ed_bins,
-        #     sv_fpn=self.work_dir + 'directional_ave_ed_bin.txt',
-        #     index=True,
-        # )
-        # self.gwriter.generic(
-        #     df=self.df[[
-        #         'dedup_cnt_direc',
-        #         'ave_ed',
-        #         'num_uniq_umis',
-        #         'num_diff_dedup_uniq_umis',
-        #         'num_diff_dedup_reads',
-        #     ]],
-        #     sv_fpn=self.work_dir + 'directional_dedup_sum.txt',
-        #     index=True,
-        #     header=True,
-        # )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='direc_repr_nodes'),
-                                                 axis=1)
-        # self.aliwriter.tobam(
-        #     tobam_fpn=self.work_dir + 'directional_dedup.bam',
-        #     tmpl_bam_fpn=self.bam_fpn,
-        #     whitelist=self.umigadgetry.decompose(list_nd=self.df['direc_bam_ids'].values),
-        # )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'directional_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'directional_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='direc_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'directional_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['direc_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def mcl(
@@ -317,9 +333,9 @@ class Tabulate:
             axis=1,
         )
         self.df['mcl_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl'), axis=1)
-        self.df['dedup_cnt_mcl'] = self.df['mcl_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['dedup_cnt'] = self.df['mcl_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        #             self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_mcl'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
@@ -332,32 +348,33 @@ class Tabulate:
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'mcl_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'dedup_cnt_mcl',
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'mcl_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_repr_nodes'), axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'mcl_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'mcl_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'mcl_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'mcl_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def mcl_val(
@@ -372,24 +389,24 @@ class Tabulate:
             inflat_val=inflat_val,
             exp_val=exp_val,
             iter_num=iter_num,
+            heterogeneity=self.heterogeneity,
         )
-
-        self.df[['count', 'clusters', 'apv', 'disapv']] = self.df.apply(
-            lambda x: self.umimcl.maxval_val(
-                df_mcl_ccs=self.umimcl.dfclusters(
-                    connected_components=x['cc'],
-                    graph_adj=x['vignette']['graph_adj'],
+        self.df['count'], self.df['clusters'], self.df['apv'], self.df['disapv'] = zip(
+            *self.df.apply(
+                lambda x: self.umimcl.maxval_val(
+                    df_mcl_ccs=self.umimcl.dfclusters(
+                        connected_components=x['cc'],
+                        graph_adj=x['vignette']['graph_adj'],
+                    ),
+                    df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+                    thres_fold=mcl_fold_thres,
                 ),
-                df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
-                thres_fold=mcl_fold_thres,
-            ),
-            axis=1,
-            result_type='expand',
+                axis=1,
+            )
         )
-        print(self.df.columns)
+        # print(self.df.columns)
         # print(self.df['count'])
         # print(self.df['clusters'])
-
         self.df['mcl_val'] = self.df.apply(
             lambda x: self.umimcl.decompose(
                 list_nd=x['clusters'].values,
@@ -397,9 +414,9 @@ class Tabulate:
             axis=1,
         )
         self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_val'), axis=1)
-        self.df['dedup_cnt_mcl_val'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['dedup_cnt'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_mcl_val'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_val_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
@@ -410,33 +427,34 @@ class Tabulate:
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'mcl_val_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'dedup_cnt_mcl_val',
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'mcl_val_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_val_repr_nodes'),
-                                                   axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'mcl_val_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_val_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'mcl_val_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'mcl_val_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_val_repr_nodes'),
+                                                       axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'mcl_val_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_val_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
     def mcl_ed(
@@ -451,25 +469,25 @@ class Tabulate:
             inflat_val=inflat_val,
             exp_val=exp_val,
             iter_num=iter_num,
+            heterogeneity=self.heterogeneity,
         )
-
-        self.df[['count', 'clusters', 'apv', 'disapv']] = self.df.apply(
-            lambda x: self.umimcl.maxval_ed(
-                df_mcl_ccs=self.umimcl.dfclusters(
-                    connected_components=x['cc'],
-                    graph_adj=x['vignette']['graph_adj'],
+        self.df['count'], self.df['clusters'], self.df['apv'], self.df['disapv'] = zip(
+            *self.df.apply(
+                lambda x: self.umimcl.maxval_ed(
+                    df_mcl_ccs=self.umimcl.dfclusters(
+                        connected_components=x['cc'],
+                        graph_adj=x['vignette']['graph_adj'],
+                    ),
+                    df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+                    umi_uniq_mapped_rev=x['vignette']['int_to_umi_dict'],
+                    thres_fold=mcl_fold_thres,
                 ),
-                df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
-                umi_uniq_mapped_rev=x['vignette']['int_to_umi_dict'],
-                thres_fold=mcl_fold_thres,
-            ),
-            axis=1,
-            result_type='expand',
+                axis=1,
+            )
         )
         # print(self.df.columns)
         # print(self.df['count'])
         # print(self.df['clusters'])
-
         self.df['mcl_ed'] = self.df.apply(
             lambda x: self.umimcl.decompose(
                 list_nd=x['clusters'].values,
@@ -477,9 +495,9 @@ class Tabulate:
             axis=1,
         )
         self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_ed'), axis=1)
-        self.df['dedup_cnt_mcl_ed'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['dedup_cnt'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
-        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt_mcl_ed'].loc['yes']))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_ed_repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
@@ -491,31 +509,31 @@ class Tabulate:
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
-        self.gwriter.generic(
-            df=self.ave_ed_bins,
-            sv_fpn=self.work_dir + 'mcl_ed_ave_ed_bin.txt',
-            index=True,
-        )
-        self.gwriter.generic(
-            df=self.df[[
-                'dedup_cnt_mcl_ed',
-                'ave_ed',
-                'num_uniq_umis',
-                'num_diff_dedup_uniq_umis',
-                'num_diff_dedup_reads',
-            ]],
-            sv_fpn=self.work_dir + 'mcl_ed_dedup_sum.txt',
-            index=True,
-            header=True,
-        )
-        self.console.print('======>start writing deduplicated reads to BAM...')
-        dedup_reads_write_stime = time.time()
-        self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_ed_repr_nodes'),
-                                                  axis=1)
-        self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
-            tmpl_bam_fpn=self.bam_fpn,
-            whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
-        )
-        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'mcl_ed_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'mcl_ed_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df

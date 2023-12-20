@@ -88,8 +88,21 @@ class Simulation:
                         heterogeneity=True,
                         verbose=False,
                     )
+                    df = self.tool(dedup_ob)[self.method]()
                     # print(dedup_ob.directional())
-                    print(dedup_ob.mcl_val())
+                    print(df.columns)
+                    print(df.dedup_cnt.values[0])
+
+                    print(df.apv.values)
+                    from umiche.deduplicate.method.Directional import Directional as umitoolmonodirec
+
+                    umitooldirec = umitoolmonodirec()
+
+                    df_direc_apv = umitooldirec.formatApvsDisapv(df.apv.values[0])
+                    print(df_direc_apv)
+
+                    # print(df.disapv.values)
+                    # print(df.direc.values)
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
@@ -98,6 +111,58 @@ class Simulation:
         #     sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
         #     header=True,
         # )
+
+    def tool(self, dedup_ob):
+        return {
+            'unique': dedup_ob.unique,
+            'cluster': dedup_ob.cluster,
+            'adjacency': dedup_ob.adjacency,
+            'directional': dedup_ob.directional,
+            'mcl': dedup_ob.mcl,
+            'mcl_val': dedup_ob.mcl_val,
+            'mcl_ed': dedup_ob.mcl_ed,
+            # 'set_cover': dedup_ob.set_cover,
+        }
+
+
+    def statistics(self, ):
+        return {
+            'ccs': {
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
+            },
+            'adj': {
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
+            },
+            'direc': {
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
+            },
+            'mcl_val': {
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
+            },
+            'mcl_ed': {
+                'df_apv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_disapv_cnt': pd.DataFrame(columns=['0', '1', 'all', 'scenario', 'method']),
+                'df_apv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_disapv_pct': pd.DataFrame(columns=['0', '1', 'scenario', 'method']),
+                'df_dedup_cnt': pd.DataFrame(columns=['dedup_cnt', 'scenario', 'method']),
+            },
+        }
 
 
 if __name__ == "__main__":

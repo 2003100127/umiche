@@ -7,10 +7,17 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import sys
+import pandas as pd
 sys.setrecursionlimit(15000000)
 
 
 class Directional:
+
+    def __init__(
+            self,
+            heterogeneity=False,
+    ):
+        self.heterogeneity = heterogeneity
 
     def umi_tools(
             self,
@@ -57,12 +64,20 @@ class Directional:
         # print(cc_subs)
         # print(cc_apvs)
         # print(cc_disapvs)
-        return {
-            "count": sum(cc_sub_cnt),
-            "clusters": cc_subs,
-            "apv": cc_apvs,
-            "disapv": cc_disapvs,
-        }
+        if self.heterogeneity:
+            return (
+                sum(cc_sub_cnt),
+                cc_subs,
+                cc_apvs,
+                cc_disapvs,
+            )
+        else:
+            return {
+                "count": sum(cc_sub_cnt),
+                "clusters": cc_subs,
+                "apv": cc_apvs,
+                "disapv": cc_disapvs,
+            }
 
     def umi_tools_(
             self,
@@ -214,6 +229,7 @@ class Directional:
 
         """
         node_list_3d = [*x.values()]
+        # print(node_list_3d)
         res_2d = []
         for i in node_list_3d:
             res_2d = res_2d + i
