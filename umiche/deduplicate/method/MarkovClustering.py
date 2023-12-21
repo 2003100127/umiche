@@ -509,6 +509,9 @@ if __name__ == "__main__":
     print(df.loc[0, 'clusters'])
     print(df.loc[0, 'clust_num'])
 
+    df_mcl_decomposed = p.decompose(list_nd=df['clusters'].values)
+    print("deduplicated clusters decomposed (mcl):\n{}".format(df_mcl_decomposed))
+
     ### @@@ mcl_val
     df_mcl_val = p.maxval_val(
         df_mcl_ccs=df,

@@ -14,15 +14,24 @@ from sklearn.cluster import Birch as skbirch
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 
 
-
 class Clustering:
 
     def __init__(
             self,
             clustering_method='dbscan',
+            **kwargs
     ):
         self.refkit = refkit()
         self.clustering_method = clustering_method
+        self.kwargs = kwargs
+        print(self.kwargs)
+
+    @property
+    def tool(self, ):
+        return {
+            'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
+            'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
+        }
 
     def dfclusters(
             self,
@@ -80,9 +89,13 @@ class Clustering:
         df_ccs['clustering_clusters'] = df_ccs['onehot'].apply(lambda onehot_2d_arrs: [
             clustering_ins.fit(onehot_2d_arrs).labels_
         ])
-        print(df_ccs['mcl_clusters'])
-
-        # df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        print(df_ccs['clustering_clusters'])
+        df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
+        print(df_ccs['clusters'])
+        df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
+        print(df_ccs['clust_num'])
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        print(df_ccs['graph_cc_adj'])
         # ### @@ df_ccs['graph_cc_adj']
         # # 0    {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': [...
         # # 1            {'E': ['G'], 'G': ['E', 'F'], 'F': ['G']}
@@ -105,12 +118,14 @@ class Clustering:
         # 2
         return df_ccs
 
-    @property
-    def tool(self, ):
-        return {
-            'dbscan': skdbscan(eps=1.5, min_samples=1),
-            'birch': skbirch(threshold=1.8, n_clusters=None),
-        }
+    def tovertex(self, x):
+        clustering_cluster_arr = x['clustering_clusters'][0]
+        cc_vertex_arr = x['cc_vertices']
+        uniq_cls_arr = np.unique(clustering_cluster_arr)
+        clusters = [[] for _ in range(len(uniq_cls_arr))]
+        for i, cls in enumerate(clustering_cluster_arr):
+            clusters[cls].append(cc_vertex_arr[i])
+        return clusters
 
     def dfclusters1(
             self,
@@ -135,7 +150,7 @@ class Clustering:
         df_vertex_onehot = pd.DataFrame(vertex_onehot)
         print(df_vertex_onehot)
         # d = skdbscan(eps=2.5, min_samples=1).fit(df_vertex_onehot)
-        d =  Birch(threshold=1.8, n_clusters=None).fit(df_vertex_onehot)
+        d =  skbirch(threshold=1.8, n_clusters=None).fit(df_vertex_onehot)
         asd = np.unique(d.labels_)
         asdas = np.array(d.labels_)
         labels = d.labels_
@@ -148,8 +163,6 @@ class Clustering:
         print(n_noise_)
         # return len(asd)
         return len(asd) + len(asdas[asdas == -1]), len(asdas[asdas == -1])
-
-
 
     def dusters(self, df_umis):
         """
@@ -169,6 +182,33 @@ class Clustering:
         labels = d.labels_
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
         return n_clusters_
+
+    def decompose(
+            self,
+            list_nd,
+    ):
+        """
+
+        Parameters
+        ----------
+        df
+
+        Returns
+        -------
+        {
+
+        }
+
+        """
+        # print(list_nd)
+        list_md = []
+        for i in list_nd:
+            list_md = list_md + i
+        res = {}
+        for i, cc_sub_each_mcl in enumerate(list_md):
+            res[i] = cc_sub_each_mcl
+        # print(res)
+        return res
 
 
 if __name__ == "__main__":
@@ -240,15 +280,24 @@ if __name__ == "__main__":
     ccs = umimonoclust().cc(graph_adj=graph_adj)
     print("Connected components:\n{}".format(ccs))
 
-    p = Clustering(clustering_method='dbscan')
+    p = Clustering(
+        clustering_method='dbscan',
+        dbscan_eps=1.5,
+        dbscan_min_spl=1,
+        birch_thres=1.8,
+        birch_n_clusters=None,
+    )
 
-    res = p.dfclusters(
+    df = p.dfclusters(
         connected_components=ccs,
         graph_adj=graph_adj,
         # df_umi_uniq_val_cnt=node_val_sorted,
         int_to_umi_dict=int_to_umi_dict,
     )
-    # print(res)
+    print(df)
+
+    df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
 
     # df_uniq_umi = pd.DataFrame.from_dict(int_to_umi_dict, orient='index', columns=['umi'])
     # print(df_uniq_umi)
