@@ -12,6 +12,7 @@ from typing import Dict
 import pandas as pd
 import markov_clustering as mc
 from umiche.graph.CC import cc as gbfscc
+from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 from umiche.util.Hamming import Hamming
 from umiche.graph.Adjacency import Adjacency as netadj
 
@@ -25,11 +26,13 @@ class MarkovClustering:
             iter_num,
             heterogeneity=False,
     ):
-        self.gbfscc = gbfscc()
         self.inflat_val = inflat_val
         self.exp_val = exp_val
         self.iter_num = iter_num
         self.heterogeneity = heterogeneity
+
+        self.gbfscc = gbfscc()
+        self.refkit = refkit()
 
     def dfclusters(
             self,
@@ -64,11 +67,11 @@ class MarkovClustering:
         """
         # print([*connected_components.values()])
         df_ccs = pd.DataFrame({'cc_vertices': [*connected_components.values()]})
-        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.graph_cc_adj(x, graph_adj))
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
         ### @@ graph_cc_adj
         # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
-        df_ccs['nt_to_int_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=False))
-        df_ccs['int_to_nt_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.keymap(graph_adj=x, reverse=True))
+        df_ccs['nt_to_int_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=False))
+        df_ccs['int_to_nt_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=True))
         ### @@ nt_to_int_map
         # {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5}
         ### @@ int_to_nt_map
@@ -89,7 +92,7 @@ class MarkovClustering:
         #  [0. 0. 0. 1. 0. 0.]
         #  [0. 0. 0. 1. 0. 0.]]
         df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.cluster(x))
-        df_ccs['clusters'] = df_ccs.apply(lambda x: self.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
+        df_ccs['clusters'] = df_ccs.apply(lambda x: self.refkit.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
         ### @@ mcl_clusters
         # [(0, 1, 2), (3, 4, 5)]
         ### @@ clusters
@@ -98,38 +101,6 @@ class MarkovClustering:
         ### @@ clust_num
         # 2
         return df_ccs
-
-
-
-    def graph_cc_adj(self, cc, graph_adj):
-        """
-
-        Parameters
-        ----------
-        cc
-            The first parameter.
-        graph_adj
-            The se parameter.
-
-        Returns
-        -------
-
-        """
-        return {node: graph_adj[node] for node in cc}
-
-    def key2node(self, list_2d, keymap):
-        """
-
-        Parameters
-        ----------
-        list_2d
-        keymap
-
-        Returns
-        -------
-
-        """
-        return [[keymap[i] for i in lis] for lis in list_2d]
 
     def cluster(
             self,
@@ -238,7 +209,7 @@ class MarkovClustering:
         mcl_sub_clust_max_val_graph = {}
         mcl_sub_clust_max_val_weights = {}
         for clust in mcl_clusters_per_cc:
-            cc_clust_sorted = self.sort_vals(df_umi_uniq_val_cnt, cc=clust)
+            cc_clust_sorted = self.refkit.sort_vals(df_umi_uniq_val_cnt, cc=clust)
             nodes = [*cc_clust_sorted.keys()]
             weights = [*cc_clust_sorted.values()]
             mcl_sub_clust_max_val_graph[nodes[0]] = set()
@@ -383,7 +354,7 @@ class MarkovClustering:
         mcl_sub_clust_max_val_graph = {}
         mcl_sub_clust_max_val_weights = {}
         for clust in mcl_clusters_per_cc:
-            cc_clust_sorted = self.sort_vals(df_umi_uniq_val_cnt, cc=clust)
+            cc_clust_sorted = self.refkit.sort_vals(df_umi_uniq_val_cnt, cc=clust)
             nodes = [*cc_clust_sorted.keys()]
             weights = [*cc_clust_sorted.values()]
             mcl_sub_clust_max_val_graph[nodes[0]] = set()
@@ -415,47 +386,6 @@ class MarkovClustering:
         ### @@ clusters
         # [['A', 'D']]
         return len(clusters), clusters, approval, disapproval
-
-    def sort_vals(
-            self,
-            df_umi_uniq_val_cnt,
-            cc,
-    ):
-        """
-
-        Parameters
-        ----------
-        df_umi_uniq_val_cnt
-        cc
-
-        Returns
-        -------
-
-        """
-        return df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
-
-    def keymap(
-            self,
-            graph_adj,
-            reverse=False,
-    ):
-        """
-
-        Parameters
-        ----------
-        graph_adj
-        reverse
-
-        Returns
-        -------
-
-        """
-        keys = [*graph_adj.keys()]
-        glen = len(keys)
-        if reverse:
-            return {k: keys[k] for k in range(glen)}
-        else:
-            return {keys[k]: k for k in range(glen)}
 
     def decompose(
             self,
@@ -579,34 +509,34 @@ if __name__ == "__main__":
     print(df.loc[0, 'clusters'])
     print(df.loc[0, 'clust_num'])
 
-    # ### @@@ mcl_val
-    # df_mcl_val = p.maxval_val(
-    #     df_mcl_ccs=df,
-    #     df_umi_uniq_val_cnt=node_val_sorted,
-    #     thres_fold=2,
-    # )
-    # print(df_mcl_val)
-    #
-    # dedup_count = df_mcl_val['count']
-    # dedup_clusters = df_mcl_val['clusters']
-    # print("deduplicated count (mcl_val):\n{}".format(dedup_count))
-    # print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
-    #
-    # df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
-    # print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
-    #
-    # df_mcl_ed = p.maxval_ed(
-    #     df_mcl_ccs=df,
-    #     df_umi_uniq_val_cnt=node_val_sorted,
-    #     thres_fold=1,
-    #     int_to_umi_dict=int_to_umi_dict,
-    # )
-    # dedup_count = df_mcl_ed['count']
-    # dedup_clusters = df_mcl_ed['clusters']
-    # print('asdasd',df_mcl_ed['apv'])
-    #
-    # print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
-    # print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
-    #
-    # df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
-    # print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))
+    ### @@@ mcl_val
+    df_mcl_val = p.maxval_val(
+        df_mcl_ccs=df,
+        df_umi_uniq_val_cnt=node_val_sorted,
+        thres_fold=2,
+    )
+    print(df_mcl_val)
+
+    dedup_count = df_mcl_val['count']
+    dedup_clusters = df_mcl_val['clusters']
+    print("deduplicated count (mcl_val):\n{}".format(dedup_count))
+    print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
+
+    df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
+    print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
+
+    df_mcl_ed = p.maxval_ed(
+        df_mcl_ccs=df,
+        df_umi_uniq_val_cnt=node_val_sorted,
+        thres_fold=1,
+        int_to_umi_dict=int_to_umi_dict,
+    )
+    dedup_count = df_mcl_ed['count']
+    dedup_clusters = df_mcl_ed['clusters']
+    print('approval: {}'.format(df_mcl_ed['apv']))
+
+    print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
+    print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
+
+    df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
+    print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))
