@@ -41,6 +41,19 @@ class Clustering:
 
         }
 
+    def adj_to_edge_list(self, graph):
+        self.netadj.graph = graph
+        return self.netadj.to_edge_list()
+
+    def tovertex(self, x):
+        clustering_cluster_arr = x['clustering_clusters'][0]
+        cc_vertex_arr = x['cc_vertices']
+        uniq_cls_arr = np.unique(clustering_cluster_arr)
+        clusters = [[] for _ in range(len(uniq_cls_arr))]
+        for i, cls in enumerate(clustering_cluster_arr):
+            clusters[cls].append(cc_vertex_arr[i])
+        return clusters
+
     def dfclusters(
             self,
             connected_components,
@@ -176,20 +189,7 @@ class Clustering:
         print(df_ccs['apv'])
         return df_ccs
 
-    def adj_to_edge_list(self, graph):
-        self.netadj.graph = graph
-        return self.netadj.to_edge_list()
-
-    def tovertex(self, x):
-        clustering_cluster_arr = x['clustering_clusters'][0]
-        cc_vertex_arr = x['cc_vertices']
-        uniq_cls_arr = np.unique(clustering_cluster_arr)
-        clusters = [[] for _ in range(len(uniq_cls_arr))]
-        for i, cls in enumerate(clustering_cluster_arr):
-            clusters[cls].append(cc_vertex_arr[i])
-        return clusters
-
-    def dfclusters1(
+    def dfclusters_cc_fuse(
             self,
             connected_components,
             df_umi_uniq_val_cnt,
@@ -226,24 +226,61 @@ class Clustering:
         # return len(asd)
         return len(asd) + len(asdas[asdas == -1]), len(asdas[asdas == -1])
 
-    def dusters(self, df_umis):
+    def dfclusters_cc_all_node_umis(
+            self,
+            graph_adj,
+            int_to_umi_dict,
+    ):
         """
-        # df_umis = pd.DataFrame.from_dict(df_umis, orient='index', columns=['umi'])
 
         Parameters
         ----------
-        df_umis
+        connected_components
+            connected components in dict format:
+            {
+                'cc0': [...] # nodes,
+                'cc1': [...],
+                'cc2': [...],
+                ...
+                'ccn': [...],
+            }
+            e.g.
+            {
+                0: ['A', 'B', 'C', 'D', 'E', 'F'],
+            }
+        graph_adj
+            the adjacency list of a graph
 
         Returns
         -------
+            a pandas dataframe
+            each connected component is decomposed into more connected subcomponents.
 
         """
-        arr_umis = df_umis['umi'].apply(lambda umi: self.refkit.onehot(umi=umi)).values.tolist()
-        d = skdbscan(eps=1.6, min_samples=1).fit(arr_umis)
-        # d =  Birch(threshold=1.8, n_clusters=None).fit(cccc)
-        labels = d.labels_
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-        return n_clusters_
+        df_ccs = pd.DataFrame()
+        df_ccs.loc[0, 'method'] = 'dfclusters_cc_all_node_umis'
+        onehot_2d_arrs = [list(self.refkit.onehot(umi=umi)) for k, umi in int_to_umi_dict.items()]
+        d1 = {'dfclusters_cc_all_node_umis': onehot_2d_arrs}
+        d2 = {'dfclusters_cc_all_node_umis': [*int_to_umi_dict.keys()]}
+        df_ccs['onehot'] = df_ccs['method'].apply(lambda x: d1[x])
+        df_ccs['cc_vertices'] = df_ccs['method'].apply(lambda x: d2[x])
+        print(df_ccs)
+        clustering_ins = self.tool[self.clustering_method]
+        df_ccs['clustering_clusters'] = df_ccs['onehot'].apply(lambda onehot_2d_arrs: [
+            clustering_ins.fit(onehot_2d_arrs).labels_
+        ])
+        print(df_ccs['clustering_clusters'])
+        df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
+        print(df_ccs['clusters'])
+        df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
+        print(df_ccs['clust_num'])
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        print(df_ccs['graph_cc_adj'])
+        df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
+        print(df_ccs['edge_list'])
+        df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
+        print(df_ccs['apv'])
+        return df_ccs
 
     def decompose(
             self,
@@ -350,18 +387,26 @@ if __name__ == "__main__":
         birch_n_clusters=None,
     )
 
-    df = p.dfclusters_adj_mat(
-        connected_components=ccs,
+    # df = p.dfclusters(
+    #     connected_components=ccs,
+    #     graph_adj=graph_adj,
+    #     # df_umi_uniq_val_cnt=node_val_sorted,
+    #     int_to_umi_dict=int_to_umi_dict,
+    # )
+    # print(df)
+    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+
+    # df = p.dfclusters_adj_mat(
+    #     connected_components=ccs,
+    #     graph_adj=graph_adj,
+    # )
+    # print(df)
+    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+
+    df = p.dfclusters_cc_all_node_umis(
         graph_adj=graph_adj,
-        # df_umi_uniq_val_cnt=node_val_sorted,
         int_to_umi_dict=int_to_umi_dict,
     )
     print(df)
-
-    df_decomposed = p.decompose(list_nd=df['clusters'].values)
-    print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
-
-    # df_uniq_umi = pd.DataFrame.from_dict(int_to_umi_dict, orient='index', columns=['umi'])
-    # print(df_uniq_umi)
-    # res = p.dusters(df_uniq_umi)
-    # print(res)
