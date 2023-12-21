@@ -114,7 +114,7 @@ class Simulation:
                     else:
                         series_2d_arr_apv = df.apv.values[0]
                         series_2d_arr_disapv = df.disapv.values[0]
-                    # print(series_2d_arr_apv)
+                    print(series_2d_arr_apv)
                     # print(series_2d_arr_disapv)
                     apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
                     disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')

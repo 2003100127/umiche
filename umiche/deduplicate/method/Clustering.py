@@ -101,6 +101,8 @@ class Clustering:
         print(df_ccs['graph_cc_adj'])
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
         print(df_ccs['edge_list'])
+        df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
+        print(df_ccs['apv'])
         # ### @@ df_ccs['graph_cc_adj']
         # # 0    {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': [...
         # # 1            {'E': ['G'], 'G': ['E', 'F'], 'F': ['G']}

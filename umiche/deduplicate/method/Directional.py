@@ -303,3 +303,5 @@ if __name__ == "__main__":
 
     print(dedup_res['apv'])
     print(dedup_res['disapv'])
+    # {'cc_0': {'node_A': [['A', 'B'], ['A', 'C']], 'node_D': [['D', 'F']], 'node_E': [['E', 'G']]}}
+    # {'cc_0': {'node_A': [['B', 'C'], ['A', 'D']], 'node_D': [['D', 'E'], ['F', 'G']], 'node_E': []}}
