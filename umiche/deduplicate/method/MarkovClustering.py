@@ -570,7 +570,7 @@ if __name__ == "__main__":
         graph_adj=graph_adj,
     )
     print(df.columns)
-    print(df.loc[0, 'cc_vertices'])
+    print("vertices: {}".format(df.loc[0, 'cc_vertices']))
     print(df.loc[0, 'graph_cc_adj'])
     print(df.loc[0, 'nt_to_int_map'])
     print(df.loc[0, 'int_to_nt_map'])
@@ -579,34 +579,34 @@ if __name__ == "__main__":
     print(df.loc[0, 'clusters'])
     print(df.loc[0, 'clust_num'])
 
-    ### @@@ mcl_val
-    df_mcl_val = p.maxval_val(
-        df_mcl_ccs=df,
-        df_umi_uniq_val_cnt=node_val_sorted,
-        thres_fold=2,
-    )
-    print(df_mcl_val)
-
-    dedup_count = df_mcl_val['count']
-    dedup_clusters = df_mcl_val['clusters']
-    print("deduplicated count (mcl_val):\n{}".format(dedup_count))
-    print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
-
-    df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
-    print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
-
-    df_mcl_ed = p.maxval_ed(
-        df_mcl_ccs=df,
-        df_umi_uniq_val_cnt=node_val_sorted,
-        thres_fold=1,
-        int_to_umi_dict=int_to_umi_dict,
-    )
-    dedup_count = df_mcl_ed['count']
-    dedup_clusters = df_mcl_ed['clusters']
-    print('asdasd',df_mcl_ed['apv'])
-
-    print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
-    print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
-
-    df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
-    print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))
+    # ### @@@ mcl_val
+    # df_mcl_val = p.maxval_val(
+    #     df_mcl_ccs=df,
+    #     df_umi_uniq_val_cnt=node_val_sorted,
+    #     thres_fold=2,
+    # )
+    # print(df_mcl_val)
+    #
+    # dedup_count = df_mcl_val['count']
+    # dedup_clusters = df_mcl_val['clusters']
+    # print("deduplicated count (mcl_val):\n{}".format(dedup_count))
+    # print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
+    #
+    # df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
+    # print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
+    #
+    # df_mcl_ed = p.maxval_ed(
+    #     df_mcl_ccs=df,
+    #     df_umi_uniq_val_cnt=node_val_sorted,
+    #     thres_fold=1,
+    #     int_to_umi_dict=int_to_umi_dict,
+    # )
+    # dedup_count = df_mcl_ed['count']
+    # dedup_clusters = df_mcl_ed['clusters']
+    # print('asdasd',df_mcl_ed['apv'])
+    #
+    # print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
+    # print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
+    #
+    # df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
+    # print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))

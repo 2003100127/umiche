@@ -7,7 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 
-class single:
+class Single:
 
     def trim(action):
         def tube(deal):
@@ -124,7 +124,7 @@ class single:
 
 
 if __name__ == "__main__":
-    p = single()
+    p = Single()
     # bs = p.get()
     bs = p.getEleTrimmed(ele_loo='A')
     # bs = p.getLisTrimmed(lis_loo=[0, 1])

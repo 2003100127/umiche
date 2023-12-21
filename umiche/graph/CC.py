@@ -135,6 +135,6 @@ if __name__ == "__main__":
     }
     p = cc()
 
-    # print(list(p.deque(graph_adj)))
+    print(list(p.deque(graph_adj)))
 
-    print(p.set(graph_adj))
+    # print(p.set(graph_adj))
