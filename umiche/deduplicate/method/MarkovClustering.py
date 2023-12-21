@@ -31,8 +31,13 @@ class MarkovClustering:
         self.iter_num = iter_num
         self.heterogeneity = heterogeneity
 
+        self.netadj = netadj()
         self.gbfscc = gbfscc()
         self.refkit = refkit()
+
+    def adj_to_edge_list(self, graph):
+        self.netadj.graph = graph
+        return self.netadj.to_edge_list()
 
     def dfclusters(
             self,
@@ -100,6 +105,14 @@ class MarkovClustering:
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
         ### @@ clust_num
         # 2
+
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        print(df_ccs['graph_cc_adj'])
+        df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
+        print(df_ccs['edge_list'])
+        df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
+        print(df_ccs['apv'])
+
         return df_ccs
 
     def cluster(

@@ -38,7 +38,6 @@ class Clustering:
             'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
             'hdscan': skhdscan(min_samples=1),
             'aprop': skaprop(preference=-50, random_state=0)
-
         }
 
     def adj_to_edge_list(self, graph):
