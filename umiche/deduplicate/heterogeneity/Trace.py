@@ -76,11 +76,10 @@ class Trace:
                 'total': cnt_total,
             }
         elif sort == 'pct':
-            series_diff_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else None)
-            series_same_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1) / len(x) if len(x) != 0 else None)
+            series_diff_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 0) / len(x) if len(x) != 0 else 0)
+            series_same_pct = series_origin.apply(lambda x: sum(1 for ele in x if ele == 1) / len(x) if len(x) != 0 else 0)
             # print(series_diff_pct)
-            series_diff_pct = series_diff_pct.loc[series_diff_pct != None]
-            series_same_pct = series_same_pct.loc[series_same_pct != None]
+            # print(series_same_pct)
             pct_diff_origin = series_diff_pct.mean()
             pct_same_origin = series_same_pct.mean()
             self.console.print('==================>trace edge cls time {time:.2f}s'.format(time=time.time()-stime))
