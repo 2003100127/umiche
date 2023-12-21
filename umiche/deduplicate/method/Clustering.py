@@ -12,6 +12,7 @@ from sklearn.cluster import DBSCAN as skdbscan
 from sklearn.cluster import Birch as skbirch
 
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
+from umiche.graph.Adjacency import Adjacency as netadj
 
 
 class Clustering:
@@ -22,6 +23,8 @@ class Clustering:
             **kwargs
     ):
         self.refkit = refkit()
+        self.netadj = netadj()
+
         self.clustering_method = clustering_method
         self.kwargs = kwargs
         print(self.kwargs)
@@ -96,6 +99,8 @@ class Clustering:
         print(df_ccs['clust_num'])
         df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
         print(df_ccs['graph_cc_adj'])
+        df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
+        print(df_ccs['edge_list'])
         # ### @@ df_ccs['graph_cc_adj']
         # # 0    {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': [...
         # # 1            {'E': ['G'], 'G': ['E', 'F'], 'F': ['G']}
@@ -117,6 +122,10 @@ class Clustering:
         ### @@ clust_num
         # 2
         return df_ccs
+
+    def adj_to_edge_list(self, graph):
+        self.netadj.graph = graph
+        return self.netadj.to_edge_list()
 
     def tovertex(self, x):
         clustering_cluster_arr = x['clustering_clusters'][0]
