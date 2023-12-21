@@ -11,8 +11,6 @@ import pandas as pd
 from sklearn.cluster import HDBSCAN as skhdscan
 from sklearn.cluster import DBSCAN as skdbscan
 from sklearn.cluster import Birch as skbirch
-from sklearn.cluster import OPTICS as skoptics
-from sklearn.cluster import SpectralClustering as skspectral
 from sklearn.cluster import AffinityPropagation as skaprop
 
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
@@ -39,8 +37,6 @@ class Clustering:
             'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
             'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
             'hdscan': skhdscan(min_samples=1),
-            'optics': skoptics(min_samples=1, xi=0.05, min_cluster_size=0.05),
-            'spectral': skspectral(2, affinity='precomputed', n_init=100, assign_labels='discretize'),
             'aprop': skaprop(preference=-50, random_state=0)
 
         }
@@ -112,26 +108,72 @@ class Clustering:
         print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
         print(df_ccs['apv'])
-        # ### @@ df_ccs['graph_cc_adj']
-        # # 0    {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': [...
-        # # 1            {'E': ['G'], 'G': ['E', 'F'], 'F': ['G']}
-        # # Name: graph_cc_adj, dtype: object
-        # df_ccs['nt_to_int_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=False))
-        # df_ccs['int_to_nt_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=True))
+        return df_ccs
 
-        ### @@ nt_to_int_map
-        # {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5}
-        ### @@ int_to_nt_map
-        # {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F'}
-        # df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.refkit.cluster(x))
-        # df_ccs['clusters'] = df_ccs.apply(lambda x: self.refkit.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
-        # ### @@ mcl_clusters
-        # # [(0, 1, 2), (3, 4, 5)]
-        # ### @@ clusters
-        # # [['A', 'B', 'C'], ['D', 'E', 'F']]
-        # df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
-        ### @@ clust_num
-        # 2
+    def dfclusters_adj_mat(
+            self,
+            connected_components,
+            graph_adj,
+    ):
+        """
+
+        Parameters
+        ----------
+        connected_components
+            connected components in dict format:
+            {
+                'cc0': [...] # nodes,
+                'cc1': [...],
+                'cc2': [...],
+                ...
+                'ccn': [...],
+            }
+            e.g.
+            {
+                0: ['A', 'B', 'C', 'D', 'E', 'F'],
+            }
+        graph_adj
+            the adjacency list of a graph
+
+        Returns
+        -------
+            a pandas dataframe
+            each connected component is decomposed into more connected subcomponents.
+
+        """
+        ### @@ graph_cc_adj
+        # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A'], 'E': ['G'], 'F': ['G'], 'G': ['E', 'F']}
+
+        # When an adjacency list of a graph is shown as above, we have the output in the following.
+        df_ccs = pd.DataFrame({'cc_vertices': [*connected_components.values()]})
+        ### @@ df_ccs
+        #     cc_vertices
+        # 0  [A, B, C, D]
+        # 1     [E, G, F]
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        # print(df_ccs['graph_cc_adj'])
+        df_ccs['cc_adj_mat'] = df_ccs.apply(
+            # lambda x: self.matrix(
+            #     graph_adj=x['graph_cc_adj'],
+            #     key_map=x['nt_to_int_map'],
+            # ),
+            lambda x: netadj(graph=x['graph_cc_adj']).to_matrix(),
+            axis=1,
+        )
+        print(df_ccs['cc_adj_mat'])
+        clustering_ins = self.tool[self.clustering_method]
+        df_ccs['clustering_clusters'] = df_ccs['cc_adj_mat'].apply(lambda adj_mat: [
+            clustering_ins.fit(adj_mat).labels_
+        ])
+        print(df_ccs['clustering_clusters'])
+        df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
+        print(df_ccs['clusters'])
+        df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
+        print(df_ccs['clust_num'])
+        df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
+        print(df_ccs['edge_list'])
+        df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
+        print(df_ccs['apv'])
         return df_ccs
 
     def adj_to_edge_list(self, graph):
@@ -308,7 +350,7 @@ if __name__ == "__main__":
         birch_n_clusters=None,
     )
 
-    df = p.dfclusters(
+    df = p.dfclusters_adj_mat(
         connected_components=ccs,
         graph_adj=graph_adj,
         # df_umi_uniq_val_cnt=node_val_sorted,
