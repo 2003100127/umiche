@@ -8,8 +8,12 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import HDBSCAN as skhdscan
 from sklearn.cluster import DBSCAN as skdbscan
 from sklearn.cluster import Birch as skbirch
+from sklearn.cluster import OPTICS as skoptics
+from sklearn.cluster import SpectralClustering as skspectral
+from sklearn.cluster import AffinityPropagation as skaprop
 
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 from umiche.graph.Adjacency import Adjacency as netadj
@@ -34,6 +38,11 @@ class Clustering:
         return {
             'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
             'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
+            'hdscan': skhdscan(min_samples=1),
+            'optics': skoptics(min_samples=1, xi=0.05, min_cluster_size=0.05),
+            'spectral': skspectral(2, affinity='precomputed', n_init=100, assign_labels='discretize'),
+            'aprop': skaprop(preference=-50, random_state=0)
+
         }
 
     def dfclusters(
