@@ -34,8 +34,9 @@ class Clustering:
     @property
     def tool(self, ):
         return {
-            'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
-            'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
+            'dbscan': skdbscan(eps=1.5, min_samples=1),
+            # 'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
+            # 'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
             'hdscan': skhdscan(min_samples=1),
             'aprop': skaprop(preference=-50, random_state=0)
         }
@@ -109,17 +110,17 @@ class Clustering:
         df_ccs['clustering_clusters'] = df_ccs['onehot'].apply(lambda onehot_2d_arrs: [
             clustering_ins.fit(onehot_2d_arrs).labels_
         ])
-        print(df_ccs['clustering_clusters'])
+        # print(df_ccs['clustering_clusters'])
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
-        print(df_ccs['clusters'])
+        # print(df_ccs['clusters'])
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
-        print(df_ccs['clust_num'])
+#         print(df_ccs['clust_num'])
         df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
-        print(df_ccs['graph_cc_adj'])
+#         print(df_ccs['graph_cc_adj'])
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
-        print(df_ccs['edge_list'])
+#         print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
-        print(df_ccs['apv'])
+#         print(df_ccs['apv'])
         return df_ccs
 
     def dfclusters_adj_mat(

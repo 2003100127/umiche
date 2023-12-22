@@ -37,8 +37,9 @@ class OnePos:
             work_dir='./',
 
             heterogeneity=False,
-
             verbose=False,
+
+            **kwargs,
     ):
         """
 
@@ -74,6 +75,7 @@ class OnePos:
         self.work_dir = work_dir
         self.heterogeneity = heterogeneity
         self.verbose = verbose
+        self.kwargs = kwargs
 
         self.umiclust = umiclust()
 
@@ -251,6 +253,21 @@ class OnePos:
             iter_num=self.iter_num,
             mcl_fold_thres=self.mcl_fold_thres,
         )
+
+    def dbscan_seq_onehot(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).clustering_umi_seq_onehot(
+            clustering_method='dbscan',
+            dbscan_eps=1.5,
+            dbscan_min_spl=1,
+        )
+
 
 
 if __name__ == "__main__":

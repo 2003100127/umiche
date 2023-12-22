@@ -32,9 +32,11 @@ class Simulation:
             is_tobam=False,
             is_dedup=False,
             verbose=False,
+            **kwargs,
     ):
         self.scenario = scenario
         self.method = method
+        self.kwargs = kwargs
 
         self.params = params(param_fpn=param_fpn)
         self.fwriter = fwriter()
@@ -94,41 +96,42 @@ class Simulation:
                         work_dir=self.params.work_dir,
                         heterogeneity=True,
                         verbose=False,
+                        # kwargs=self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
                     print(df.dedup_cnt.values[0])
                     dedup_arr.append(df.dedup_cnt.values[0])
                     # print(df.apv.values[0])
 
-                    umiold = umirel(
-                        df=dedup_ob.df_bam,
-                        verbose=self.verbose,
-                    )
-                    umiidtrace = umitrace(
-                        df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
-                        umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
-                    )
-                    if self.method == 'directional':
-                        series_2d_arr_apv = umiidtrace.format_apv_disapv(df.apv.values[0])
-                        series_2d_arr_disapv = umiidtrace.format_apv_disapv(df.disapv.values[0])
-                    else:
-                        series_2d_arr_apv = df.apv.values[0]
-                        series_2d_arr_disapv = df.disapv.values[0]
-                    print(series_2d_arr_apv)
-                    # print(series_2d_arr_disapv)
-                    apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
-                    disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')
-                    apv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='pct')
-                    disapv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='pct')
-                    apv_cnt_dict['permutation'], apv_cnt_dict['method'], apv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
-                    disapv_cnt_dict['permutation'], disapv_cnt_dict['method'], disapv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
-                    apv_pct_dict['permutation'], apv_pct_dict['method'], apv_pct_dict['scenario'] = perm_num_i, self.method, scenario_i
-                    disapv_pct_dict['permutation'], disapv_pct_dict['method'], disapv_pct_dict['scenario'] = perm_num_i, self.method, scenario_i
-
-                    self.df_apv_cnt = pd.concat([self.df_apv_cnt, pd.DataFrame.from_dict(apv_cnt_dict, orient='index').T]).reset_index(drop=True)
-                    self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T]).reset_index(drop=True)
-                    self.df_apv_pct = pd.concat([self.df_apv_pct, pd.DataFrame.from_dict(apv_pct_dict, orient='index').T]).reset_index(drop=True)
-                    self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
+                    # umiold = umirel(
+                    #     df=dedup_ob.df_bam,
+                    #     verbose=self.verbose,
+                    # )
+                    # umiidtrace = umitrace(
+                    #     df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
+                    #     umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
+                    # )
+                    # if self.method == 'directional':
+                    #     series_2d_arr_apv = umiidtrace.format_apv_disapv(df.apv.values[0])
+                    #     series_2d_arr_disapv = umiidtrace.format_apv_disapv(df.disapv.values[0])
+                    # else:
+                    #     series_2d_arr_apv = df.apv.values[0]
+                    #     series_2d_arr_disapv = df.disapv.values[0]
+                    # print(series_2d_arr_apv)
+                    # # print(series_2d_arr_disapv)
+                    # apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
+                    # disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')
+                    # apv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='pct')
+                    # disapv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='pct')
+                    # apv_cnt_dict['permutation'], apv_cnt_dict['method'], apv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    # disapv_cnt_dict['permutation'], disapv_cnt_dict['method'], disapv_cnt_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    # apv_pct_dict['permutation'], apv_pct_dict['method'], apv_pct_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    # disapv_pct_dict['permutation'], disapv_pct_dict['method'], disapv_pct_dict['scenario'] = perm_num_i, self.method, scenario_i
+                    #
+                    # self.df_apv_cnt = pd.concat([self.df_apv_cnt, pd.DataFrame.from_dict(apv_cnt_dict, orient='index').T]).reset_index(drop=True)
+                    # self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T]).reset_index(drop=True)
+                    # self.df_apv_pct = pd.concat([self.df_apv_pct, pd.DataFrame.from_dict(apv_pct_dict, orient='index').T]).reset_index(drop=True)
+                    # self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
                     # print(self.df_apv_pct)
 
                     # self.plothetero.n1(
@@ -157,6 +160,7 @@ class Simulation:
             'mcl': dedup_ob.mcl,
             'mcl_val': dedup_ob.mcl_val,
             'mcl_ed': dedup_ob.mcl_ed,
+            'dbscan_seq_onehot': dedup_ob.dbscan_seq_onehot,
             # 'set_cover': dedup_ob.set_cover,
         }
 
@@ -175,19 +179,20 @@ if __name__ == "__main__":
     from umiche.path import to
 
     p = Simulation(
-        scenario='pcr_nums',
+        # scenario='pcr_nums',
         # scenario='pcr_errs',
-        # scenario='seq_errs',
+        scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
 
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
+        method='dbscan_seq_onehot',
         # method='set_cover',
 
         # is_trim=True,
@@ -201,6 +206,8 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
+        dbscan_eps=1.5,
+        dbscan_min_spl=1,
 
         param_fpn=to('data/seqerr_sl.yml')
     )

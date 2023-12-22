@@ -16,6 +16,7 @@ from umiche.deduplicate.Gadgetry import Gadgetry as umigadgetry
 from umiche.deduplicate.method.Adjacency import Adjacency as umiadj
 from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
+from umiche.deduplicate.method.Clustering import Clustering as umiclustering
 from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
 
 from umiche.util.Writer import Writer as gwriter
@@ -541,6 +542,71 @@ class Tabulate:
                 tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        return self.df
+
+    def clustering_umi_seq_onehot(
+            self,
+            clustering_method,
+            **kwargs
+    ):
+        dedup_umi_stime = time.time()
+        self.umiclustering = umiclustering(
+            clustering_method=clustering_method,
+            kwargs=kwargs,
+        )
+        self.df[clustering_method] = self.df.apply(
+            lambda x: self.umiclustering.decompose(
+                list_nd=self.umiclustering.dfclusters(
+                    connected_components=x['cc'],
+                    graph_adj=x['vignette']['graph_adj'],
+                    int_to_umi_dict=x['vignette']['int_to_umi_dict'],
+                )['clusters'].values,
+            ),
+            axis=1,
+        )
+        self.df[clustering_method + '_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col=clustering_method), axis=1)
+        self.df['dedup_cnt'] = self.df[clustering_method + '_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+        self.console.print('======>calculate average edit distances between umis...')
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col=clustering_method + '_repr_nodes'), axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col=clustering_method + '_repr_nodes'),
+            axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col=clustering_method + '_repr_nodes'),
+            axis=1)
+        self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
+        self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
+        self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
+        if not self.heterogeneity:
+            self.gwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + clustering_method + '_ave_ed_bin.txt',
+                index=True,
+            )
+            self.gwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + clustering_method + '_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df[clustering_method + '_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col=clustering_method + '_repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + clustering_method + '_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df[clustering_method + '_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
