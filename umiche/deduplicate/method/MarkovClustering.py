@@ -106,13 +106,10 @@ class MarkovClustering:
         ### @@ clust_num
         # 2
 
-        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
-        print(df_ccs['graph_cc_adj'])
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
-        print(df_ccs['edge_list'])
+        # print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
-        print(df_ccs['apv'])
-
+        # print(df_ccs['apv'])
         return df_ccs
 
     def cluster(
@@ -417,14 +414,20 @@ class MarkovClustering:
         }
 
         """
-        # print(list_nd)
+        ### @@ list_nd
+        # [list([['A', 'B', 'C'], ['D', 'E', 'F', 'G']])]
         list_md = []
         for i in list_nd:
+            ### @@ i
+            # [['A', 'B', 'C'], ['D', 'E', 'F', 'G']]
             list_md = list_md + i
+        ### @@ list_md
+        # [['A', 'B', 'C'], ['D', 'E', 'F', 'G']]
         res = {}
         for i, cc_sub_each_mcl in enumerate(list_md):
             res[i] = cc_sub_each_mcl
-        # print(res)
+        ### @@ res
+        # {0: ['A', 'B', 'C'], 1: ['D', 'E', 'F', 'G']}
         return res
 
     def get_full_subcc(
@@ -522,37 +525,38 @@ if __name__ == "__main__":
     print(df.loc[0, 'clusters'])
     print(df.loc[0, 'clust_num'])
 
+    print(df['clusters'].values)
     df_mcl_decomposed = p.decompose(list_nd=df['clusters'].values)
     print("deduplicated clusters decomposed (mcl):\n{}".format(df_mcl_decomposed))
 
     ### @@@ mcl_val
-    df_mcl_val = p.maxval_val(
-        df_mcl_ccs=df,
-        df_umi_uniq_val_cnt=node_val_sorted,
-        thres_fold=2,
-    )
-    print(df_mcl_val)
+    # df_mcl_val = p.maxval_val(
+    #     df_mcl_ccs=df,
+    #     df_umi_uniq_val_cnt=node_val_sorted,
+    #     thres_fold=2,
+    # )
+    # print(df_mcl_val)
+    # dedup_count = df_mcl_val['count']
+    # dedup_clusters = df_mcl_val['clusters']
+    # print("deduplicated count (mcl_val):\n{}".format(dedup_count))
+    # print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
+    #
+    # df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
+    # print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
 
-    dedup_count = df_mcl_val['count']
-    dedup_clusters = df_mcl_val['clusters']
-    print("deduplicated count (mcl_val):\n{}".format(dedup_count))
-    print("deduplicated clusters (mcl_val):\n{}".format(dedup_clusters))
-
-    df_mcl_val = p.decompose(list_nd=df_mcl_val['clusters'].values)
-    print("deduplicated clusters decomposed (mcl_val):\n{}".format(df_mcl_val))
-
-    df_mcl_ed = p.maxval_ed(
-        df_mcl_ccs=df,
-        df_umi_uniq_val_cnt=node_val_sorted,
-        thres_fold=1,
-        int_to_umi_dict=int_to_umi_dict,
-    )
-    dedup_count = df_mcl_ed['count']
-    dedup_clusters = df_mcl_ed['clusters']
-    print('approval: {}'.format(df_mcl_ed['apv']))
-
-    print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
-    print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
-
-    df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
-    print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))
+    ### @@ mcl_ed
+    # df_mcl_ed = p.maxval_ed(
+    #     df_mcl_ccs=df,
+    #     df_umi_uniq_val_cnt=node_val_sorted,
+    #     thres_fold=1,
+    #     int_to_umi_dict=int_to_umi_dict,
+    # )
+    # dedup_count = df_mcl_ed['count']
+    # dedup_clusters = df_mcl_ed['clusters']
+    # print('approval: {}'.format(df_mcl_ed['apv']))
+    #
+    # print("deduplicated count (mcl_ed):\n{}".format(dedup_count))
+    # print("deduplicated clusters (mcl_ed):\n{}".format(dedup_clusters))
+    #
+    # df_mcl_ed = p.decompose(list_nd=df_mcl_ed['clusters'].values)
+    # print("deduplicated clusters decomposed (mcl_ed):\n{}".format(df_mcl_ed))

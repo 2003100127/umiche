@@ -214,7 +214,6 @@ class Trace:
         # cc_48                    [[63, 101], [63, 219], [63, 238]]
         return cc_decomposed_2d_series
 
-
     def dictTo2d(
             self,
             x,
@@ -295,3 +294,27 @@ class Trace:
         # cc_47    [[[59, 106], [59, 133], [59, 180], [59, 194], ...
         # cc_48                  [[[63, 101], [63, 219], [63, 238]]]
         return cc_decomposed_3d_series
+
+    def format(
+            self,
+            method,
+            df,
+    ):
+        if method in ['directional']:
+            series_2d_arr_apv = self.format_apv_disapv(df.apv.values[0])
+            series_2d_arr_disapv = self.format_apv_disapv(df.disapv.values[0])
+            return series_2d_arr_apv, series_2d_arr_disapv
+        if method in ['mcl_val', 'mcl_ed']:
+            series_2d_arr_apv = df.apv.values[0]
+            series_2d_arr_disapv = df.disapv.values[0]
+            return series_2d_arr_apv, series_2d_arr_disapv
+        if method in [
+            'mcl',
+            'dbscan_seq_onehot',
+            'birch_seq_onehot',
+            'hdbscan_seq_onehot',
+            'aprop_seq_onehot',
+        ]:
+            series_2d_arr_apv = df.apv.values[0][0]
+            series_2d_arr_disapv = pd.Series()
+            return series_2d_arr_apv, series_2d_arr_disapv

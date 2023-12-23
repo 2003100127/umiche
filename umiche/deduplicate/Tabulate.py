@@ -8,6 +8,8 @@ __lab__ = "Cribbslab"
 
 import time
 
+import pandas as pd
+
 from umiche.bam.Writer import Writer as aliwriter
 
 from umiche.deduplicate.Gadgetry import Gadgetry as umigadgetry
@@ -324,27 +326,41 @@ class Tabulate:
             exp_val=exp_val,
             iter_num=iter_num,
         )
-        self.df['mcl'] = self.df.apply(
-            lambda x: self.umimcl.decompose(
-                list_nd=self.umimcl.dfclusters(
-                    connected_components=x['cc'],
-                    graph_adj=x['vignette']['graph_adj'],
-                )['clusters'].values,
+        # print(self.df)
+        ### @@ please note that df and df_mcl_res cannot be merged becuase the dimension is not the same.
+        df_mcl_res = self.df.apply(
+            lambda x: self.umimcl.dfclusters(
+                connected_components=x['cc'],
+                graph_adj=x['vignette']['graph_adj'],
             ),
             axis=1,
-        )
+        ).values[0]
+        mcl_dict = {'mcl': self.umimcl.decompose(
+            list_nd=df_mcl_res['clusters'].values
+        )}
+        apv_dict = {'apv': [df_mcl_res['apv']]}
+        self.df['mcl'] = self.df.apply(lambda x: mcl_dict['mcl'], axis=1)
+        self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
+        # self.df['mcl'] = self.df.apply(
+        #     lambda x: self.umimcl.decompose(
+        #         list_nd=self.umimcl.dfclusters(
+        #             connected_components=x['cc'],
+        #             graph_adj=x['vignette']['graph_adj'],
+        #         )['clusters'].values,
+        #     ),
+        #     axis=1,
+        # )
+        ### @@ self.df['mcl']
+        # 1    {0: [0, 76, 162, 188, 237, 256], 1: [65, 55, 1...
+        # Name: mcl, dtype: object
         self.df['mcl_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl'), axis=1)
         self.df['dedup_cnt'] = self.df['mcl_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),
-            axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),
-            axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -408,12 +424,14 @@ class Tabulate:
         # print(self.df.columns)
         # print(self.df['count'])
         # print(self.df['clusters'])
+        # print('asdasd',self.df['clusters'].values[0].values)
         self.df['mcl_val'] = self.df.apply(
             lambda x: self.umimcl.decompose(
                 list_nd=x['clusters'].values,
             ),
             axis=1,
         )
+        # print('asdasd',self.df['mcl_val'])
         self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_val'), axis=1)
         self.df['dedup_cnt'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
@@ -556,16 +574,21 @@ class Tabulate:
             clustering_method=clustering_method,
             **kwargs,
         )
-        self.df[clustering_method] = self.df.apply(
-            lambda x: self.umiclustering.decompose(
-                list_nd=self.umiclustering.dfclusters(
-                    connected_components=x['cc'],
-                    graph_adj=x['vignette']['graph_adj'],
-                    int_to_umi_dict=x['vignette']['int_to_umi_dict'],
-                )['clusters'].values,
+        df_clustering_res = self.df.apply(
+            lambda x: self.umiclustering.dfclusters(
+                connected_components=x['cc'],
+                graph_adj=x['vignette']['graph_adj'],
+                int_to_umi_dict=x['vignette']['int_to_umi_dict'],
             ),
             axis=1,
-        )
+        ).values[0]
+        mcl_dict = {clustering_method: self.umiclustering.decompose(
+            list_nd=df_clustering_res['clusters'].values
+        )}
+        apv_dict = {'apv': [df_clustering_res['apv']]}
+        self.df[clustering_method] = self.df.apply(lambda x: mcl_dict[clustering_method], axis=1)
+        self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
+        print(self.df['apv'])
         self.df[clustering_method + '_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col=clustering_method), axis=1)
         self.df['dedup_cnt'] = self.df[clustering_method + '_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
