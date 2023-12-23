@@ -96,7 +96,7 @@ class Simulation:
                         work_dir=self.params.work_dir,
                         heterogeneity=True,
                         verbose=False,
-                        # kwargs=self.kwargs
+                        **self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
                     print(df.dedup_cnt.values[0])
@@ -161,6 +161,9 @@ class Simulation:
             'mcl_val': dedup_ob.mcl_val,
             'mcl_ed': dedup_ob.mcl_ed,
             'dbscan_seq_onehot': dedup_ob.dbscan_seq_onehot,
+            'birch_seq_onehot': dedup_ob.birch_seq_onehot,
+            'hdbscan_seq_onehot': dedup_ob.hdbscan_seq_onehot,
+            'aprop_seq_onehot': dedup_ob.aprop_seq_onehot,
             # 'set_cover': dedup_ob.set_cover,
         }
 
@@ -192,7 +195,10 @@ if __name__ == "__main__":
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
-        method='dbscan_seq_onehot',
+        # method='dbscan_seq_onehot',
+        # method='birch_seq_onehot',
+        method='hdbscan_seq_onehot',
+        # method='aprop_seq_onehot',
         # method='set_cover',
 
         # is_trim=True,
@@ -206,8 +212,11 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        dbscan_eps=1.5,
-        dbscan_min_spl=1,
+        # dbscan_eps=1.5,
+        # dbscan_min_spl=1,
+        # birch_thres=1.8,
+        # birch_n_clusters=None,
+        hdbscan_min_spl=3,
 
         param_fpn=to('data/seqerr_sl.yml')
     )

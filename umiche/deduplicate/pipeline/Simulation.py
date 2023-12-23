@@ -13,8 +13,8 @@ from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
-from umiche.plot.Heterogeneity import valid as plotv
-from umiche.util.Writer import writer as gwriter
+from umiche.plot.Heterogeneity import Heterogeneity as plotv
+from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
 
 
@@ -35,7 +35,7 @@ class Simulation:
 
         self.params = params(param_fpn=param_fpn)
         self.gbfscc = gbfscc()
-        self.gwriter = gwriter()
+        self.fwriter = fwriter()
         self.plotv = plotv()
 
         self.verbose = verbose
@@ -90,7 +90,7 @@ class Simulation:
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
-        # self.gwriter.generic(
+        # self.fwriter.generic(
         #     df=df_dedup,
         #     sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
         #     header=True,

@@ -8,7 +8,7 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import HDBSCAN as skhdscan
+from sklearn.cluster import HDBSCAN as skhdbscan
 from sklearn.cluster import DBSCAN as skdbscan
 from sklearn.cluster import Birch as skbirch
 from sklearn.cluster import AffinityPropagation as skaprop
@@ -28,17 +28,45 @@ class Clustering:
         self.netadj = netadj()
 
         self.clustering_method = clustering_method
+
         self.kwargs = kwargs
         print(self.kwargs)
+        if 'dbscan_eps' in self.kwargs.keys():
+            self.dbscan_eps = self.kwargs['dbscan_eps']
+        else:
+            self.dbscan_eps = None
+        if 'dbscan_min_spl' in self.kwargs.keys():
+            self.dbscan_min_spl = self.kwargs['dbscan_min_spl']
+        else:
+            self.dbscan_min_spl = None
+        if 'birch_thres' in self.kwargs.keys():
+            self.birch_thres = self.kwargs['birch_thres']
+        else:
+            self.birch_thres = None
+        if 'birch_n_clusters' in self.kwargs.keys():
+            self.birch_n_clusters = self.kwargs['birch_n_clusters']
+        else:
+            self.birch_n_clusters = None
+        if 'hdbscan_min_spl' in self.kwargs.keys():
+            self.hdbscan_min_spl = self.kwargs['hdbscan_min_spl']
+        else:
+            self.hdbscan_min_spl = None
+        if 'aprop_preference' in self.kwargs.keys():
+            self.aprop_preference = self.kwargs['aprop_preference']
+        else:
+            self.aprop_preference = None
+        if 'aprop_random_state' in self.kwargs.keys():
+            self.aprop_random_state = self.kwargs['aprop_random_state']
+        else:
+            self.aprop_random_state = None
 
     @property
     def tool(self, ):
         return {
-            'dbscan': skdbscan(eps=1.5, min_samples=1),
-            # 'dbscan': skdbscan(eps=self.kwargs['dbscan_eps'], min_samples=self.kwargs['dbscan_min_spl']),
-            # 'birch': skbirch(threshold=self.kwargs['birch_thres'], n_clusters=self.kwargs['birch_n_clusters']),
-            'hdscan': skhdscan(min_samples=1),
-            'aprop': skaprop(preference=-50, random_state=0)
+            'dbscan': skdbscan(eps=self.dbscan_eps, min_samples=self.dbscan_min_spl),
+            'birch': skbirch(threshold=self.birch_thres, n_clusters=self.birch_n_clusters),
+            'hdbscan': skhdbscan(min_samples=self.hdbscan_min_spl),
+            'aprop': skaprop(preference=self.aprop_preference, random_state=self.aprop_random_state),
         }
 
     def adj_to_edge_list(self, graph):

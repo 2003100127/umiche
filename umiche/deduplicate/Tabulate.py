@@ -554,7 +554,7 @@ class Tabulate:
         dedup_umi_stime = time.time()
         self.umiclustering = umiclustering(
             clustering_method=clustering_method,
-            kwargs=kwargs,
+            **kwargs,
         )
         self.df[clustering_method] = self.df.apply(
             lambda x: self.umiclustering.decompose(

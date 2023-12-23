@@ -1,24 +1,39 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from umiche.util.Reader import reader as greader
-from umiche.deduplicate.trimer.pipeline import Config
+from umiche.simu.Parameter import Parameter as params
 
 
-class protTrimerSplit(Config.config):
+class protsplit:
 
-    def __init__(self, fpns):
-        super(protTrimerSplit, self).__init__()
+    def __init__(
+            self,
+            metric_char,
+            param_fpn,
+            fpns,
+    ):
+        self.params = params(param_fpn=param_fpn)
+
         self.greader = greader()
         self.df = pd.DataFrame()
         self.df_T = pd.DataFrame()
         for method, fpn in fpns.items():
-            df_met = self.greader.generic(df_fpn=fpn, header=0)[13:]
+            df_met = self.greader.generic(df_fpn=fpn, header=0)[:]
             df_met_T = df_met.T
             df_met_T = (df_met_T - 50) / 50
-            df_met_T.columns = ['{:.1e}'.format(x) for x in self.seq_fix_errs[13:]]
-            # df_met_T.columns = [int(x*100000) for x in self.seq_fix_errs[13:]]
+            print(['{:.1e}'.format(x) for x in self.params.varied[metric_char][:]])
+            df_met_T.columns = ['{:.1e}'.format(x) for x in self.params.varied[metric_char][:]]
+            # df_met_T.columns = [int(x*100000) for x in self.seq_fix_errs[:]]
             df_met_T['method'] = method
             # print(df_met_T)
             # df_met = np.exp((df_met - 50) / 50)
@@ -30,10 +45,10 @@ class protTrimerSplit(Config.config):
             df_met['mean-min'] = df_met['std']
             df_met['max-mean'] = df_met['std']
             df_met['method'] = method
-            df_met['metric'] = ['{:.1e}'.format(x) for x in self.seq_fix_errs[13:]]
-            # df_met['metric'] = ['{:.1f}'.format(x) for x in self.ampl_rates[13:]]
-            # df_met['metric'] = ['{:.0f}'.format(x) for x in self.umi_unit_lens[13:]]
-            # df_met['metric'] = ['{:.1e}'.format(x) for x in self.pcr_errs[13:]]
+            df_met['metric'] = ['{:.1e}'.format(x) for x in self.params.varied[metric_char][:]]
+            # df_met['metric'] = ['{:.1f}'.format(x) for x in self.ampl_rates[:]]
+            # df_met['metric'] = ['{:.0f}'.format(x) for x in self.umi_unit_lens[:]]
+            # df_met['metric'] = ['{:.1e}'.format(x) for x in self.pcr_errs[:]]
             self.df = pd.concat([self.df, df_met], axis=0)
             self.df_T = pd.concat([self.df_T, df_met_T], axis=0)
         print(self.df)
@@ -99,7 +114,7 @@ class protTrimerSplit(Config.config):
         )
 
         g.ax_joint.set_title(met, fontsize=14)
-        g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[13:]])
+        g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[:]])
         g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01])
         plt.setp(g.ax_joint.get_xticklabels(), rotation=45)
 
@@ -317,18 +332,21 @@ if __name__ == "__main__":
     from umiche.path import to
     # metric_char ='pcr_nums'
     # metric_char ='pcr_errs'
-    metric_char ='seq_errs'
+    metric_char = 'seq_errs'
     # metric_char  = 'ampl_rates'
     # metric_char ='umi_lens'
 
     DEFINE = {
         'fpns': {
-            'directional': to('data/simu/monomer/general/ar1/') + metric_char + '/directional.txt',
-            'mcl_val': to('data/simu/monomer/general/ar1/') + metric_char + '/mcl_val.txt',
-            'mcl_ed': to('data/simu/monomer/general/ar1/') + metric_char + '/mcl_ed.txt',
+            'directional': to('data/simu/monomer/ar1/') + metric_char + '/directional.txt',
+            'mcl_val': to('data/simu/monomer/ar1/') + metric_char + '/mcl_val.txt',
+            'mcl_ed': to('data/simu/monomer/ar1/') + metric_char + '/mcl_ed.txt',
         },
     }
-    p = protTrimerSplit(
+    p = protsplit(
+        metric_char ='seq_errs',
+
+        param_fpn=to('data/seqerr_sl.yml'),
         fpns=DEFINE['fpns']
     )
     # print(p.strip())

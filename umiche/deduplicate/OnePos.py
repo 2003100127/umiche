@@ -76,6 +76,7 @@ class OnePos:
         self.heterogeneity = heterogeneity
         self.verbose = verbose
         self.kwargs = kwargs
+        print(self.kwargs)
 
         self.umiclust = umiclust()
 
@@ -264,10 +265,47 @@ class OnePos:
             verbose=False,
         ).clustering_umi_seq_onehot(
             clustering_method='dbscan',
-            dbscan_eps=1.5,
-            dbscan_min_spl=1,
+            **self.kwargs
         )
 
+    def birch_seq_onehot(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).clustering_umi_seq_onehot(
+            clustering_method='birch',
+            **self.kwargs
+        )
+
+    def hdbscan_seq_onehot(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).clustering_umi_seq_onehot(
+            clustering_method='hdbscan',
+            **self.kwargs
+        )
+
+    def aprop_seq_onehot(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).clustering_umi_seq_onehot(
+            clustering_method='aprop',
+            **self.kwargs
+        )
 
 
 if __name__ == "__main__":
