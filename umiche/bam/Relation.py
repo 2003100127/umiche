@@ -23,6 +23,7 @@ class Relation:
 
         self.df = df
         self.df['umi#'] = self.df['query_name'].apply(lambda x: x.split('_')[0].split('-')[0])
+        # print(self.df)
         ### @@ self.df
         #           id            query_name  flag  ...         umi  source  umi#
         # 0          0   23-pcr-8_GCATCAGTAG     0  ...  GCATCAGTAG       1    23
@@ -31,6 +32,7 @@ class Relation:
         # ...      ...                   ...   ...  ...         ...     ...   ...
         # 23813  23813   47-pcr-9_GCGAAGAGGA     0  ...  GCGAAGAGGA       1    47
         self.df['umi_pcr#'] = self.df['query_name'].apply(lambda x: self.pcrnum(x))
+        # print(self.df)
         ### @@ self.df
         #           id            query_name  flag  ...  source  umi#  umi_pcr#
         # 0          0   23-pcr-8_GCATCAGTAG     0  ...       1    23         8
@@ -38,7 +40,11 @@ class Relation:
         # 2          2   13-pcr-7_CACACGATAC     0  ...       1    13         7
         # ...      ...                   ...   ...  ...     ...   ...       ...
         # 23813  23813   47-pcr-9_GCGAAGAGGA     0  ...       1    47         9
-        self.df['umi_src'] = self.df['query_name'].apply(lambda x: x.split('_')[0].split('-')[1])
+        ### @@@ note version 2 for resimpy
+        # self.df['umi_src'] = self.df['query_name'].apply(lambda x: x.split('_')[0].split('-')[1])
+        ### @@@ note version 2 for phylotres as well as resimpy
+        self.df['umi_src'] = self.df['query_name'].apply(lambda x: x.split('_')[-2].split('-')[1])
+        # print(self.df)
         ### @@ self.df
         #           id            query_name  flag  ...  umi#  umi_pcr#  umi_src
         # 0          0   23-pcr-8_GCATCAGTAG     0  ...    23         8      pcr
@@ -90,7 +96,12 @@ class Relation:
         self.console.print('==================>umi trace dict time: {:.3f}s'.format(time.time() - umi_trace_dict_stime))
 
     def pcrnum(self, x):
-        c = x.split('_')[0].split('-')
+        # print(x.split('_'))
+        ### @@@ note version 1 for resimpy
+        # c = x.split('_')[0].split('-')
+        ### @@@ note version 2 for phylotres as well as resimpy
+        c = x.split('_')[-2].split('-')
+        # print(c)
         if c[1] == 'init':
             return -1
         else:

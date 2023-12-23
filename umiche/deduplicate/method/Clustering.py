@@ -144,26 +144,14 @@ class Clustering:
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
         # print(df_ccs['clusters'])
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
-#         print(df_ccs['clust_num'])
+        # print(df_ccs['clust_num'])
         df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
-#         print(df_ccs['graph_cc_adj'])
+        # print(df_ccs['graph_cc_adj'])
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
-#         print(df_ccs['edge_list'])
+        # print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
-        print(df_ccs['apv'])
-#         return df_ccs
-        if self.heterogeneity:
-            return (
-                df_ccs['clust_num'],
-                df_ccs['clusters'],
-                df_ccs['apv'],
-            )
-        else:
-            return {
-                'count': df_ccs['clust_num'],
-                'clusters': df_ccs['clusters'],
-                'apv': df_ccs['apv'],
-            }
+        # print(df_ccs['apv'])
+        return df_ccs
 
     def dfclusters_adj_mat(
             self,
