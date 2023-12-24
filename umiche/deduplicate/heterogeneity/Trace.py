@@ -20,7 +20,6 @@ class Trace:
             verbose=False,
     ):
         self.df_umi_uniq_val_cnt = df_umi_uniq_val_cnt
-        print(self.df_umi_uniq_val_cnt)
         self.umi_id_to_origin_id_dict = umi_id_to_origin_id_dict
 
         self.verbose = verbose
@@ -54,7 +53,7 @@ class Trace:
         # cc_47    [[59, 106], [59, 133], [59, 180], [59, 194], [...
         # cc_48                    [[63, 101], [63, 219], [63, 238]]
         series_origin = series_2d_arr.apply(
-            lambda x: self.is_same_origin(x),
+            lambda x: self.is_same_origin_between_every_two_nodes(x),
         )
         ### @@ series_origin
         # cc_0        [1, 1, 1, 1, 1, 1, 1, 1]
@@ -90,7 +89,7 @@ class Trace:
                 'total': 1,
             }
 
-    def is_same_origin(
+    def is_same_origin_between_every_two_nodes(
             self,
             arr_2d,
     ):
@@ -138,7 +137,7 @@ class Trace:
         -------
 
         """
-        self.console.print('==================>edges to be traced is {}'.format(series_2d_arr.shape[0]))
+        self.console.print('==================>Match representative node from {} edges in a cc'.format(series_2d_arr.shape[0]))
         ### @@ series_2d_arr
         # 0                                             [[82, 0]]
         # 1     [[105, 103], [19, 1], [105, 19], [52, 19], [18...
@@ -148,7 +147,7 @@ class Trace:
         # 52                                                   []
         # Name: apv, dtype: object
         series_origin = series_2d_arr.apply(
-            lambda x: self.find_repre(x),
+            lambda x: self.is_same_origin_between_repr_node_and_node(x),
         )
         ### @@ series_origin
         # 0      {0: {'ori': 17, 'same': [82, 0], 'diff': []}}
@@ -159,10 +158,10 @@ class Trace:
         # 52                                                   {}
         # Name: apv, dtype: object
         series_origin.index = ['cc'+str(i) for i in range(series_origin.shape[0])]
-        print(series_origin.to_dict())
+        # print(series_origin.to_dict())
         return series_origin
 
-    def find_repre(
+    def is_same_origin_between_repr_node_and_node(
             self,
             arr_2d,
     ):
@@ -172,23 +171,23 @@ class Trace:
             # print(arr_flatten_1d)
             node_repr = self.df_umi_uniq_val_cnt.loc[self.df_umi_uniq_val_cnt.index.isin(arr_flatten_1d)].idxmax()
             umi_ori_node_repr = self.umi_id_to_origin_id_dict[node_repr]
-            print('======>Representative node: {}, its origain: {}'.format(node_repr, umi_ori_node_repr))
-            node_dict[node_repr] = {}
-            node_dict[node_repr]['ori'] = umi_ori_node_repr
-            node_dict[node_repr]['same'] = []
-            node_dict[node_repr]['diff'] = []
+            # print('======>Representative node: {}, its origain: {}'.format(node_repr, umi_ori_node_repr))
+            node_dict[int(node_repr)] = {}
+            node_dict[int(node_repr)]['ori'] = umi_ori_node_repr
+            node_dict[int(node_repr)]['same'] = []
+            node_dict[int(node_repr)]['diff'] = []
             for nodes in arr_2d:
                 # self.console.print('==================>2 nodes in the edge are {} and {}'.format(nodes[0], nodes[1]))
                 umi_ori_node_1 = self.umi_id_to_origin_id_dict[nodes[0]]
                 umi_ori_node_2 = self.umi_id_to_origin_id_dict[nodes[1]]
                 if umi_ori_node_1 == umi_ori_node_repr:
-                    node_dict[node_repr]['same'].append(nodes[0])
+                    node_dict[int(node_repr)]['same'].append(nodes[0])
                 else:
-                    node_dict[node_repr]['diff'].append(nodes[0])
+                    node_dict[int(node_repr)]['diff'].append(nodes[0])
                 if umi_ori_node_2 == umi_ori_node_repr:
-                    node_dict[node_repr]['same'].append(nodes[1])
+                    node_dict[int(node_repr)]['same'].append(nodes[1])
                 else:
-                    node_dict[node_repr]['diff'].append(nodes[1])
+                    node_dict[int(node_repr)]['diff'].append(nodes[1])
         else:
             node_dict = {}
         return node_dict

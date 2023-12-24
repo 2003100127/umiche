@@ -53,9 +53,11 @@ class Heterogeneity:
         self.df_apv_pct = pd.DataFrame(columns=columns)
         self.df_disapv_pct = pd.DataFrame(columns=columns)
         self.df_dedup = pd.DataFrame()
+        self.node_repr_dict = {}
         for perm_num_i in range(self.params.fixed['permutation_num']):
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
+            self.node_repr_dict[perm_num_i] = {}
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 if self.scenario == 'pcr_nums':
                     self.fn_mark = str(scenario_i)
@@ -100,7 +102,7 @@ class Heterogeneity:
                         **self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
-                    print(df.dedup_cnt.values[0])
+                    print("No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
                     dedup_arr.append(df.dedup_cnt.values[0])
                     # print(df.apv.values[0])
                     # print(len(df[self.method + '_repr_nodes'].loc[1]))
@@ -115,8 +117,8 @@ class Heterogeneity:
                     )
                     series_2d_arr_apv, series_2d_arr_disapv = umiidtrace.format(method=self.method, df=df)
 
-                    umiidtrace.match_representative(series_2d_arr=series_2d_arr_apv)
-                    # print(series_2d_arr_apv.to_dict())
+                    series_dict_origin_apv = umiidtrace.match_representative(series_2d_arr=series_2d_arr_apv)
+                    self.node_repr_dict[perm_num_i][scenario_i] = series_dict_origin_apv.to_dict()
                     # print(series_2d_arr_disapv)
                     if not series_2d_arr_apv.empty:
                         apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
@@ -150,16 +152,20 @@ class Heterogeneity:
                     # )
             self.df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
+
         sv_dedup_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_dedup' + '.txt'
         sv_apv_cnt_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_apv_cnt' + '.txt'
         sv_disapv_cnt_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_disapv_cnt' + '.txt'
         sv_apv_pct_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_apv_pct' + '.txt'
         sv_disapv_pct_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_disapv_pct' + '.txt'
+        sv_node_repr_fpn = self.params.work_dir + '/' + scenario + '/' + str(self.method) + '_node_repr' + '.json'
         self.fwriter.generic(df=self.df_dedup, sv_fpn=sv_dedup_fpn, header=True, )
         self.fwriter.generic(df=self.df_apv_cnt, sv_fpn=sv_apv_cnt_fpn, header=True, )
         self.fwriter.generic(df=self.df_disapv_cnt, sv_fpn=sv_disapv_cnt_fpn, header=True, )
         self.fwriter.generic(df=self.df_apv_pct, sv_fpn=sv_apv_pct_fpn, header=True, )
         self.fwriter.generic(df=self.df_disapv_pct, sv_fpn=sv_disapv_pct_fpn, header=True, )
+        with open(sv_node_repr_fpn, 'w') as f:
+            json.dump(self.node_repr_dict, f)
 
     def tool(self, dedup_ob):
         return {
@@ -201,8 +207,8 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
-        method='mcl',
+        method='directional',
+        # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='dbscan_seq_onehot',
