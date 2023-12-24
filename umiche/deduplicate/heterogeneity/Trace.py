@@ -20,6 +20,7 @@ class Trace:
             verbose=False,
     ):
         self.df_umi_uniq_val_cnt = df_umi_uniq_val_cnt
+        print(self.df_umi_uniq_val_cnt)
         self.umi_id_to_origin_id_dict = umi_id_to_origin_id_dict
 
         self.verbose = verbose
@@ -89,7 +90,10 @@ class Trace:
                 'total': 1,
             }
 
-    def is_same_origin(self, arr_2d):
+    def is_same_origin(
+            self,
+            arr_2d,
+    ):
         """
 
         Parameters
@@ -118,40 +122,76 @@ class Trace:
                 trace_marks.append(0)
         return trace_marks
 
-    def matchRepresentative(self, df):
-        print('======>representative to be traced is {}'.format(df.shape[0]))
-        stime = time.time()
-        res = df.apply(
-            lambda arr_2d: self.maxval(arr_2d),
-        )
-        # print(res)
-        ttt = set()
-        total1 = res.values
-        for i in total1:
-            ttt.update(i)
-            # ttt = ttt + i
-        total = res.apply(lambda x: len(x))
-        # print(total)
-        total_len = total.sum()
-        # print(total_len)
-        print('======>trace representative time {time:.2f}s'.format(time=time.time() - stime))
-        return len(ttt)/50
+    def match_representative(
+            self,
+            series_2d_arr,
+    ):
+        """
 
-    def maxval(self, arr_2d):
-        repr_max_nodes = []
-        # repr_max_nodes = set()
-        for sub_cc_nodes in arr_2d:
-            node_val_sorted = self.df_umi_uniq_val_cnt.loc[
-                self.df_umi_uniq_val_cnt.index.isin(sub_cc_nodes)
-            ].sort_values(ascending=False).to_dict()
-            max_node = [*node_val_sorted.keys()][0]
-            umi_ori_max_nodes = self.umi_id_to_origin_id_dict[max_node]
-            if len(umi_ori_max_nodes) != 1:
-                repr_max_nodes = repr_max_nodes + []
-            else:
-                repr_max_nodes = repr_max_nodes + umi_ori_max_nodes
-        # print(len(repr_max_nodes))
-        return repr_max_nodes
+        Parameters
+        ----------
+        arr_2d
+            A 2d edge list, one with 2-sized vector consisting of 2 nodes.
+            e.g. [[0, 65], [65, 55], [65, 188], [65, 190], [0, 76], [0, 162], [0, 237], [0, 256]]
+
+        Returns
+        -------
+
+        """
+        self.console.print('==================>edges to be traced is {}'.format(series_2d_arr.shape[0]))
+        ### @@ series_2d_arr
+        # 0                                             [[82, 0]]
+        # 1     [[105, 103], [19, 1], [105, 19], [52, 19], [18...
+        # 2                [[146, 2], [60, 2], [60, 48], [48, 2]]
+        # ...
+        # 51                                                   []
+        # 52                                                   []
+        # Name: apv, dtype: object
+        series_origin = series_2d_arr.apply(
+            lambda x: self.find_repre(x),
+        )
+        ### @@ series_origin
+        # 0      {0: {'ori': 17, 'same': [82, 0], 'diff': []}}
+        # 1     {19: {'ori': 30, 'same': [105, 103, 19, 1, ...
+        # 2     {2: {'ori': 9, 'same': [146, 2, 60, 2, 60, ...
+        # ...
+        # 51                                                   {}
+        # 52                                                   {}
+        # Name: apv, dtype: object
+        series_origin.index = ['cc'+str(i) for i in range(series_origin.shape[0])]
+        print(series_origin.to_dict())
+        return series_origin
+
+    def find_repre(
+            self,
+            arr_2d,
+    ):
+        node_dict = {}
+        if len(arr_2d):
+            arr_flatten_1d = sum(arr_2d, [])
+            # print(arr_flatten_1d)
+            node_repr = self.df_umi_uniq_val_cnt.loc[self.df_umi_uniq_val_cnt.index.isin(arr_flatten_1d)].idxmax()
+            umi_ori_node_repr = self.umi_id_to_origin_id_dict[node_repr]
+            print('======>Representative node: {}, its origain: {}'.format(node_repr, umi_ori_node_repr))
+            node_dict[node_repr] = {}
+            node_dict[node_repr]['ori'] = umi_ori_node_repr
+            node_dict[node_repr]['same'] = []
+            node_dict[node_repr]['diff'] = []
+            for nodes in arr_2d:
+                # self.console.print('==================>2 nodes in the edge are {} and {}'.format(nodes[0], nodes[1]))
+                umi_ori_node_1 = self.umi_id_to_origin_id_dict[nodes[0]]
+                umi_ori_node_2 = self.umi_id_to_origin_id_dict[nodes[1]]
+                if umi_ori_node_1 == umi_ori_node_repr:
+                    node_dict[node_repr]['same'].append(nodes[0])
+                else:
+                    node_dict[node_repr]['diff'].append(nodes[0])
+                if umi_ori_node_2 == umi_ori_node_repr:
+                    node_dict[node_repr]['same'].append(nodes[1])
+                else:
+                    node_dict[node_repr]['diff'].append(nodes[1])
+        else:
+            node_dict = {}
+        return node_dict
 
     def format_apv_disapv(
             self,

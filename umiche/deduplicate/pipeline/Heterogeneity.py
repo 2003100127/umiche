@@ -103,7 +103,7 @@ class Heterogeneity:
                     print(df.dedup_cnt.values[0])
                     dedup_arr.append(df.dedup_cnt.values[0])
                     # print(df.apv.values[0])
-                    # print(len(df['dbscan_repr_nodes'].loc[1]))
+                    # print(len(df[self.method + '_repr_nodes'].loc[1]))
 
                     umiold = umirel(
                         df=dedup_ob.df_bam,
@@ -114,6 +114,8 @@ class Heterogeneity:
                         umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
                     )
                     series_2d_arr_apv, series_2d_arr_disapv = umiidtrace.format(method=self.method, df=df)
+
+                    umiidtrace.match_representative(series_2d_arr=series_2d_arr_apv)
                     # print(series_2d_arr_apv.to_dict())
                     # print(series_2d_arr_disapv)
                     if not series_2d_arr_apv.empty:
@@ -199,8 +201,8 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
-        # method='mcl',
+        # method='directional',
+        method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='dbscan_seq_onehot',

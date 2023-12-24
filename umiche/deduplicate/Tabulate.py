@@ -258,7 +258,7 @@ class Tabulate:
         # print(self.df.columns)
         # print(self.df['count'])
         # print(self.df['clusters'])
-        print(self.df['apv'])
+        # print(self.df['apv'])
         self.df['direc'] = self.df.apply(
             lambda x: self.umidirec.decompose(
                 cc_sub_dict=x['clusters'],
@@ -341,6 +341,7 @@ class Tabulate:
         apv_dict = {'apv': [df_mcl_res['apv']]}
         self.df['mcl'] = self.df.apply(lambda x: mcl_dict['mcl'], axis=1)
         self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
+        print(self.df['apv'])
         # self.df['mcl'] = self.df.apply(
         #     lambda x: self.umimcl.decompose(
         #         list_nd=self.umimcl.dfclusters(
