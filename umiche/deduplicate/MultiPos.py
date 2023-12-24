@@ -18,8 +18,6 @@ from umiche.deduplicate.Tabulate import Tabulate as umitab
 # dedup methods
 from umiche.deduplicate.method.Cluster import Cluster as umiclust
 
-from umiche.util.Number import number as rannum
-from umiche.util.Writer import writer as gwriter
 from umiche.util.Console import Console
 
 
@@ -30,13 +28,13 @@ class MultiPos:
             bam_fpn,
             ed_thres,
             pos_tag='PO',
-            mcl_fold_thres=None,
-            inflat_val=2.0,
-            exp_val=2,
-            iter_num=100,
             umi_='_',
             work_dir='./',
+
+            heterogeneity=False,
             verbose=False,
+
+            **kwargs,
     ):
         """
 
@@ -66,19 +64,15 @@ class MultiPos:
         self.bam_fpn = bam_fpn
         self.ed_thres = ed_thres
         self.pos_tag = pos_tag
-        self.mcl_fold_thres = mcl_fold_thres
-        self.inflat_val = inflat_val
-        self.exp_val = exp_val
-        self.iter_num = iter_num
         self.work_dir = work_dir
+        self.heterogeneity = heterogeneity
         self.verbose = verbose
+        self.kwargs = kwargs
 
         self.umiclust = umiclust()
 
         self.umibuild = umibuild
         self.umigadgetry = umigadgetry()
-        self.rannum = rannum()
-        self.gwriter = gwriter()
         self.console = Console()
         self.console.verbose = self.verbose
 
@@ -171,6 +165,7 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).unique()
 
@@ -180,8 +175,10 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).cluster()
+
 
     def adjacency(self, ) -> pd.DataFrame:
         return umitab(
@@ -189,6 +186,7 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).adjacency()
 
@@ -198,6 +196,7 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).directional()
 
@@ -207,11 +206,22 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
+            **self.kwargs
+        )
+
+    def mcl_cc_all_node_umis(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).mcl_cc_all_node_umis(
+            **self.kwargs
         )
 
     def mcl_val(self, ) -> pd.DataFrame:
@@ -220,12 +230,10 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_val(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
-            mcl_fold_thres=self.mcl_fold_thres,
+            **self.kwargs
         )
 
     def mcl_ed(self, ) -> pd.DataFrame:
@@ -234,12 +242,10 @@ class MultiPos:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_ed(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
-            mcl_fold_thres=self.mcl_fold_thres,
+            **self.kwargs
         )
 
 
@@ -248,21 +254,22 @@ if __name__ == "__main__":
 
     umiche = MultiPos(
         # bam_fpn=to('data/example.bam'),
-        bam_fpn=to('data/example_bundle1.bam'),
+        bam_fpn=to('data/example_bundle.bam'),
         pos_tag='PO',
         mcl_fold_thres=1.5,
         inflat_val=1.6,
         exp_val=2,
         iter_num=100,
-        verbose=True,
         ed_thres=1,
         work_dir=to('data/'),
+        verbose=True, # False
+        heterogeneity=True, # False
     )
 
-    print(umiche.unique())
-    print(umiche.cluster())
-    print(umiche.adjacency())
-    print(umiche.directional())
-    # print(umiche.mcl())
-    # print(umiche.mcl_val())
+    # print(umiche.unique())
+    # print(umiche.cluster())
+    # print(umiche.adjacency())
+    # print(umiche.directional())
+    print(umiche.mcl())
+    print(umiche.mcl_val())
     # print(umiche.mcl_ed())

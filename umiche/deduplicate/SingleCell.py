@@ -19,8 +19,6 @@ from umiche.deduplicate.Tabulate import Tabulate as umitab
 # dedup methods
 from umiche.deduplicate.method.Cluster import Cluster as umiclust
 
-from umiche.util.Number import number as rannum
-from umiche.util.Writer import writer as gwriter
 from umiche.util.Console import Console
 sys.setrecursionlimit(15000000)
 
@@ -33,13 +31,12 @@ class SingleCell:
             ed_thres,
             gene_assigned_tag,
             gene_is_assigned_tag,
-            mcl_fold_thres=None,
-            inflat_val=2.0,
-            exp_val=2,
-            iter_num=100,
             umi_='_',
             work_dir='./',
+            heterogeneity=False,
             verbose=False,
+
+            **kwargs,
     ):
         """
 
@@ -70,19 +67,15 @@ class SingleCell:
         self.ed_thres = ed_thres
         self.gene_assigned_tag = gene_assigned_tag
         self.gene_is_assigned_tag = gene_is_assigned_tag
-        self.mcl_fold_thres = mcl_fold_thres
-        self.inflat_val = inflat_val
-        self.exp_val = exp_val
-        self.iter_num = iter_num
         self.work_dir = work_dir
+        self.heterogeneity = heterogeneity
         self.verbose = verbose
+        self.kwargs = kwargs
 
         self.umiclust = umiclust()
 
         self.umibuild = umibuild
         self.umigadgetry = umigadgetry()
-        self.rannum = rannum()
-        self.gwriter = gwriter()
         self.console = Console()
         self.console.verbose = self.verbose
 
@@ -90,6 +83,7 @@ class SingleCell:
 
         self.alireader = alireader(bam_fpn=self.bam_fpn, verbose=self.verbose)
         self.df_bam = self.alireader.todf(tags=[self.gene_assigned_tag, self.gene_is_assigned_tag, 'BC'])
+        print(self.df_bam['BC'])
         ### @@ self.df_bam
         #           id  ... query_qualities
         # 0          0  ...            None
@@ -179,6 +173,7 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).unique()
 
@@ -188,8 +183,10 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).cluster()
+
 
     def adjacency(self, ) -> pd.DataFrame:
         return umitab(
@@ -197,6 +194,7 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).adjacency()
 
@@ -206,6 +204,7 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).directional()
 
@@ -215,11 +214,22 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
+            **self.kwargs
+        )
+
+    def mcl_cc_all_node_umis(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).mcl_cc_all_node_umis(
+            **self.kwargs
         )
 
     def mcl_val(self, ) -> pd.DataFrame:
@@ -228,12 +238,10 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_val(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
-            mcl_fold_thres=self.mcl_fold_thres,
+            **self.kwargs
         )
 
     def mcl_ed(self, ) -> pd.DataFrame:
@@ -242,12 +250,10 @@ class SingleCell:
             df_bam=self.df_bam,
             bam_fpn=self.bam_fpn,
             work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
             verbose=False,
         ).mcl_ed(
-            inflat_val=self.inflat_val,
-            exp_val=self.exp_val,
-            iter_num=self.iter_num,
-            mcl_fold_thres=self.mcl_fold_thres,
+            **self.kwargs
         )
 
 
@@ -262,9 +268,11 @@ if __name__ == "__main__":
         inflat_val=1.6,
         exp_val=2,
         iter_num=100,
-        verbose=True,
         ed_thres=6,
         work_dir=to('data/'),
+
+        verbose=False,  # False
+        heterogeneity=False,  # False
     )
 
     print(umiche.unique())

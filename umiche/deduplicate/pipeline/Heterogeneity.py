@@ -55,12 +55,13 @@ class Heterogeneity:
         self.df_dedup = pd.DataFrame()
         self.node_repr_dict = {}
         for perm_num_i in range(self.params.fixed['permutation_num']):
+            print("===>No.{} permutation".format(perm_num_i))
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
             self.node_repr_dict[perm_num_i] = {}
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 if self.scenario == 'pcr_nums':
-                    self.fn_mark = str(scenario_i)
+                    self.fn_mark = str(id)
                 elif self.scenario == 'pcr_errs':
                     self.fn_mark = str(id)
                 elif self.scenario == 'seq_errs':
@@ -107,42 +108,43 @@ class Heterogeneity:
                     # print(df.apv.values[0])
                     # print(len(df[self.method + '_repr_nodes'].loc[1]))
 
-                    umiold = umirel(
-                        df=dedup_ob.df_bam,
-                        verbose=self.verbose,
-                    )
-                    umiidtrace = umitrace(
-                        df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
-                        umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
-                    )
-                    series_2d_arr_apv, series_2d_arr_disapv = umiidtrace.format(method=self.method, df=df)
+                    if self.method not in ['adjacency', 'cluster', 'unique']:
+                        umiold = umirel(
+                            df=dedup_ob.df_bam,
+                            verbose=self.verbose,
+                        )
+                        umiidtrace = umitrace(
+                            df_umi_uniq_val_cnt=umiold.df_umi_uniq_val_cnt,
+                            umi_id_to_origin_id_dict=umiold.umi_id_to_origin_id_dict,
+                        )
+                        series_2d_arr_apv, series_2d_arr_disapv = umiidtrace.format(method=self.method, df=df)
 
-                    series_dict_origin_apv = umiidtrace.match_representative(series_2d_arr=series_2d_arr_apv)
-                    self.node_repr_dict[perm_num_i][scenario_i] = series_dict_origin_apv.to_dict()
-                    # print(series_2d_arr_disapv)
-                    if not series_2d_arr_apv.empty:
-                        apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
-                        # print(apv_cnt_dict)
-                        apv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='pct')
-                        apv_cnt_dict['permutation'] = perm_num_i
-                        apv_cnt_dict['method'] = self.method
-                        apv_cnt_dict['scenario'] = scenario_i
-                        apv_pct_dict['permutation'] = perm_num_i
-                        apv_pct_dict['method'] = self.method
-                        apv_pct_dict['scenario'] = scenario_i
-                        self.df_apv_cnt = pd.concat([self.df_apv_cnt, pd.DataFrame.from_dict(apv_cnt_dict, orient='index').T]).reset_index(drop=True)
-                        self.df_apv_pct = pd.concat([self.df_apv_pct, pd.DataFrame.from_dict(apv_pct_dict, orient='index').T]).reset_index(drop=True)
-                    if not series_2d_arr_disapv.empty:
-                        disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')
-                        disapv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='pct')
-                        disapv_cnt_dict['permutation'] = perm_num_i
-                        disapv_cnt_dict['method'] = self.method
-                        disapv_cnt_dict['scenario'] = scenario_i
-                        disapv_pct_dict['permutation'] = perm_num_i
-                        disapv_pct_dict['method'] = self.method
-                        disapv_pct_dict['scenario'] = scenario_i
-                        self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T]).reset_index(drop=True)
-                        self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
+                        series_dict_origin_apv = umiidtrace.match_representative(series_2d_arr=series_2d_arr_apv)
+                        self.node_repr_dict[perm_num_i][scenario_i] = series_dict_origin_apv.to_dict()
+                        # print(series_2d_arr_disapv)
+                        if not series_2d_arr_apv.empty:
+                            apv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='cnt')
+                            # print(apv_cnt_dict)
+                            apv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_apv, sort='pct')
+                            apv_cnt_dict['permutation'] = perm_num_i
+                            apv_cnt_dict['method'] = self.method
+                            apv_cnt_dict['scenario'] = scenario_i
+                            apv_pct_dict['permutation'] = perm_num_i
+                            apv_pct_dict['method'] = self.method
+                            apv_pct_dict['scenario'] = scenario_i
+                            self.df_apv_cnt = pd.concat([self.df_apv_cnt, pd.DataFrame.from_dict(apv_cnt_dict, orient='index').T]).reset_index(drop=True)
+                            self.df_apv_pct = pd.concat([self.df_apv_pct, pd.DataFrame.from_dict(apv_pct_dict, orient='index').T]).reset_index(drop=True)
+                        if not series_2d_arr_disapv.empty:
+                            disapv_cnt_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='cnt')
+                            disapv_pct_dict = umiidtrace.edge_class(series_2d_arr=series_2d_arr_disapv, sort='pct')
+                            disapv_cnt_dict['permutation'] = perm_num_i
+                            disapv_cnt_dict['method'] = self.method
+                            disapv_cnt_dict['scenario'] = scenario_i
+                            disapv_pct_dict['permutation'] = perm_num_i
+                            disapv_pct_dict['method'] = self.method
+                            disapv_pct_dict['scenario'] = scenario_i
+                            self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T]).reset_index(drop=True)
+                            self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
 
                     # print(self.df_apv_pct)
 
@@ -176,6 +178,7 @@ class Heterogeneity:
             'mcl': dedup_ob.mcl,
             'mcl_val': dedup_ob.mcl_val,
             'mcl_ed': dedup_ob.mcl_ed,
+            'mcl_cc_all_node_umis': dedup_ob.mcl_cc_all_node_umis,
             'dbscan_seq_onehot': dedup_ob.dbscan_seq_onehot,
             'birch_seq_onehot': dedup_ob.birch_seq_onehot,
             'hdbscan_seq_onehot': dedup_ob.hdbscan_seq_onehot,
@@ -198,19 +201,20 @@ if __name__ == "__main__":
     from umiche.path import to
 
     p = Heterogeneity(
-        # scenario='pcr_nums',
+        scenario='pcr_nums',
         # scenario='pcr_errs',
-        scenario='seq_errs',
+        # scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
 
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
-        # method='mcl',
+        # method='directional',
+        method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
+        # method='mcl_cc_all_node_umis',
         # method='dbscan_seq_onehot',
         # method='birch_seq_onehot',
         # method='hdbscan_seq_onehot',
@@ -228,11 +232,6 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        dbscan_eps=1.5,
-        dbscan_min_spl=1,
-        birch_thres=1.8,
-        birch_n_clusters=None,
-        hdbscan_min_spl=3,
 
         param_fpn=to('data/seqerr_sl.yml'),
     )

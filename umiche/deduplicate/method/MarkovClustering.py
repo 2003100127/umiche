@@ -24,12 +24,16 @@ class MarkovClustering:
             inflat_val,
             exp_val,
             iter_num,
-            heterogeneity=False,
+            **kwargs,
     ):
         self.inflat_val = inflat_val
         self.exp_val = exp_val
         self.iter_num = iter_num
-        self.heterogeneity = heterogeneity
+        self.kwargs = kwargs
+        if 'heterogeneity' in self.kwargs.keys():
+            self.heterogeneity = self.kwargs['heterogeneity']
+        else:
+            self.heterogeneity = False
 
         self.netadj = netadj()
         self.gbfscc = gbfscc()
@@ -98,6 +102,86 @@ class MarkovClustering:
         #  [0. 0. 0. 1. 0. 0.]]
         df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.cluster(x))
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.refkit.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
+        ### @@ mcl_clusters
+        # [(0, 1, 2), (3, 4, 5)]
+        ### @@ clusters
+        # [['A', 'B', 'C'], ['D', 'E', 'F']]
+        df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
+        ### @@ clust_num
+        # 2
+
+        df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
+        # print(df_ccs['edge_list'])
+        df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
+        # print(df_ccs['apv'])
+        return df_ccs
+
+    def dfclusters_cc_all_node_umis(
+            self,
+            graph_adj,
+            int_to_umi_dict,
+    ):
+        """
+
+        Parameters
+        ----------
+        connected_components
+            connected components in dict format:
+            {
+                'cc0': [...] # nodes,
+                'cc1': [...],
+                'cc2': [...],
+                ...
+                'ccn': [...],
+            }
+            e.g.
+            {
+                0: ['A', 'B', 'C', 'D', 'E', 'F'],
+            }
+        graph_adj
+            the adjacency list of a graph
+
+        Returns
+        -------
+            a pandas dataframe
+            each connected component is decomposed into more connected subcomponents.
+
+        """
+        df_ccs = pd.DataFrame()
+        df_ccs.loc[0, 'method'] = 'dfclusters_cc_all_node_umis'
+        onehot_2d_arrs = [list(self.refkit.onehot(umi=umi)) for k, umi in int_to_umi_dict.items()]
+        d1 = {'dfclusters_cc_all_node_umis': onehot_2d_arrs}
+        d2 = {'dfclusters_cc_all_node_umis': [*int_to_umi_dict.keys()]}
+        df_ccs['onehot'] = df_ccs['method'].apply(lambda x: d1[x])
+        df_ccs['cc_vertices'] = df_ccs['method'].apply(lambda x: d2[x])
+        # print(df_ccs)
+        df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
+        ### @@ graph_cc_adj
+        # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
+        df_ccs['nt_to_int_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=False))
+        df_ccs['int_to_nt_map'] = df_ccs['graph_cc_adj'].apply(lambda x: self.refkit.keymap(graph_adj=x, reverse=True))
+        ### @@ nt_to_int_map
+        # {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5}
+        ### @@ int_to_nt_map
+        # {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F'}
+        df_ccs['cc_adj_mat'] = df_ccs.apply(
+            # lambda x: self.matrix(
+            #     graph_adj=x['graph_cc_adj'],
+            #     key_map=x['nt_to_int_map'],
+            # ),
+            lambda x: netadj(graph=x['graph_cc_adj']).to_matrix(),
+            axis=1,
+        )
+        ### @@ cc_adj_mat
+        # [[0. 1. 1. 1. 0. 0.]
+        #  [1. 0. 1. 0. 0. 0.]
+        #  [1. 1. 0. 0. 0. 0.]
+        #  [1. 0. 0. 0. 1. 1.]
+        #  [0. 0. 0. 1. 0. 0.]
+        #  [0. 0. 0. 1. 0. 0.]]
+        df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.cluster(x))
+        df_ccs['clusters'] = df_ccs.apply(
+            lambda x: self.refkit.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
         ### @@ mcl_clusters
         # [(0, 1, 2), (3, 4, 5)]
         ### @@ clusters

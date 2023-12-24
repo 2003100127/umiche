@@ -98,7 +98,7 @@ class Reader:
         self.console.print('=========>start converting bam to df...')
         stime = time.time()
         for id, read in enumerate(self.pysam_bam):
-            # print(read)
+            print(read)
             read_tags = read.get_tags()
             # print(read_tags)
             rt_dict = {k: v for k, v in read_tags}

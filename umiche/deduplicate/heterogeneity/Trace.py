@@ -349,6 +349,7 @@ class Trace:
             return series_2d_arr_apv, series_2d_arr_disapv
         if method in [
             'mcl',
+            'mcl_cc_all_node_umis',
             'dbscan_seq_onehot',
             'birch_seq_onehot',
             'hdbscan_seq_onehot',
