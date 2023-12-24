@@ -82,8 +82,12 @@ class SingleCell:
         # sys.stdout = open(self.work_dir + self.method + '_log.txt', 'w')
 
         self.alireader = alireader(bam_fpn=self.bam_fpn, verbose=self.verbose)
-        self.df_bam = self.alireader.todf(tags=[self.gene_assigned_tag, self.gene_is_assigned_tag, 'BC'])
-        print(self.df_bam['BC'])
+        self.df_bam = self.alireader.todf(tags=[
+            self.gene_assigned_tag,
+            self.gene_is_assigned_tag,
+            # 'BC',
+        ])
+        # print(self.df_bam['BC'])
         ### @@ self.df_bam
         #           id  ... query_qualities
         # 0          0  ...            None
@@ -96,14 +100,28 @@ class SingleCell:
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
         self.df_bam = self.df_bam.loc[self.df_bam[self.gene_is_assigned_tag] == 'Assigned']
 
-        self.df_bam['bc'] = self.df_bam['BC']
-        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
-        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
+        self.df_bam['bc'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-2])
+        ### @@ self.df_bam['bc']
+        # 0          GGTGCGTAGGCTACGA
+        # 1          TGACTAGGTGTGGTTT
+        # 2          CAGATCATCGTCGTTC
+        #                  ...
+        # 3552650    ATCACGAGTAATTGGA
+        # 3552651    ACTATCTCAAGGTGTG
+        # Name: bc, Length: 588963, dtype: object
+        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
+        ### @@ self.df_bam['umi']
+        # 0          CCGGAGAGGG
+        # 1          CGCCCCCGGG
+        # 2          CCCGAGAATT
+        #               ...
+        # 3552650    CAACACAAGT
+        # 3552651    TGATTGAAGC
+        # Name: umi, Length: 588963, dtype: object
         self.console.print('======># of unique barcodes: {}'.format(self.df_bam['bc'].unique().shape[0]))
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
         self.console.print('======>edit distance thres: {}'.format(self.ed_thres))
-
         ### @@ self.df_bam
         #           id                     query_name  ...        umi  source
         # 0          0   SRR2057595.2985267_ACCGGTTTA  ...  ACCGGTTTA       1
