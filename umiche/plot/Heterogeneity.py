@@ -6,46 +6,49 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 
 class Heterogeneity:
 
-    def n1(self, df_disapv, df_apv):
-        fig, ax = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
-        ax[0].plot(
-            df_disapv.index,
-            df_disapv['diff_origin'],
-            label='different',
-            color='cornflowerblue',
-            lw=3,
-        )
-        ax[0].plot(
-            df_disapv.index,
-            df_disapv['same_origin'],
-            label='same',
-            color='salmon',
-            lw=3,
-        )
-        ax[1].plot(
-            df_apv.index,
-            df_apv['diff_origin'],
-            label='different',
-            color='cornflowerblue',
-            lw=3,
-        )
-        ax[1].plot(
-            df_apv.index,
-            df_apv['same_origin'],
-            label='same',
-            color='salmon',
-            lw=3,
-        )
+    def __init__(self, ):
+        sns.set(font="Helvetica")
+        sns.set_style("ticks")
 
+    def n1(
+            self,
+            df_disapv,
+            df_apv
+    ):
+        fig, ax = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+        colors = [
+            'dimgray', # black
+            'crimson',
+        ]
+        labels = [
+            'different',
+            'same',
+        ]
+        for i, col in enumerate(['diff_origin', 'same_origin']):
+            ax[0].plot(
+                df_disapv.index,
+                df_disapv[col],
+                label=labels[i],
+                color=colors[i],
+                lw=3,
+            )
+            ax[1].plot(
+                df_apv.index,
+                df_apv[col],
+                label=labels[i],
+                color=colors[i],
+                lw=3,
+            )
         # ax[0].set_xlabel('Time (ps)', fontsize=14)
 
-        ax[0].set_ylabel('number of pairwise \nunique UMIs', fontsize=11)
+        ax[0].set_ylabel('UMI count', fontsize=14)
         ax[0].set_title('Not merged', fontsize=12)
         ax[0].spines['right'].set_visible(False)
         ax[0].spines['top'].set_visible(False)
@@ -53,7 +56,7 @@ class Heterogeneity:
         # ax[1].set_xlabel('Time (ps)', fontsize=14)
         ax[1].set_xticks(df_apv.index)
         # ax[1].set_xticklabels(df_apv['metric'].apply(lambda x: 'PCR #' + x), fontsize=7, rotation=30)
-        ax[1].set_ylabel('number of pairwise \nunique UMIs', fontsize=11)
+        ax[1].set_ylabel('UMI count', fontsize=14)
         ax[1].set_title('Merged', fontsize=12)
         ax[1].spines['right'].set_visible(False)
         ax[1].spines['top'].set_visible(False)
@@ -64,7 +67,6 @@ class Heterogeneity:
             labels1,
             fontsize=10,
         )
-
         handles2, labels2 = ax[1].get_legend_handles_labels()
         ax[1].legend(
             handles2,
@@ -73,10 +75,10 @@ class Heterogeneity:
         )
 
         fig.subplots_adjust(
-            # top=0.92,
-            # bottom=0.13,
-            # left=0.13,
-            # right=0.95,
+            top=0.92,
+            bottom=0.13,
+            left=0.09,
+            right=0.95,
             hspace=0.40,
             # wspace=0.15
         )
@@ -156,3 +158,51 @@ class Heterogeneity:
     def n2dist(self, df):
         sns.displot(data=df, x='dedup_cnt', hue='method', kind="kde", rug=True)
         plt.show()
+
+
+if __name__ == "__main__":
+    from umiche.util.Reader import reader as freader
+    from umiche.path import to
+
+    p = Heterogeneity()
+
+    scenario='pcr_nums'
+    # scenario='pcr_errs'
+    # scenario='seq_errs'
+    # scenario='ampl_rates'
+    # scenario='umi_lens'
+    # scenario = 'seq_deps'
+
+    # method='unique'
+    # method='cluster'
+    # method='adjacency'
+    # method='directional'
+    # method='mcl'
+    # method='mcl_val'
+    method='mcl_ed'
+    # method='mcl_cc_all_node_umis'
+    # method='dbscan_seq_onehot'
+    # method='birch_seq_onehot'
+    # method='aprop_seq_onehot'
+    # method='hdbscan_seq_onehot'
+    # method='set_cover'
+
+    df_apv_cnt = freader().generic(
+        df_fpn=to('data/simu/mclumi/') + scenario + '/' + method + '_apv_cnt.txt',
+        header=0,
+    )
+    print(df_apv_cnt)
+    df_disapv_cnt = freader().generic(
+        df_fpn=to('data/simu/mclumi/') + scenario + '/' + method + '_disapv_cnt.txt',
+        header=0,
+    )
+    print(df_disapv_cnt)
+
+    df_apv_cnt = df_apv_cnt.groupby(by=['scenario']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
+    df_disapv_cnt = df_disapv_cnt.groupby(by=['scenario']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
+    print(df_apv_cnt)
+
+    p.n1(
+        df_apv=df_apv_cnt,
+        df_disapv=df_disapv_cnt,
+    )

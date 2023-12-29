@@ -6,6 +6,8 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
+import warnings
+warnings.filterwarnings("ignore")
 import json
 import pandas as pd
 from umiche.simu.Parameter import Parameter as params
@@ -54,6 +56,7 @@ class Heterogeneity:
         self.df_disapv_pct = pd.DataFrame(columns=columns)
         self.df_dedup = pd.DataFrame()
         self.node_repr_dict = {}
+        print("===>dedup method: {}".format(self.method))
         for perm_num_i in range(self.params.fixed['permutation_num']):
             print("===>No.{} permutation".format(perm_num_i))
             self.console.print("===>permutation number {}".format(perm_num_i))
@@ -61,20 +64,24 @@ class Heterogeneity:
             self.node_repr_dict[perm_num_i] = {}
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 if self.scenario == 'pcr_nums':
-                    self.fn_mark = str(id)
+                    self.fn_mark = str(id) # scenario_i
                 elif self.scenario == 'pcr_errs':
                     self.fn_mark = str(id)
                 elif self.scenario == 'seq_errs':
                     self.fn_mark = str(id)
                 elif self.scenario == 'ampl_rates':
                     self.fn_mark = str(id)
+                elif self.scenario == 'seq_deps':
+                    self.fn_mark = str(id)
                 elif self.scenario == 'umi_lens':
-                    self.fn_mark = str(scenario_i)
+                    self.fn_mark = str(id)
                 else:
                     self.fn_mark = str(scenario_i)
                 self.fn_prefix = self.params.file_names[self.scenario] + self.fn_mark
                 self.fastq_location = self.params.work_dir + self.scenario + '/permute_' + str(perm_num_i) + '/'
                 if is_trim:
+                    if self.scenario == 'umi_lens':
+                        self.params.trimmed['umi_1']['len'] = scenario_i
                     self.console.print("======>fastq is being trimmed.")
                     self.params.trimmed['fastq']['fpn'] = self.fastq_location + self.fn_prefix + '.fastq.gz'
                     self.params.trimmed['fastq']['trimmed_fpn'] = self.fastq_location + 'trimmed/' + self.fn_prefix + '.fastq.gz'
@@ -97,14 +104,22 @@ class Heterogeneity:
                         exp_val=self.params.dedup['exp_val'],
                         iter_num=self.params.dedup['iter_num'],
                         ed_thres=self.params.dedup['ed_thres'],
+                        dbscan_eps=self.params.dedup['dbscan_eps'],
+                        dbscan_min_spl=self.params.dedup['dbscan_min_spl'],
+                        birch_thres=self.params.dedup['birch_thres'],
+                        birch_n_clusters=self.params.dedup['birch_n_clusters'],
                         work_dir=self.params.work_dir,
                         heterogeneity=True,
                         verbose=False,
                         **self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
-                    print("No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
-                    dedup_arr.append(df.dedup_cnt.values[0])
+                    if self.method == "unique":
+                        print("No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
+                        dedup_arr.append(df.num_uniq_umis.values[0])
+                    else:
+                        print("No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
+                        dedup_arr.append(df.dedup_cnt.values[0])
                     # print(df.apv.values[0])
                     # print(len(df[self.method + '_repr_nodes'].loc[1]))
 
@@ -146,12 +161,11 @@ class Heterogeneity:
                             self.df_disapv_cnt = pd.concat([self.df_disapv_cnt, pd.DataFrame.from_dict(disapv_cnt_dict, orient='index').T]).reset_index(drop=True)
                             self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
 
-                    # print(self.df_apv_pct)
-
-                    # self.plothetero.n1(
-                    #     df_apv=self.df_apv_pct,
-                    #     df_disapv=self.df_disapv_pct,
-                    # )
+                        # print(self.df_apv_pct)
+                        # self.plothetero.n1(
+                        #     df_apv=self.df_apv_cnt,
+                        #     df_disapv=self.df_disapv_cnt,
+                        # )
             self.df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
 
@@ -201,24 +215,25 @@ if __name__ == "__main__":
     from umiche.path import to
 
     p = Heterogeneity(
-        scenario='pcr_nums',
+        # scenario='pcr_nums',
         # scenario='pcr_errs',
         # scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
+        scenario='seq_deps',
 
         # method='unique',
-        # method='cluster',
+        method='cluster',
         # method='adjacency',
         # method='directional',
-        method='mcl',
+        # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='mcl_cc_all_node_umis',
         # method='dbscan_seq_onehot',
         # method='birch_seq_onehot',
-        # method='hdbscan_seq_onehot',
         # method='aprop_seq_onehot',
+        # method='hdbscan_seq_onehot',
         # method='set_cover',
 
         # is_trim=True,
@@ -233,5 +248,5 @@ if __name__ == "__main__":
         is_tobam=False,
         is_dedup=True,
 
-        param_fpn=to('data/seqerr_sl.yml'),
+        param_fpn=to('data/params.yml'),
     )

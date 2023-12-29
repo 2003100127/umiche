@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 from umiche.path import to
 
 
-class filter:
+class Filter:
 
     def method(self, ):
         return {
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             'name': 'simu',
         },
     }
-    p = filter(DEFINE)
+    p = Filter(DEFINE)
 
     umis = p.cus()
 

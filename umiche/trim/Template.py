@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import pandas as pd
 from umiche.fastq.Read import read as rfastq
 from umiche.fastq.Write import write as wfastq
-from umiche.trim.Filter import filter
+from umiche.trim.Filter import Filter
 from umiche.trim.BCRuleOut import bcRuleOut as bcro
 from umiche.trim.UMIRuleOut import umiRuleOut as umiro
 from umiche.trim.SeqRuleOut import seqRuleOut as seqro
@@ -25,7 +25,7 @@ class Template:
     ):
         self.params = params
         self.verbose = verbose
-        self.filter = filter()
+        self.filter = Filter()
         self.bcro = bcro(read_summary=self.params, verbose=self.verbose)
         self.umiro = umiro(read_summary=self.params, verbose=self.verbose)
         self.seqro = seqro(read_summary=self.params, verbose=self.verbose)
@@ -72,7 +72,7 @@ class Template:
         )
         df = pd.DataFrame(seqs, columns=['seq_raw'])
         df['name'] = names
-        print(df)
+        print('before trimmed', df)
         self.console.print('===>umi structure: {}'.format(self.params['read_struct']))
         compo_struct = self.params['read_struct'].split('+')
         bc_pos_in_struct = [i for i, cstruct in enumerate(compo_struct) if 'bc' in cstruct.split('_')]
@@ -100,13 +100,14 @@ class Template:
         for key, val in bc_rule_out_len_dict.items():
             start = val
             end = val + self.params[key]['len']
+            print('BC: start: {} end: {}'.format(start, end))
             df[key] = df.apply(lambda x: self.filter.singleStart(x['seq_raw'], start, end), axis=1)
             self.console.print('===>{} has been taken out'.format(key))
         # print(df)
         for key, val in umi_rule_out_len_dict.items():
             start = val
             end = val + self.params[key]['len']
-            print('asd {} {}'.format(start, end))
+            print('UMI: start: {} end: {}'.format(start, end))
             df[key] = df.apply(lambda x: self.filter.singleStart(x['seq_raw'], start, end), axis=1)
             self.console.print('===>{} has been taken out'.format(key))
         # print(df)
@@ -115,7 +116,7 @@ class Template:
             end = val + self.params[key]['len']
             df[key] = df.apply(lambda x: self.filter.singleStart(x['seq_raw'], start, end), axis=1)
             self.console.print('===>{} has been taken out'.format(key))
-        # print(df)
+        print('after trimmed', df)
         return df
 
     def togz(self, df):
@@ -142,7 +143,7 @@ class Template:
         ...     'trimmed_name': 'pcr_1_trim',
         ... },
         ...}
-        >>>p = template(params)
+        >>>p = Template(params)
         >>>df = p.todf()
         >>>p.togz(df)
 
@@ -219,7 +220,7 @@ if __name__ == "__main__":
             'trimmed_fpn': to('data/pcr_1_trim.fastq.gz'),
         },
     }
-    p = template(params)
+    p = Template(params)
 
     df = p.todf()
 

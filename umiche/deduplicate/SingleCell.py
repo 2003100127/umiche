@@ -289,8 +289,8 @@ if __name__ == "__main__":
         ed_thres=6,
         work_dir=to('data/'),
 
-        verbose=False,  # False
-        heterogeneity=False,  # False
+        verbose=False,  # False True
+        heterogeneity=False,  # False True
     )
 
     print(umiche.unique())

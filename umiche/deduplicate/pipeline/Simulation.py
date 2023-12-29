@@ -128,5 +128,5 @@ if __name__ == "__main__":
         is_tobam=False,
         is_dedup=True,
 
-        param_fpn=to('data/seqerr_sl.yml')
+        param_fpn=to('data/params.yml')
     )

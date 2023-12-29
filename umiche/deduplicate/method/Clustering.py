@@ -32,7 +32,6 @@ class Clustering:
         self.heterogeneity = heterogeneity
 
         self.kwargs = kwargs
-        # print(self.kwargs)
         if 'dbscan_eps' in self.kwargs.keys():
             self.dbscan_eps = self.kwargs['dbscan_eps']
         else:
@@ -66,7 +65,7 @@ class Clustering:
     def tool(self, ):
         return {
             'dbscan': skdbscan(eps=self.dbscan_eps, min_samples=self.dbscan_min_spl),
-            'birch': skbirch(threshold=self.birch_thres, n_clusters=self.birch_n_clusters),
+            'birch': skbirch(threshold=self.birch_thres, n_clusters=None),
             'hdbscan': skhdbscan(min_samples=self.hdbscan_min_spl),
             'aprop': skaprop(preference=self.aprop_preference, random_state=self.aprop_random_state),
         }
@@ -203,20 +202,20 @@ class Clustering:
             lambda x: netadj(graph=x['graph_cc_adj']).to_matrix(),
             axis=1,
         )
-        print(df_ccs['cc_adj_mat'])
+        # print(df_ccs['cc_adj_mat'])
         clustering_ins = self.tool[self.clustering_method]
         df_ccs['clustering_clusters'] = df_ccs['cc_adj_mat'].apply(lambda adj_mat: [
             clustering_ins.fit(adj_mat).labels_
         ])
-        print(df_ccs['clustering_clusters'])
+        # print(df_ccs['clustering_clusters'])
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
-        print(df_ccs['clusters'])
+        # print(df_ccs['clusters'])
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
-        print(df_ccs['clust_num'])
+        # print(df_ccs['clust_num'])
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
-        print(df_ccs['edge_list'])
+        # print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
-        print(df_ccs['apv'])
+        # print(df_ccs['apv'])
         return df_ccs
 
     def dfclusters_cc_fuse(

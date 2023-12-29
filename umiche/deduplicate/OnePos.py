@@ -312,9 +312,9 @@ if __name__ == "__main__":
         iter_num=100,
         ed_thres=1,
         work_dir=to('data/'),
-        heterogeneity=False,
 
-        verbose=True,
+        verbose=False,  # False True
+        heterogeneity=False,  # False True
     )
 
     print(umiche.unique())

@@ -350,7 +350,7 @@ class Tabulate:
             self.df['mcl'] = self.df.apply(lambda x: mcl_dict['mcl'], axis=1)
             apv_dict = {'apv': [df_mcl_res['apv']]}
             self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
-            print(self.df['mcl'])
+            # print(self.df['mcl'])
         else:
             self.df['mcl'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
@@ -361,7 +361,7 @@ class Tabulate:
                 ),
                 axis=1,
             )
-            print(self.df['mcl'])
+            # print(self.df['mcl'])
         ### @@ self.df['mcl']
         # 1    {0: [0, 76, 162, 188, 237, 256], 1: [65, 55, 1...
         # Name: mcl, dtype: object
@@ -519,7 +519,7 @@ class Tabulate:
                 ),
                 axis=1,
             )
-            print(self.df['mcl_val'])
+            # print(self.df['mcl_val'])
         else:
             self.df['mcl_val'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
@@ -534,7 +534,7 @@ class Tabulate:
                 ),
                 axis=1,
             )
-            print(self.df['mcl_val'])
+            # print(self.df['mcl_val'])
         self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_val'), axis=1)
         self.df['dedup_cnt'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))

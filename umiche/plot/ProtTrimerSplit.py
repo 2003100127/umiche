@@ -338,15 +338,15 @@ if __name__ == "__main__":
 
     DEFINE = {
         'fpns': {
-            'directional': to('data/simu/monomer/ar1/') + metric_char + '/directional.txt',
-            'mcl_val': to('data/simu/monomer/ar1/') + metric_char + '/mcl_val.txt',
-            'mcl_ed': to('data/simu/monomer/ar1/') + metric_char + '/mcl_ed.txt',
+            'directional': to('data/simu/monomer/ar1/') + metric_char + '/old/directional.txt',
+            'mcl_val': to('data/simu/monomer/ar1/') + metric_char + '/old/mcl_val.txt',
+            'mcl_ed': to('data/simu/monomer/ar1/') + metric_char + '/old/mcl_ed.txt',
         },
     }
     p = protsplit(
         metric_char ='seq_errs',
 
-        param_fpn=to('data/seqerr_sl.yml'),
+        param_fpn=to('data/params.yml'),
         fpns=DEFINE['fpns']
     )
     # print(p.strip())
