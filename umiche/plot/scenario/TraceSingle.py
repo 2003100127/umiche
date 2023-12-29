@@ -6,80 +6,82 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
-import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-class Heterogeneity:
+class TraceSingle:
 
-    def __init__(self, ):
+    def __init__(
+            self,
+            df_apv,
+            df_disapv,
+    ):
+        self.df_apv = df_apv
+        self.df_disapv = df_disapv
+        self.method = self.df_disapv['method'].unique()[0]
         sns.set(font="Helvetica")
         sns.set_style("ticks")
 
-    def n1(
-            self,
-            df_disapv,
-            df_apv
-    ):
-        fig, ax = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+    def line_apv_disapv(self, ):
+        fig, ax = plt.subplots(2, 1, figsize=(5, 6), sharex=True)
         colors = [
-            'dimgray', # black
-            'crimson',
+            'dimgray',  # black dimgray
+            'palevioletred', # crimson mediumvioletred
         ]
+        # colors = sns.color_palette("Set2")
         labels = [
-            'different',
-            'same',
+            'different origin',
+            'same origin',
         ]
         for i, col in enumerate(['diff_origin', 'same_origin']):
             ax[0].plot(
-                df_disapv.index,
-                df_disapv[col],
+                self.df_disapv.index,
+                self.df_disapv[col],
                 label=labels[i],
                 color=colors[i],
-                lw=3,
+                lw=2.5,
+                # alpha=0.8,
             )
             ax[1].plot(
-                df_apv.index,
-                df_apv[col],
+                self.df_apv.index,
+                self.df_apv[col],
                 label=labels[i],
                 color=colors[i],
-                lw=3,
+                lw=2.5,
+                # alpha=0.8,
             )
-        # ax[0].set_xlabel('Time (ps)', fontsize=14)
 
         ax[0].set_ylabel('UMI count', fontsize=14)
-        ax[0].set_title('Not merged', fontsize=12)
+        ax[0].set_title('Not merged' + ' (' + self.method + ')', fontsize=12)
         ax[0].spines['right'].set_visible(False)
         ax[0].spines['top'].set_visible(False)
 
-        # ax[1].set_xlabel('Time (ps)', fontsize=14)
-        ax[1].set_xticks(df_apv.index)
+        ax[1].set_xlabel('PCR cycle', fontsize=12)
+        ax[1].set_xticks(self.df_apv.index)
         # ax[1].set_xticklabels(df_apv['metric'].apply(lambda x: 'PCR #' + x), fontsize=7, rotation=30)
         ax[1].set_ylabel('UMI count', fontsize=14)
-        ax[1].set_title('Merged', fontsize=12)
+        ax[1].set_title('Merged' + ' (' + self.method + ')', fontsize=12)
         ax[1].spines['right'].set_visible(False)
         ax[1].spines['top'].set_visible(False)
-        # sns.lineplot(data=data, palette="tab10", linewidth=2.5)
         handles1, labels1 = ax[0].get_legend_handles_labels()
         ax[0].legend(
             handles1,
             labels1,
-            fontsize=10,
+            fontsize=12,
         )
         handles2, labels2 = ax[1].get_legend_handles_labels()
         ax[1].legend(
             handles2,
             labels2,
-            fontsize=10,
+            fontsize=12,
         )
-
         fig.subplots_adjust(
-            top=0.92,
-            bottom=0.13,
-            left=0.09,
+            top=0.95,
+            bottom=0.1,
+            left=0.18,
             right=0.95,
-            hspace=0.40,
+            hspace=0.20,
             # wspace=0.15
         )
         plt.show()
@@ -161,48 +163,40 @@ class Heterogeneity:
 
 
 if __name__ == "__main__":
-    from umiche.util.Reader import reader as freader
     from umiche.path import to
 
-    p = Heterogeneity()
+    from umiche.deduplicate.io.Stat import Stat as dedupstat
 
-    scenario='pcr_nums'
-    # scenario='pcr_errs'
-    # scenario='seq_errs'
-    # scenario='ampl_rates'
-    # scenario='umi_lens'
-    # scenario = 'seq_deps'
+    scenarios = {
+        'pcr_nums': 'PCR cycle',
+        # 'pcr_errs': 'PCR error',
+        # 'seq_errs': 'Sequencing error',
+        # 'ampl_rates': 'Amplification rate',
+        # 'umi_lens': 'UMI length',
+        # 'seq_deps': 'Sequencing depth',
+    }
+    methods = {
+        # 'unique': 'Unique',
+        # 'cluster': 'Cluster',
+        # 'adjacency': 'Adjacency',
+        'directional': 'Directional',
+        # 'dbscan_seq_onehot': 'DBSCAN',
+        # 'birch_seq_onehot': 'Birch',
+        # 'aprop_seq_onehot': 'Affinity Propagation',
+        # 'mcl': 'MCL',
+        # 'mcl_val': 'MCL-val',
+        # 'mcl_ed': 'MCL-ed',
+    }
 
-    # method='unique'
-    # method='cluster'
-    # method='adjacency'
-    # method='directional'
-    # method='mcl'
-    # method='mcl_val'
-    method='mcl_ed'
-    # method='mcl_cc_all_node_umis'
-    # method='dbscan_seq_onehot'
-    # method='birch_seq_onehot'
-    # method='aprop_seq_onehot'
-    # method='hdbscan_seq_onehot'
-    # method='set_cover'
-
-    df_apv_cnt = freader().generic(
-        df_fpn=to('data/simu/mclumi/') + scenario + '/' + method + '_apv_cnt.txt',
-        header=0,
+    dedupstat = dedupstat(
+        scenarios=scenarios,
+        methods=methods,
+        param_fpn=to('data/params.yml'),
     )
-    print(df_apv_cnt)
-    df_disapv_cnt = freader().generic(
-        df_fpn=to('data/simu/mclumi/') + scenario + '/' + method + '_disapv_cnt.txt',
-        header=0,
-    )
-    print(df_disapv_cnt)
 
-    df_apv_cnt = df_apv_cnt.groupby(by=['scenario']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
-    df_disapv_cnt = df_disapv_cnt.groupby(by=['scenario']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
-    print(df_apv_cnt)
-
-    p.n1(
-        df_apv=df_apv_cnt,
-        df_disapv=df_disapv_cnt,
+    p = TraceSingle(
+        df_apv=dedupstat.df_trace_cnt['apv'],
+        df_disapv=dedupstat.df_trace_cnt['disapv'],
     )
+
+    p.line_apv_disapv()

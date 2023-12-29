@@ -13,7 +13,7 @@ from umiche.util.Writer import writer as gwriter
 from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.deduplicate.dimer.pipeline import Config
 from umiche.deduplicate.MultiPos import MultiPos as dedup1pos
-from umiche.plot.Heterogeneity import valid as plotv
+from umiche.plot.scenario.TraceSingle import valid as plotv
 from umiche.path import to
 
 

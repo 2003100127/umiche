@@ -102,7 +102,12 @@ class protsplit:
         ddd['Sequencing error'] = self.df_melt['Sequencing error']
         ddd[r'$\frac{N_e-N_t}{N_t}$'] = self.df_melt['value']
 
-        g = sns.JointGrid(data=ddd[ddd['method'] == met], x="Sequencing error", y=r'$\frac{N_e-N_t}{N_t}$', marginal_ticks=True)
+        g = sns.JointGrid(
+            data=ddd[ddd['method'] == met],
+            x="Sequencing error",
+            y=r'$\frac{N_e-N_t}{N_t}$',
+            marginal_ticks=True,
+        )
 
         # Create an inset legend for the histogram colorbar
         cax = g.figure.add_axes([.20, .55, .02, .2])
@@ -110,7 +115,7 @@ class protsplit:
         # Add the joint and marginal histogram plots
         g.plot_joint(
             sns.kdeplot, discrete=(True, False),
-            cmap="light:#03012d", pmax=.8, cbar=True, cbar_ax=cax
+            cmap="light:#03012d", pmax=.8, cbar=True, cbar_ax=cax,
         )
 
         g.ax_joint.set_title(met, fontsize=14)
@@ -351,7 +356,7 @@ if __name__ == "__main__":
     )
     # print(p.strip())
     # print(p.jointplot())
-    # print(p.jointgrid())
+    print(p.jointgrid())
     # print(p.stackedbar())
     # print(p.errorbar())
-    print(p.errorband())
+    # print(p.errorband())

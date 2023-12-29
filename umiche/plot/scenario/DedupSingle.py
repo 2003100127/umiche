@@ -13,12 +13,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from umiche.simu.Parameter import Parameter as params
+from umiche.deduplicate.io.Stat import Stat as dedupstat
 from umiche.plot.gadget.Transmitter import Transmitter as transmitter
 
 from umiche.util.Reader import reader as freader
 
 
-class Scenario:
+class DedupSingle:
 
     def __init__(
             self,
@@ -30,33 +31,20 @@ class Scenario:
         self.scenarios = scenarios
         self.methods = methods
         self.umi_gt_cnt = umi_gt_cnt
+        self.param_fpn = param_fpn
         self.freader = freader()
-        self.params = params(param_fpn=param_fpn)
+        self.params = params(param_fpn=self.param_fpn)
+
+        self.dedupstat = dedupstat(
+            scenarios=self.scenarios,
+            methods=self.methods,
+            param_fpn=self.param_fpn,
+        )
+
+        self.df_dedup = self.dedupstat.df_dedup
 
         sns.set(font="Helvetica")
         sns.set_style("ticks")
-
-    @property
-    def df_dedup(self, ):
-        df = pd.DataFrame()
-        for scenario, scenario_formal in self.scenarios.items():
-            for method, method_formal in self.methods.items():
-                df_sce_met = self.freader.generic(
-                    df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
-                    header=0,
-                )
-                df_sce_met = (df_sce_met - 50) / 50
-                df_sce_met['mean'] = df_sce_met.mean(axis=1)
-                df_sce_met['max'] = df_sce_met.max(axis=1)
-                df_sce_met['min'] = df_sce_met.min(axis=1)
-                df_sce_met['std'] = df_sce_met.std(axis=1)
-                # df_sce_met['mean-min'] = df_sce_met['std']
-                # df_sce_met['max-mean'] = df_sce_met['std']
-                df_sce_met['scenario'] = scenario_formal
-                df_sce_met['method'] = method_formal
-                df_sce_met['metric'] = [str(x) for x in self.params.varied[scenario]]
-                df = pd.concat([df, df_sce_met], axis=0)
-        return df
 
     def line(
             self,
@@ -64,7 +52,7 @@ class Scenario:
             num_img_col=3,
     ):
         print(self.df_dedup)
-        fig, ax = plt.subplots(nrows=num_img_row, ncols=num_img_col, figsize=(15, 10), sharey=False, sharex=False)
+        fig, ax = plt.subplots(nrows=num_img_row, ncols=num_img_col, figsize=(17, 9), sharey=False, sharex=False)
         palette = sns.color_palette("Paired")
         for n, (scenario, scenario_formal) in enumerate(self.scenarios.items()):
             self.df_sce = self.df_dedup[self.df_dedup['scenario'] == scenario_formal]
@@ -94,15 +82,15 @@ class Scenario:
                     xl_mark=xl_mark,
                     yl_mark=True if n % num_img_col == 0 else False,
                     title='{}'.format(scenario_formal),
-                    title_fs=12,
-                    x_label='Position',
-                    y_label='Percentage',
-                    x_label_rotation=15,
+                    title_fs=16,
+                    x_label=None, # 'Position'
+                    y_label=r'($\frac{N_e-N_t}{N_t}$)',
+                    x_label_rotation=20,
                     x_label_rotation_align='right',
-                    x_ticks=(np.arange(self.df_sce_met.index.shape[0]) + 1).tolist(),
+                    x_ticks=(np.arange(self.df_sce_met.index.shape[0])).tolist(),
                     x_ticklabels=self.df_sce_met['metric'].values.tolist(),
-                    x_ticklabel_fs=9,
-                    x_label_fs=16,
+                    x_ticklabel_fs=8,
+                    x_label_fs=11,
                     y_label_fs=18,
                     legend_fs=11,
                     legend_loc=None,
@@ -112,7 +100,7 @@ class Scenario:
         plt.subplots_adjust(
             top=0.96,
             bottom=0.06,
-            left=0.05,
+            left=0.06,
             right=0.98,
             # hspace=0.40,
             # wspace=0.15,
@@ -133,7 +121,7 @@ class Scenario:
 if __name__ == "__main__":
     from umiche.path import to
 
-    p = Scenario(
+    p = DedupSingle(
         scenarios={
             'pcr_nums': 'PCR cycle',
             'pcr_errs': 'PCR error',

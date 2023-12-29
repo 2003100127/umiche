@@ -15,7 +15,7 @@ from umiche.trim.Template import Template as trimmer
 from umiche.fastq.Convert import Convert as fastqconverter
 
 from umiche.deduplicate.OnePos import OnePos as dedupop
-from umiche.plot.Heterogeneity import Heterogeneity as plothetero
+from umiche.plot.scenario.TraceSingle import TraceSingle as plothetero
 
 from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
 from umiche.bam.Relation import Relation as umirel
@@ -162,7 +162,7 @@ class Heterogeneity:
                             self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
 
                         # print(self.df_apv_pct)
-                        # self.plothetero.n1(
+                        # self.plothetero.line_apv_disapv(
                         #     df_apv=self.df_apv_cnt,
                         #     df_disapv=self.df_disapv_cnt,
                         # )
