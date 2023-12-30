@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 umiche/data/
 umiche/path.py
+umiche/plot/transloc/
 
 __pycache__/
 *.py[cod]
