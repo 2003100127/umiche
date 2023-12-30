@@ -129,7 +129,7 @@ class editdistance(object):
                 shape=(len(cell_maps), len(gene_maps))
             )
             print('===>gc matrix shape: {}'.format(gc_mat.shape))
-            from ext.sequelpy.stat.gene.expression.Extreme import extreme as ppp
+            from umiche.plot.sequelpy.stat.gene.expression.Extreme import extreme as ppp
             high_genes = ppp.geneIds(
                 gc_mat.toarray(),
                 oriented='maximal',

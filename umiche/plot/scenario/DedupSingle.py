@@ -11,7 +11,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from umiche.util.Reader import reader as greader
-from umiche.simu.Parameter import Parameter as params
 
 
 class DedupSingle:
@@ -20,9 +19,10 @@ class DedupSingle:
             self,
             df,
             df_melt,
-            param_fpn,
     ):
-        self.params = params(param_fpn=param_fpn)
+        sns.set(font="Helvetica")
+        sns.set_style("ticks")
+
         self.greader = greader()
         self.df = df
         self.df_melt = df_melt
@@ -34,10 +34,7 @@ class DedupSingle:
         self.df_mcl_ed = self.df[self.df['method'] == 'MCL-ed']
 
 
-
     def jointplot(self, ):
-        sns.set(font="Helvetica")
-        sns.set_style("ticks")
         ppp = sns.jointplot(
             # x=self.df_mcl_ed['mean'].values,
             x=self.df_mcl_val['mean'].values,
@@ -57,20 +54,13 @@ class DedupSingle:
         plt.show()
 
     def jointgrid(self, ):
-        sns.set(font="Helvetica")
-        sns.set_style("ticks")
         # fig, ax = plt.subplots()
-        # met = 'directional'
-        # met = 'mcl_ed'
-        met = 'mcl_val'
+        self.df_melt = self.df_melt.rename(columns={'value': r'$\frac{N_e-N_t}{N_t}$'})
 
-        ddd = pd.DataFrame()
-        ddd['method'] = self.df_melt['method']
-        ddd['Sequencing error'] = self.df_melt['Sequencing error']
-        ddd[r'$\frac{N_e-N_t}{N_t}$'] = self.df_melt['value']
+        self.df_melt['Sequencing error'] = self.df_melt['Sequencing error'].astype(float)
 
         g = sns.JointGrid(
-            data=ddd[ddd['method'] == met],
+            data=self.df_melt[self.df_melt['method'] == 'MCL-ed'],
             x="Sequencing error",
             y=r'$\frac{N_e-N_t}{N_t}$',
             marginal_ticks=True,
@@ -85,9 +75,11 @@ class DedupSingle:
             cmap="light:#03012d", pmax=.8, cbar=True, cbar_ax=cax,
         )
 
-        g.ax_joint.set_title(met, fontsize=14)
-        g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[:]])
-        g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01])
+        g.ax_joint.set_title('Directional', fontsize=14)
+        g.ax_joint.set_xticks([int(x * 100000) for x in self.df_melt['Sequencing error'].unique().astype(float)])
+        g.ax_joint.set_xticklabels(self.df_melt['Sequencing error'].unique().astype(float))
+        # g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[:]])
+        # g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01])
         plt.setp(g.ax_joint.get_xticklabels(), rotation=45)
 
         g.plot_marginals(
@@ -105,8 +97,6 @@ class DedupSingle:
         return
 
     def strip(self, ):
-        sns.set(font="Helvetica")
-        sns.set_style("ticks")
         fig, ax = plt.subplots()
         sns.despine(bottom=True, left=True)
         cc = [
@@ -184,8 +174,6 @@ class DedupSingle:
         plt.show()
 
     def errorbar(self, ):
-        sns.set(font="Helvetica")
-        sns.set_style("ticks")
         # plt.rc('text', usetex=True)
         # plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
         fig, ax = plt.subplots()
@@ -248,8 +236,6 @@ class DedupSingle:
         return
 
     def errorband(self, ):
-        sns.set(font="Helvetica")
-        sns.set_style("ticks")
         fig, ax = plt.subplots()
         cc = [
             'tab:green',
@@ -341,7 +327,6 @@ if __name__ == "__main__":
     p = DedupSingle(
         df=df_dedup,
         df_melt=df_dedup_perm_melt,
-        param_fpn=to('data/params.yml'),
     )
     # print(p.strip())
     # print(p.jointplot())

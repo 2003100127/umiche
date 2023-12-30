@@ -96,7 +96,7 @@ G2 = nx.Graph()
 G2.add_nodes_from(makeNodes(ccs))
 G2.add_edges_from(edge_list)
 
-pos=nx.sp(G1)
+pos=nx.spring_layout(G1)
 # print(G.nodes())
 fig, ax = plt.subplots(figsize=(15, 15))
 nx.draw_networkx(G2, pos, edge_color=edge_colors2, with_labels=False, **options2)
