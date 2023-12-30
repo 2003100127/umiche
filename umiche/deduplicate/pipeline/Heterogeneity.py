@@ -44,7 +44,6 @@ class Heterogeneity:
 
         self.params = params(param_fpn=param_fpn)
         self.fwriter = fwriter()
-        self.plothetero = plothetero()
 
         self.console = Console()
         self.console.verbose = self.verbose
@@ -74,6 +73,8 @@ class Heterogeneity:
                 elif self.scenario == 'seq_deps':
                     self.fn_mark = str(id)
                 elif self.scenario == 'umi_lens':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'umi_nums':
                     self.fn_mark = str(id)
                 else:
                     self.fn_mark = str(scenario_i)
@@ -162,10 +163,10 @@ class Heterogeneity:
                             self.df_disapv_pct = pd.concat([self.df_disapv_pct, pd.DataFrame.from_dict(disapv_pct_dict, orient='index').T]).reset_index(drop=True)
 
                         # print(self.df_apv_pct)
-                        # self.plothetero.line_apv_disapv(
+                        # plothetero(
                         #     df_apv=self.df_apv_cnt,
                         #     df_disapv=self.df_disapv_cnt,
-                        # )
+                        # ).line_apv_disapv()
             self.df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
 
@@ -220,13 +221,14 @@ if __name__ == "__main__":
         # scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
-        scenario='seq_deps',
+        # scenario='seq_deps',
+        scenario='umi_nums',
 
         # method='unique',
-        method='cluster',
+        # method='cluster',
         # method='adjacency',
         # method='directional',
-        # method='mcl',
+        method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='mcl_cc_all_node_umis',
