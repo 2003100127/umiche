@@ -43,12 +43,38 @@ class Stat:
                 df_sce_met['max'] = df_sce_met.max(axis=1)
                 df_sce_met['min'] = df_sce_met.min(axis=1)
                 df_sce_met['std'] = df_sce_met.std(axis=1)
-                # df_sce_met['mean-min'] = df_sce_met['std']
-                # df_sce_met['max-mean'] = df_sce_met['std']
+                df_sce_met['mean-min'] = df_sce_met['std']
+                df_sce_met['max-mean'] = df_sce_met['std']
                 df_sce_met['scenario'] = scenario_formal
                 df_sce_met['method'] = method_formal
                 df_sce_met['metric'] = [str(x) for x in self.params.varied[scenario]]
                 df = pd.concat([df, df_sce_met], axis=0)
+        return df
+
+    @property
+    def df_dedup_perm_melt(self, ):
+        df = pd.DataFrame()
+        for scenario, scenario_formal in self.scenarios.items():
+            for method, method_formal in self.methods.items():
+                df_sce_met = self.freader.generic(
+                    df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
+                    header=0,
+                )
+                df_sce_met_T = df_sce_met.T
+                df_sce_met_T = (df_sce_met_T - 50) / 50
+                df_sce_met_T.columns = [str(x) for x in self.params.varied[scenario]]
+                df_sce_met_T['method'] = method_formal
+                df = pd.concat([df, df_sce_met_T], axis=0)
+        df_melt = pd.melt(df, 'method', var_name="Sequencing error")
+        return df_melt
+
+    @property
+    def df_dedup_melt(self, ):
+        df = pd.melt(
+            frame=self.df_dedup[['method', 'metric', 'scenario', 'mean']],
+            id_vars=['method', 'metric', 'scenario'],
+            # value_vars=['mean',],
+        )
         return df
 
     @property
@@ -103,15 +129,6 @@ class Stat:
             "apv": df_apv,
             "disapv": df_disapv,
         }
-
-    @property
-    def df_dedup_melt(self, ):
-        df = pd.melt(
-            frame=self.df_dedup[['method', 'metric', 'scenario', 'mean']],
-            id_vars=['method', 'metric', 'scenario'],
-            # value_vars=['mean',],
-        )
-        return df
 
 
 if __name__ == "__main__":

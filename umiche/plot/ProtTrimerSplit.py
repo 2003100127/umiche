@@ -355,8 +355,8 @@ if __name__ == "__main__":
         fpns=DEFINE['fpns']
     )
     # print(p.strip())
-    # print(p.jointplot())
-    print(p.jointgrid())
+    print(p.jointplot())
+    # print(p.jointgrid())
     # print(p.stackedbar())
     # print(p.errorbar())
     # print(p.errorband())
