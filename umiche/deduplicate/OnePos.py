@@ -305,9 +305,10 @@ if __name__ == "__main__":
 
     umiche = OnePos(
         # bam_fpn=to('data/example.bam'),
-        bam_fpn=to('data/example_bundle.bam'),
-        mcl_fold_thres=1.5,
-        inflat_val=1.6,
+        # bam_fpn=to('data/example_bundle.bam'),
+        bam_fpn=to('data/simu/mclumi/seq_errs/permute_0/trimmed/bam/seq_err_14.bam'),
+        mcl_fold_thres=1.6,
+        inflat_val=1.7,
         exp_val=2,
         iter_num=100,
         ed_thres=1,
@@ -317,10 +318,10 @@ if __name__ == "__main__":
         heterogeneity=False,  # False True
     )
 
-    print(umiche.unique())
-    print(umiche.cluster())
-    print(umiche.adjacency())
+    # print(umiche.unique())
+    # print(umiche.cluster())
+    # print(umiche.adjacency())
     print(umiche.directional())
-    print(umiche.mcl())
-    print(umiche.mcl_val())
-    print(umiche.mcl_ed())
+    # print(umiche.mcl())
+    # print(umiche.mcl_val())
+    # print(umiche.mcl_ed())

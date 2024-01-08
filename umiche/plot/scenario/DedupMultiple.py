@@ -16,7 +16,7 @@ from umiche.simu.Parameter import Parameter as params
 from umiche.deduplicate.io.Stat import Stat as dedupstat
 from umiche.plot.gadget.Transmitter import Transmitter as transmitter
 
-from umiche.util.Reader import reader as freader
+from umiche.util.Reader import Reader as freader
 
 
 class DedupMultiple:

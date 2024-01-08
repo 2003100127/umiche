@@ -5,15 +5,15 @@ __lab__ = "Adam Cribbs lab"
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ext.sequelpy.plot.boxplot.Style import style
+from umiche.plot.boxplot.Style import Style
 
 
-class gcmat(object):
+class boxplot:
 
     def __init__(self, ):
         pass
 
-    def boxplot(
+    def draw1(
             self,
             data_dict,
     ):
@@ -27,6 +27,26 @@ class gcmat(object):
                 {method_3: {val_dict_arr_1d_3: val_dict_containing_arr_1d_3}},
                 ...
                 {method_m: {val_dict_arr_1d_m: val_dict_containing_arr_1d_m}},
+            }
+
+            {
+                'real': {
+                    'val_dict_arr_1d':
+                    {'CD8+ Cytotoxic T': array([31, 33, 17, ..., 30, 27, 23], dtype=int64),
+                     'CD8+/CD45RA+ Naive Cytotoxic': array([31, 33, 17, ..., 27, 23, 21], dtype=int64),
+                     'CD4+/CD45RO+ Memory': array([31, 33, 17, ..., 30, 23, 27], dtype=int64),
+                     'CD19+ B': array([31, 33, 17, ..., 35, 27, 21], dtype=int64),
+                     'CD4+/CD25 T Reg': array([31, 17, 33, ..., 30, 23, 27], dtype=int64),
+                     'CD56+ NK': array([31, 17,  8, ..., 34,  8, 20], dtype=int64),
+                     'CD4+ T Helper2': array([31, 33, 17, ..., 30, 27, 23], dtype=int64),
+                     'CD4+/CD45RA+/CD25- Naive T': array([31, 33, 17, ..., 27, 21, 23], dtype=int64),
+                     'CD34+': array([ 8,  0, 17, ..., 36,  0, 26], dtype=int64),
+                     'Dendritic': array([31,  8,  3, ..., 26,  9, 35], dtype=int64),
+                     'CD14+ Monocyte': array([ 3,  8, 31, ..., 35, 26, 12], dtype=int64)}
+                }
+                'method_2': {
+                    ...
+                }
             }
 
         ..  Example:
@@ -92,7 +112,7 @@ class gcmat(object):
             'sienna',
             'crimson',
         ]
-        style().plain(boxplot_handles=bplot_handles, palette=palette)
+        Style().plain(boxplot_handles=bplot_handles, palette=palette)
 
         # add legend to the boxplot
         ax.legend(
@@ -105,3 +125,7 @@ class gcmat(object):
         # fig.tight_layout()
         plt.show()
         return 0
+
+    def draw2(self, ):
+        return
+

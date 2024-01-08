@@ -8,9 +8,9 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-from umiche.util.Reader import reader as greader
+import matplotlib.pyplot as plt
+from umiche.util.Reader import Reader as freader
 
 
 class DedupSingle:
@@ -20,32 +20,33 @@ class DedupSingle:
             df,
             df_melt,
     ):
+        # sns.set(font="Verdana")
         sns.set(font="Helvetica")
         sns.set_style("ticks")
 
-        self.greader = greader()
+        self.freader = freader()
         self.df = df
         self.df_melt = df_melt
         print(self.df)
         print(self.df_melt)
 
-        self.df_direc = self.df[self.df['method'] == 'Directional']
-        self.df_mcl_val = self.df[self.df['method'] == 'MCL-val']
-        self.df_mcl_ed = self.df[self.df['method'] == 'MCL-ed']
-
-
-    def jointplot(self, ):
+    def jointplot(
+            self,
+            method,
+    ):
         ppp = sns.jointplot(
-            # x=self.df_mcl_ed['mean'].values,
-            x=self.df_mcl_val['mean'].values,
-            y=self.df_direc['mean'].values,
+            x=self.df[self.df['method'] == method]['mean'].values,
+            y=self.df[self.df['method'] == 'Directional']['mean'].values,
             kind="reg",
             color="crimson",
             label='asd',
         )
         ppp.ax_joint.plot([0, 8.5], [0, 8.5], 'grey', linewidth=2, alpha=1)
-        # ppp.set_axis_labels('mcl_ed '+ r'($\frac{N_e-N_t}{N_t}$)' , 'directional ' + r'($\frac{N_e-N_t}{N_t}$)', fontsize=14)
-        ppp.set_axis_labels('mcl_val '+ r'($\frac{N_e-N_t}{N_t}$)' , 'directional ' + r'($\frac{N_e-N_t}{N_t}$)', fontsize=14)
+        ppp.set_axis_labels(
+            r'$\frac{N_e-N_t}{N_t}$' + ' (' + method + ')',
+            r'$\frac{N_e-N_t}{N_t}$' + ' (Directional)',
+            fontsize=14,
+        )
         ppp.ax_joint.text(8, 8.5, "confidence interval", horizontalalignment='right', size='medium', color='crimson',)
         ppp.ax_joint.text(3, 5.5, "regression", horizontalalignment='left', size='medium', color='crimson',)
         ppp.ax_joint.text(5.5, 5, "baseline", horizontalalignment='left', size='medium', color='black',)
@@ -53,14 +54,18 @@ class DedupSingle:
         plt.tight_layout()
         plt.show()
 
-    def jointgrid(self, ):
+    def jointgrid(
+            self,
+            method='MCL-ed',
+    ):
         # fig, ax = plt.subplots()
         self.df_melt = self.df_melt.rename(columns={'value': r'$\frac{N_e-N_t}{N_t}$'})
 
         self.df_melt['Sequencing error'] = self.df_melt['Sequencing error'].astype(float)
-
+        self.df_melt = self.df_melt.loc[self.df_melt['Sequencing error'] <5.0e-03]
+        print(self.df_melt)
         g = sns.JointGrid(
-            data=self.df_melt[self.df_melt['method'] == 'MCL-ed'],
+            data=self.df_melt[self.df_melt['method'] == method],
             x="Sequencing error",
             y=r'$\frac{N_e-N_t}{N_t}$',
             marginal_ticks=True,
@@ -68,18 +73,22 @@ class DedupSingle:
 
         # Create an inset legend for the histogram colorbar
         cax = g.figure.add_axes([.20, .55, .02, .2])
-
+        g.ax_joint.set_xlabel('Sequencing error', fontsize=16)
+        g.ax_joint.set_ylabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=18)
         # Add the joint and marginal histogram plots
         g.plot_joint(
-            sns.kdeplot, discrete=(True, False),
+            sns.kdeplot,
+            discrete=(True, False),
             cmap="light:#03012d", pmax=.8, cbar=True, cbar_ax=cax,
         )
 
-        g.ax_joint.set_title('Directional', fontsize=14)
-        g.ax_joint.set_xticks([int(x * 100000) for x in self.df_melt['Sequencing error'].unique().astype(float)])
-        g.ax_joint.set_xticklabels(self.df_melt['Sequencing error'].unique().astype(float))
-        # g.ax_joint.set_xticks([int(x*100000) for x in self.seq_fix_errs[:]])
-        # g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01])
+        g.ax_joint.set_title(method, fontsize=14)
+        xticks = self.df_melt['Sequencing error'].unique()
+        print(xticks[xticks < 5.0e-03])
+        g.ax_joint.set_xticks(np.linspace(xticks[xticks <5.0e-03][0], xticks[xticks <5.0e-03][-1], 4))
+        # g.ax_joint.set_xticklabels(xticks[xticks <5.0e-03])
+        # g.ax_joint.set_xticklabels([1e-05, '', '', '', '', '', '', '', 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025])
+        g.ax_joint.set_xticklabels(np.linspace(xticks[xticks <5.0e-03][0], xticks[xticks <5.0e-03][-1], 4))
         plt.setp(g.ax_joint.get_xticklabels(), rotation=45)
 
         g.plot_marginals(
@@ -87,38 +96,54 @@ class DedupSingle:
             element="step",
             color="#03012d",
         )
-        # ax.legend(ncol=2, loc="upper right", frameon=True)
-        # g.set(ylabel="", xlabel="Automobile collisions per billion miles")
-        # ax.set_ylabel('Sequencing error', fontsize=12)
-        # ax.set_xlabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=12)
         # sns.despine(left=True, bottom=True)
         plt.tight_layout()
         plt.show()
-        return
 
     def strip(self, ):
         fig, ax = plt.subplots()
         sns.despine(bottom=True, left=True)
         cc = [
             'tab:green',
-            'crimson',
             'tab:blue',
+            'crimson',
         ]
-        # Show each observation with a scatterplot
-        sns.stripplot(x="value", y="Sequencing error", hue='method', palette=cc,
-                      data=self.df_melt, dodge=True, alpha=.25, zorder=1)
-        # sns.pointplot(x="value", y="Sequencing error", hue='method',
-        #               data=self.df_melt, dodge=.8 - .8 / 3,
-        #               join=False,  palette=cc,
-        #               markers="d", scale=.75, ci=None)
-
-        # Improve the legend
+        sns.stripplot(
+            x="value",
+            y="Sequencing error",
+            hue='method',
+            palette=cc,
+            data=self.df_melt,
+            dodge=True,
+            alpha=.25,
+            zorder=1,
+        )
+        sns.pointplot(
+            x="value",
+            y="Sequencing error",
+            hue='method',
+            data=self.df_melt,
+            dodge=.8 - .8 / 3,
+            join=False,
+            palette=cc,
+            markers="d",
+            scale=.75,
+            ci=None,
+        )
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[3:], labels[3:], title='method',
-                  handletextpad=0, columnspacing=1,
-                  loc="upper right", ncol=3, frameon=True)
-        ax.set_xlabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=14)
-        ax.set_ylabel('Sequencing error rate', fontsize=14)
+        ax.legend(
+            handles[len(handles)//2:],
+            labels[len(handles)//2:],
+            title='',
+            handletextpad=0,
+            columnspacing=1,
+            loc="upper right",
+            ncol=3,
+            frameon=True,
+            fontsize=12,
+        )
+        ax.set_xlabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=16)
+        ax.set_ylabel('Sequencing error rate', fontsize=16)
         fig.subplots_adjust(
             top=0.98,
             bottom=0.15,
@@ -131,8 +156,10 @@ class DedupSingle:
 
     def stackedbar(self, ):
         fig, ax = plt.subplots(figsize=(4, 5))
-        # sns.set(font="Verdana")
-        sns.set(font="Helvetica")
+
+        self.df_direc = self.df[self.df['method'] == 'Directional']
+        self.df_mcl_val = self.df[self.df['method'] == 'MCL-val']
+        self.df_mcl_ed = self.df[self.df['method'] == 'MCL-ed']
 
         self.df_mcl_val["dmean"] = self.df_direc["mean"] - self.df_mcl_val["mean"]
         self.df_mcl_ed["dmean"] = self.df_direc["mean"] - self.df_mcl_ed["mean"]
@@ -158,15 +185,15 @@ class DedupSingle:
         )
 
         # plt.fill_between(self.df_mcl_val["dmean"], self.df_mcl_val["metric"])
-        ax.legend(ncol=2, loc="upper right", frameon=True)
+        ax.legend(ncol=2, loc="upper right", frameon=True, fontsize=12)
         # ax.set(ylabel="", xlabel="Automobile collisions per billion miles")
-        ax.set_ylabel('Sequencing error', fontsize=12)
-        ax.set_xlabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=12)
+        ax.set_ylabel('Sequencing error', fontsize=16)
+        ax.set_xlabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=16)
         sns.despine(left=True, bottom=True)
         fig.subplots_adjust(
             top=0.98,
-            bottom=0.12,
-            left=0.20,
+            bottom=0.14,
+            left=0.24,
             right=0.98,
             # hspace=0.40,
             # wspace=0.15
@@ -233,13 +260,13 @@ class DedupSingle:
         )
         plt.legend(fontsize=11, loc='upper left')
         plt.show()
-        return
 
     def errorband(self, ):
         fig, ax = plt.subplots()
         cc = [
             'tab:green',
             'tab:blue',
+            # 'dimgray',
             'crimson',
         ]
         df_gp = self.df.groupby(by=['method'])
@@ -262,8 +289,8 @@ class DedupSingle:
                 markersize=3,
                 label=met,
             )
-            ax.plot(df_met.index, df_met['mean'] - df_met['mean-min'], color=cc[i], linewidth=0.1,alpha=0.1)
-            ax.plot(df_met.index, df_met['max-mean'] + df_met['mean'], color=cc[i], linewidth=0.1,alpha=0.1)
+            ax.plot(df_met.index, df_met['mean'] - df_met['mean-min'], color=cc[i], linewidth=0.1, alpha=0.1)
+            ax.plot(df_met.index, df_met['max-mean'] + df_met['mean'], color=cc[i], linewidth=0.1, alpha=0.1)
             ax.fill_between(
                 df_met.index,
                 df_met['mean'] - df_met['mean-min'],
@@ -289,7 +316,6 @@ class DedupSingle:
         )
         plt.legend(fontsize=11)
         plt.show()
-        return
 
 
 if __name__ == "__main__":
@@ -312,7 +338,7 @@ if __name__ == "__main__":
         # 'dbscan_seq_onehot': 'DBSCAN',
         # 'birch_seq_onehot': 'Birch',
         # 'aprop_seq_onehot': 'Affinity Propagation',
-        # 'mcl': 'MCL',
+        'mcl': 'MCL',
         'mcl_val': 'MCL-val',
         'mcl_ed': 'MCL-ed',
     }
@@ -329,8 +355,17 @@ if __name__ == "__main__":
         df_melt=df_dedup_perm_melt,
     )
     # print(p.strip())
-    # print(p.jointplot())
-    print(p.jointgrid())
+    # print(p.jointplot(
+    #     # method='MCL',
+    #     method='MCL-val',
+    #     # method='MCL-ed',
+    # ))
+    print(p.jointgrid(
+        # method='Directional',
+        # method='MCL',
+        # method='MCL-val',
+        method='MCL-ed',
+    ))
     # print(p.stackedbar())
     # print(p.errorbar())
     # print(p.errorband())

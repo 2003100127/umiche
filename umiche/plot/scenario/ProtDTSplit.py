@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from umiche.util.Reader import reader as greader
+from umiche.util.Reader import Reader as freader
 from umiche.deduplicate.trimer.pipeline import Config
 
 
@@ -10,12 +10,12 @@ class protDTSplit(Config.config):
 
     def __init__(self, fpns):
         super(protDTSplit, self).__init__()
-        self.greader = greader()
+        self.freader = freader()
         self.df = pd.DataFrame()
         self.df_T = pd.DataFrame()
         for method, fpn in fpns.items():
-            df_met = self.greader.generic(df_fpn=fpn, header=0)[:]
-            # df_met = self.greader.generic(df_fpn=fpn, header=0)[:13]
+            df_met = self.freader.generic(df_fpn=fpn, header=0)[:]
+            # df_met = self.freader.generic(df_fpn=fpn, header=0)[:13]
             df_met_T = df_met.T
             df_met_T = (df_met_T - 50) / 50
             df_met_T.columns = ['{:.1e}'.format(x) for x in self.seq_errs[:]]

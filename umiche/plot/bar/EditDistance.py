@@ -1,18 +1,26 @@
-import sys
+__version__ = "v1.0"
+__copyright__ = "Copyright 2024"
+__license__ = "MIT"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+__lab__ = "Cribbslab"
+
 import pandas as pd
-import numpy as np
 import seaborn as sns
-from pathlib import Path
 from matplotlib import pyplot as plt
-import ext.sequelpy.plot.bar.external.lca_standard_graphs as lsg
-from ext.morph.pdo.Reader import reader as freader
-from Path import to
+import umiche.plot.bar.external.lca_standard_graphs as lsg
+from umiche.util.Reader import Reader as freader
+from umiche.path import to
 
 
-class editdistance(object):
+class editdistance:
 
     def __init__(self, ):
         self.freader = freader()
+
+        sns.set(font="Helvetica")
+        sns.set_style("ticks")
 
     def umi_tools(self, ):
         tool = 'UMI-tools'
@@ -89,12 +97,12 @@ class editdistance(object):
     def wk2(self, ):
         tool = 'Mclumi'
         umi_len = 10
-        met_full = ['Cluster', 'Adjacency', 'Directional', 'Mcl', 'Mcl_val', 'Mcl_ed']
-        met_full_s = ['cluster', 'adjacency', 'directional', 'mcl', 'mcl_val', 'mcl_ed']
-        met_abbr = ['cc', 'adj', 'direc', 'mcl', 'mcl_val', 'mcl_ed']
+        met_full = ['Cluster', 'Adjacency', 'Directional', 'MCL']
+        met_full_s = ['cluster', 'adjacency', 'directional', 'mcl']
+        met_abbr = ['cc', 'adj', 'direc', 'mcl']
         # df = pd.DataFrame()
         df_ex = self.freader.generic(
-            df_fpn=to('ext/data/sc/umi/hgmm100/ed6/uniq_dedup_sum.txt'),
+            df_fpn=to('data/simu/sc/hgmm100/ed6/uniq_dedup_sum.txt'),
             df_sep='\t',
             header=0,
             index_col=0,
@@ -111,7 +119,7 @@ class editdistance(object):
             df = self.freader.generic(
                 # df_fpn=to('ext/data/seq/umi/example.bam/ed1/mclumi/') + met_a + '_ave_ed_pos_bin.txt',
                 # df_fpn=to('ext/data/bulk/RM82CLK1_S3/umi/') + met_a + '_ave_ed_pos_bin.txt',
-                df_fpn=to('ext/data/sc/umi/hgmm100/ed6/') + met_a + '_dedup_sum.txt',
+                df_fpn=to('data/simu/sc/hgmm100/ed6/') + met_a + '_dedup_sum.txt',
                 df_sep='\t',
                 header=0,
                 index_col=0,
@@ -129,12 +137,12 @@ class editdistance(object):
                 shape=(len(cell_maps), len(gene_maps))
             )
             print('===>gc matrix shape: {}'.format(gc_mat.shape))
-            from umiche.plot.sequelpy.stat.gene.expression.Extreme import extreme as ppp
-            high_genes = ppp.geneIds(
-                gc_mat.toarray(),
+            from umiche.plot.stat.gene.expression.Extreme import Extreme as ppp
+            high_genes = ppp().geneIds(
+                gc_mat=gc_mat.toarray(),
                 oriented='maximal',
                 n_top=10,
-                scheme={'method': 'mean', 'cell_ratio': 0.9}
+                scheme={'method': 'mean', 'cell_ratio': 0.9},
             )
             gene_ids = [gene_rev_maps[i] for i in high_genes]
             print(gene_ids)
@@ -146,11 +154,35 @@ class editdistance(object):
             #     print(df.loc[df['gene'].isin([i])])
         return
 
+    def asdas(self, ):
+        import numpy as np
+        np.random.seed(19680801)
+        data = np.random.lognormal(size=(37, 4), mean=1.5, sigma=1.75)
+        labels = list('ABCD')
+        fs = 10  # fontsize
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+        bplot = ax.boxplot(data, labels=labels)
+        ax.set_title('Default', fontsize=fs)
+        ax.spines['right'].set_color('none')
+        ax.spines['top'].set_color('none')
+
+        # for bplot_handle, color in zip(boxplot_handles, palette):
+        for patch in bplot['boxes']:
+            patch.set(color='black', linewidth=1.1)
+            # patch.set(facecolor='white', alpha=0.3)
+        for whisker in bplot['whiskers']:
+            whisker.set(color='black', linewidth=1)
+        for cap in bplot['caps']:
+            cap.set(color='black', linewidth=1)
+        for median in bplot['medians']:
+            median.set(color='black', linewidth=1)
+        for flier in bplot['fliers']:
+            flier.set(marker='o', color='y', alpha=0.5)
+
+        fig.subplots_adjust(hspace=0.4)
+        plt.show()
+
     def bplot(self, x_col_name, y_col_name, xlabel, df):
-        import seaborn as sns
-        from matplotlib import pyplot as plt
-        sns.set_theme(style="ticks")
-        # Initialize the figure with a logarithmic x axis
         fig, ax = plt.subplots(figsize=(8, 6))
         # ax.set_xscale("log")
 
@@ -160,24 +192,29 @@ class editdistance(object):
             y=y_col_name,
             data=df,
             whis=[0, 100],
-            width=.6,
-            palette="vlag"
+            width=0.6,
+            fill=False,
+            gap=0.1,
+            color="grey",
+            # palette="grey",
         )
         # Add in points to show each observation
         sns.stripplot(
             x=x_col_name,
             y=y_col_name,
             data=df,
-            size=4,
-            color=".3",
-            linewidth=0,
+            size=2,
+            color="whitesmoke",
+            linewidth=0.8,
+            alpha=0.8,
         )
         # Tweak the visual presentation
-        ax.xaxis.grid(True)
+        # ax.xaxis.grid(True)
         ax.set(ylabel="")
+        ax.set(xlabel="")
         sns.despine(trim=True, left=True)
 
-        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_title(xlabel, fontsize=16)
         fig.subplots_adjust(
             # bottom=0.26,
             # top=0.92,
@@ -190,9 +227,10 @@ class editdistance(object):
 if __name__ == "__main__":
 
     p = editdistance()
-    # print(p.wk2())
+    print(p.wk2())
+    # print(p.asdas())
 
-    print(p.data())
+    # print(p.data())
 # pd.options.display.multi_sparse = False
 
 # # Define dataframes

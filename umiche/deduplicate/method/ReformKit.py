@@ -49,6 +49,16 @@ class ReformKit:
         """
         return df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
 
+    def breakpoint(self, x, connected_components):
+        print('MCL clusters:\n {}'.format(x['clusters']))
+        print('CCS:\n {}'.format(len(connected_components)))
+        print('CC:\n {}'.format(x['cc_vertices']))
+        print('Edge list of MCL clusters:\n {}'.format(x['edge_list']))
+        print('Graph adj list of MCL clusters:\n {}'.format(x['graph_cc_adj']))
+        print('\n')
+        # df.to_csv('./sd.txt', sep='\t', index=False, header=True)
+        return
+
     def keymap(
             self,
             graph_adj,

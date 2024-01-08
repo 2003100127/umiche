@@ -74,8 +74,10 @@ class MarkovClustering:
             each connected component is decomposed into more connected subcomponents.
 
         """
+        # print(connected_components)
         # print([*connected_components.values()])
         df_ccs = pd.DataFrame({'cc_vertices': [*connected_components.values()]})
+        # print(df_ccs['cc_vertices'])
         df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))
         ### @@ graph_cc_adj
         # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A', 'E', 'F'], 'E': ['D'], 'F': ['D']}
@@ -102,18 +104,20 @@ class MarkovClustering:
         #  [0. 0. 0. 1. 0. 0.]]
         df_ccs['mcl_clusters'] = df_ccs['cc_adj_mat'].apply(lambda x: self.cluster(x))
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.refkit.key2node(list_2d=x['mcl_clusters'], keymap=x['int_to_nt_map']), axis=1)
+        # print(df_ccs['clusters'].values.tolist())
         ### @@ mcl_clusters
         # [(0, 1, 2), (3, 4, 5)]
         ### @@ clusters
         # [['A', 'B', 'C'], ['D', 'E', 'F']]
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
+        # df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: print(x) if len(x) > 1 else 1)
         ### @@ clust_num
         # 2
-
         df_ccs['edge_list'] = df_ccs['graph_cc_adj'].apply(lambda graph: self.adj_to_edge_list(graph=graph))
         # print(df_ccs['edge_list'])
         df_ccs['apv'] = df_ccs['edge_list'].apply(lambda edge_list: [list(el) for el in edge_list])
         # print(df_ccs['apv'])
+        # df_ccs.apply(lambda x: self.refkit.breakpoint(x, connected_components) if x['clust_num'] > 1 else 1, axis=1)
         return df_ccs
 
     def dfclusters_cc_all_node_umis(
@@ -247,6 +251,7 @@ class MarkovClustering:
         -------
 
         """
+        print(df_umi_uniq_val_cnt)
         df_mcl_ccs['mscmv_val'] = df_mcl_ccs['clusters'].apply(
             lambda x: self.maxval_val_(
                 mcl_clusters_per_cc=x,

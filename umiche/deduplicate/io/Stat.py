@@ -11,7 +11,7 @@ from typing import Dict
 import pandas as pd
 from umiche.simu.Parameter import Parameter as params
 
-from umiche.util.Reader import reader as freader
+from umiche.util.Reader import Reader as freader
 
 
 class Stat:
@@ -94,29 +94,19 @@ class Stat:
                 df_sce_met_apv_perm = df_sce_met_apv_perm.rename(columns={'scenario': 'metric'})
                 df_sce_met_disapv_perm = df_sce_met_disapv_perm.rename(columns={'scenario': 'metric'})
 
-                df_sce_met_apv = df_sce_met_apv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
-                df_sce_met_apv['diff_origin_max'] = df_sce_met_apv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'max'})['diff_origin'].values
-                df_sce_met_apv['diff_origin_min'] = df_sce_met_apv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'min'})['diff_origin'].values
-                df_sce_met_apv['same_origin_max'] = df_sce_met_apv_perm.groupby(by=['metric']).agg(
-                    {'same_origin': 'max'})['same_origin'].values
-                df_sce_met_apv['same_origin_min'] = df_sce_met_apv_perm.groupby(by=['metric']).agg(
-                    {'same_origin': 'min'})['same_origin'].values
+                df_sce_met_apv = df_sce_met_apv_perm.groupby(by=['metric']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
+                df_sce_met_apv['diff_origin_max'] = df_sce_met_apv_perm.groupby(by=['metric']).agg({'diff_origin': 'max'})['diff_origin'].values
+                df_sce_met_apv['diff_origin_min'] = df_sce_met_apv_perm.groupby(by=['metric']).agg({'diff_origin': 'min'})['diff_origin'].values
+                df_sce_met_apv['same_origin_max'] = df_sce_met_apv_perm.groupby(by=['metric']).agg({'same_origin': 'max'})['same_origin'].values
+                df_sce_met_apv['same_origin_min'] = df_sce_met_apv_perm.groupby(by=['metric']).agg({'same_origin': 'min'})['same_origin'].values
                 df_sce_met_apv['scenario'] = scenario_formal
                 df_sce_met_apv['method'] = method_formal
 
-                df_sce_met_disapv = df_sce_met_disapv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
-                df_sce_met_disapv['diff_origin_max'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'max'})['diff_origin'].values
-                df_sce_met_disapv['diff_origin_min'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg(
-                    {'diff_origin': 'min'})['diff_origin'].values
-                df_sce_met_disapv['same_origin_max'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg(
-                    {'same_origin': 'max'})['same_origin'].values
-                df_sce_met_disapv['same_origin_min'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg(
-                    {'same_origin': 'min'})['same_origin'].values
+                df_sce_met_disapv = df_sce_met_disapv_perm.groupby(by=['metric']).agg({'diff_origin': 'mean', 'same_origin': 'mean'}).reset_index()
+                df_sce_met_disapv['diff_origin_max'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg({'diff_origin': 'max'})['diff_origin'].values
+                df_sce_met_disapv['diff_origin_min'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg({'diff_origin': 'min'})['diff_origin'].values
+                df_sce_met_disapv['same_origin_max'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg({'same_origin': 'max'})['same_origin'].values
+                df_sce_met_disapv['same_origin_min'] = df_sce_met_disapv_perm.groupby(by=['metric']).agg({'same_origin': 'min'})['same_origin'].values
                 df_sce_met_disapv['scenario'] = scenario_formal
                 df_sce_met_disapv['method'] = method_formal
 
@@ -130,6 +120,32 @@ class Stat:
             "disapv": df_disapv,
         }
 
+    @property
+    def df_inflat_exp(self, ):
+        df_inflat = pd.DataFrame()
+        df_exp = pd.DataFrame()
+        for scenario, scenario_formal in self.scenarios.items():
+            df_inflat_sub = self.freader.generic(
+                df_fpn=self.params.work_dir + scenario + '/inflat_val.txt',
+                header=None,
+            )
+            df_inflat_sub = df_inflat_sub.rename(columns={0: 'id', 1: 'cnt'})
+            df_exp_sub = self.freader.generic(
+                df_fpn=self.params.work_dir + scenario + '/exp_val.txt',
+                header=None,
+            )
+            df_exp_sub = df_exp_sub.rename(columns={0: 'id', 1: 'cnt'})
+            # print(df_inflat_sub)
+            # print(df_exp_sub)
+            # print(scenario)
+            df_inflat[scenario_formal] = df_inflat_sub['cnt']
+            df_exp[scenario_formal] = df_exp_sub['cnt']
+        df_inflat = (df_inflat - 50) / 50
+        df_exp = (df_exp - 50) / 50
+        df_inflat.index = df_inflat_sub['id'].values
+        df_exp.index = df_exp_sub['id'].astype(int).values
+        return df_inflat, df_exp
+
 
 if __name__ == "__main__":
     from umiche.path import to
@@ -138,23 +154,23 @@ if __name__ == "__main__":
         scenarios={
             'pcr_nums': 'PCR cycle',
             'pcr_errs': 'PCR error',
-            # 'seq_errs': 'Sequencing error',
-            # 'ampl_rates': 'Amplification rate',
-            # 'umi_lens': 'UMI length',
-            # 'seq_deps': 'Sequencing depth',
+            'seq_errs': 'Sequencing error',
+            'ampl_rates': 'Amplification rate',
+            'umi_lens': 'UMI length',
+            'seq_deps': 'Sequencing depth',
         },
 
         methods={
             # 'unique': 'Unique',
             # 'cluster': 'Cluster',
             # 'adjacency': 'Adjacency',
-            'directional': 'Directional',
+            # 'directional': 'Directional',
             # 'dbscan_seq_onehot': 'DBSCAN',
             # 'birch_seq_onehot': 'Birch',
             # 'aprop_seq_onehot': 'Affinity Propagation',
-            # 'mcl': 'MCL',
-            'mcl_val': 'MCL-val',
-            'mcl_ed': 'MCL-ed',
+            'mcl': 'MCL',
+            # 'mcl_val': 'MCL-val',
+            # 'mcl_ed': 'MCL-ed',
         },
 
         param_fpn=to('data/params.yml'),
@@ -162,4 +178,5 @@ if __name__ == "__main__":
 
     # print(p.df_dedup)
     # print(p.df_dedup_melt)
-    print(p.df_trace_cnt)
+    # print(p.df_trace_cnt)
+    print(p.df_inflat_exp)

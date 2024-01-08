@@ -1,15 +1,20 @@
 import time
 import numpy as np
-from ext.dacube.math.normalization.Matrix import matrix as normmat
 
 
-class extreme(object):
+class Extreme:
 
     def __init__(self, ):
         pass
 
-    @classmethod
-    def geneIds(scls, gc_mat, oriented='maximal', n_top=10, scheme={'method': 'mean',}, is_norm=False):
+    def pervector(self, gc_mat, axis=1):
+        d_sum = np.sum(gc_mat, axis=axis)
+        if axis == 1:
+            return gc_mat / d_sum[:, np.newaxis]
+        elif axis == 0:
+            return (gc_mat.T / d_sum[:, np.newaxis]).T
+
+    def geneIds(self, gc_mat, oriented='maximal', n_top=10, scheme={'method': 'mean',}, is_norm=False):
         """
         ..  Summary:
             --------
@@ -28,7 +33,7 @@ class extreme(object):
         """
         print('======>start to find extreme gene ids...')
         if is_norm:
-            gc_mat = normmat(gc_mat).pervector()
+            gc_mat = self.pervector(gc_mat)
         if scheme['method'] == 'mean':
             mean_stime = time.time()
             d = gc_mat.mean(axis=0)
@@ -88,7 +93,7 @@ if __name__ == "__main__":
         [1., 1., 1., 2., 2.],
         [1., 22., 1., 2., 2.]
     ])
-    p = extreme()
+    p = Extreme()
     print(p.geneIds(gc_mat, oriented='maximal', n_top=3, scheme={'method': 'cell_ratio', 'cell_ratio': 0.2}))
 
     cls_vec = {0: [0, 2], 1: [1]}

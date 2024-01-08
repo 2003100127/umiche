@@ -262,14 +262,14 @@ if __name__ == "__main__":
         iter_num=100,
         ed_thres=1,
         work_dir=to('data/'),
-        verbose=True, # False
+        verbose=False, # False True
         heterogeneity=True, # False
     )
 
     # print(umiche.unique())
     # print(umiche.cluster())
     # print(umiche.adjacency())
-    # print(umiche.directional())
-    print(umiche.mcl())
-    print(umiche.mcl_val())
+    print(umiche.directional())
+    # print(umiche.mcl())
+    # print(umiche.mcl_val())
     # print(umiche.mcl_ed())

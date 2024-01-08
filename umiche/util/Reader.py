@@ -10,7 +10,7 @@ import pandas as pd
 from functools import wraps
 
 
-class reader:
+class Reader:
 
 
 
@@ -38,7 +38,7 @@ class reader:
                 )
         return read
 
-    def generic(self, df_fpn, df_sep='\t', skiprows=None, header=None, is_utf8=False):
+    def generic(self, df_fpn, df_sep='\t', skiprows=None, header=None, index_col=None, is_utf8=False):
         """
 
         Parameters
@@ -58,6 +58,7 @@ class reader:
                 df_fpn,
                 sep=df_sep,
                 header=header,
+                index_col=index_col,
                 encoding='utf-8',
                 skiprows=skiprows,
             )
@@ -66,6 +67,7 @@ class reader:
                 df_fpn,
                 sep=df_sep,
                 header=header,
+                index_col=index_col,
                 skiprows=skiprows
             )
 

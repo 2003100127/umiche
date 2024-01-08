@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from umiche.util.Reader import reader as freader
+from umiche.util.Reader import Reader as freader
 from umiche.deduplicate.trimer.pipeline import Config
 
 

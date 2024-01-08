@@ -1,4 +1,4 @@
-from umiche.align import BundlePos as bp
+from umiche.bam import Bundle as bp
 
 
 def umi_tools(

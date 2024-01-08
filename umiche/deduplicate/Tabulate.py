@@ -327,6 +327,8 @@ class Tabulate:
             self,
             **kwargs
     ):
+        # print(self.df.columns)
+        # print(self.df)
         dedup_umi_stime = time.time()
         umimcl_ob = umimcl(
             inflat_val=kwargs['inflat_val'],

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from umiche.util.Reader import reader as greader
+from umiche.util.Reader import Reader as freader
 from umiche.deduplicate.pipeline import Config
 
 
@@ -27,15 +27,15 @@ class protSC(Config.config):
         :param fpns:
         """
         super(protSC, self).__init__()
-        self.greader = greader()
-        self.df_gt = self.greader.generic(df_fpn=fpns['ground_truth'], header=0)[:]
+        self.freader = freader()
+        self.df_gt = self.freader.generic(df_fpn=fpns['ground_truth'], header=0)[:]
         print(self.df_gt['gc_cnt'].sum())
         self.df_gt['gc_tag'] = self.df_gt.apply(lambda x: 'cell'+str(x[0] + 1) + ' ' + 'gene' + str(x[1] + 1), axis=1)
         print(self.df_gt)
         self.df = pd.DataFrame()
         df_melt = pd.DataFrame()
         for method, fpn in fpns['methods'].items():
-            df_met = self.greader.generic(df_fpn=fpn, header=0)[:]
+            df_met = self.freader.generic(df_fpn=fpn, header=0)[:]
             # print(df_met)
             df_met = df_met.sub(self.df_gt['gc_cnt'], axis='rows')
             df_met = df_met.div(self.df_gt['gc_cnt'], axis='rows')
