@@ -7,12 +7,20 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import time
+import pandas as pd
+from umiche.util.Console import Console
 
 
-class reader:
+class Reader:
+
+    def __init__(
+            self,
+            verbose=False,
+    ):
+        self.console = Console()
+        self.console.verbose = verbose
 
     def todf(self, seqs, names):
-        import pandas as pd
         umi_df_stime = time.time()
         df_fastq = pd.DataFrame(seqs, columns=['seq_raw'])
         df_fastq['name'] = names
@@ -26,7 +34,7 @@ class reader:
         # print(df_fastq['umi'])
         # print(df_fastq['umi#'])
         # print(df_fastq['umi_src'])
-        print('===>Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
+        self.console.print('===============>Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
         return df_fastq
 
     def todfFromTree(self, seqs, names):
@@ -45,7 +53,7 @@ class reader:
         # print(df_fastq['umi'])
         # print(df_fastq['umi#'])
         # print(df_fastq['umi_src'])
-        print('===>Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
+        self.console.print('===>Trimmed UMIs to df time: {:.3f}s'.format(time.time() - umi_df_stime))
         return df_fastq
 
     def pcrnum(self, x):

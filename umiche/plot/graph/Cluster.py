@@ -26,11 +26,11 @@ class Cluster:
         self.palette = self.pele.color(which='ccs4', is_random=True)
         self.palette = [
             'crimson',
-            'grey',
+            'gray', # grey sienna
+            'orange',
             'seagreen',
-            'green',
-            'teal',
-            'olive',
+            'cornflowerblue',
+            'sienna',
         ]
         sns.set(font="Helvetica")
         sns.set_style("ticks")
@@ -52,27 +52,35 @@ class Cluster:
         # self.ccs = {0: [3, 88], 3: [0, 86], 88: [0], 86: [3, 82], 82: [18, 86, 93], 18: [11, 82], 93: [82], 11: [18, 53], 53: [11, 25, 52], 25: [53, 97], 52: [53, 95], 97: [7, 25], 95: [52], 7: [97]}
         # self.edge_list = [(53, 11), (52, 53), (93, 82), (7, 97), (95, 52), (88, 0), (3, 0), (86, 3), (11, 18), (82, 86), (25, 53), (97, 25), (18, 82)]
 
-        # cc
-        self.dedup_cluster =  [[23, 41, 27, 62, 85, 48, 58, 81, 28, 46, 45, 38, 71, 39, 64, 49]]
+        # cc iCHIP
+        # self.dedup_cluster =  [[23, 41, 27, 62, 85, 48, 58, 81, 28, 46, 45, 38, 71, 39, 64, 49]]
         # mcl
         # self.dedup_cluster =  [[23, 41, 27, 62], [85, 48, 58, 81, 28, 46, 45, 38], [71, 39, 64, 49]]
         # direc
-        # self.dedup_cluster = [[64, 49, 71, 39], [48, 81, 85, 58, 62], [38, 28, 46], [45], [27], [41, 23]]
+        self.dedup_cluster = [[64, 49, 71, 39], [48, 81, 85, 58, 62], [38, 28, 46], [45], [27], [41, 23]]
         self.ccs = {23: [41], 41: [23, 27], 27: [41, 62], 62: [27, 85], 85: [48, 58, 62, 81], 48: [81, 85], 58: [85], 81: [28, 46, 48, 71, 85], 28: [45, 46, 81], 46: [28, 38, 81], 71: [39, 81], 45: [28, 38], 38: [45, 46], 39: [64, 71], 64: [39, 49], 49: [64]}
         self.edge_list = [(38, 46), (58, 85), (71, 81), (48, 85), (81, 85), (28, 81), (62, 27), (41, 23), (46, 81), (49, 64), (38, 45), (85, 62), (64, 39), (81, 48), (45, 28), (39, 71), (46, 28), (27, 41)]
 
-
         self.nodes = [*self.ccs.keys()]
+        print('nodes: {}'.format(self.nodes))
 
-        # umi_cnt_dict = self.freader.generic(to('data/simu/mclumi/seq_errs/umi_uniq_val_cnt-simu.txt')).to_dict()
-        # self.node_size = [umi_cnt_dict[0][int(node_i)] for node_i in self.nodes]
-        # print(self.node_size)
+        df_umi_uniq_val_cnt = self.freader.generic(to('data/simu/mclumi/seq_errs/umi_uniq_val_cnt-iclip.txt'))
+        # df_umi_uniq_val_cnt = self.freader.generic(to('data/simu/mclumi/seq_errs/umi_uniq_val_cnt-simu.txt'))
+        import pandas as pd
+        umi_cnt_dict = pd.Series(df_umi_uniq_val_cnt[1].values, index=df_umi_uniq_val_cnt[0]).to_dict()
+        self.node_size = {node_i: umi_cnt_dict[int(node_i)]*60 for node_i in self.nodes}
+        print(self.node_size)
 
     def nodeColors(self, arr_2d, palette):
-        colors_ = {}
+        colors = {}
         for i, arr_1d in enumerate(arr_2d):
             for j in arr_1d:
-                colors_[j] = palette[i]
+                colors[j] = palette[i]
+        print(colors)
+        colors_ = {}
+        for node in self.nodes:
+            colors_[node] = colors[node]
+        print(colors_)
         return colors_
 
     def edgeColors(self, edge_list, node_colors):
@@ -92,8 +100,8 @@ class Cluster:
 
         options = {
             "font_size": 8,
-            "node_size": 200,
-            # 'node_size': self.node_size,
+            # "node_size": 200,
+            'node_size': [*self.node_size.values()],
             "node_color": [*node_colors.values()],
             # "edgecolors": 'gray',
             "linewidths": 1,

@@ -7,8 +7,8 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import pandas as pd
-from umiche.fastq.Read import read as rfastq
-from umiche.fastq.Write import write as wfastq
+from umiche.fastq.Reader import read as rfastq
+from umiche.fastq.Writer import write as wfastq
 from umiche.trim.Filter import Filter
 from umiche.trim.BCRuleOut import bcRuleOut as bcro
 from umiche.trim.UMIRuleOut import umiRuleOut as umiro

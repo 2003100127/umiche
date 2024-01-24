@@ -9,95 +9,112 @@ __lab__ = "Cribbslab"
 import time
 import textwrap
 import pandas as pd
-from collections import Counter
-from simreadflow.util.sequence.fastq.Read import read as rfastq
-from simreadflow.util.random.Number import number as rannum
-from umiche.trim.Template import template as umitrim
-from umiche.trim.Reader import reader as trimreader
-from simreadflow.util.file.read.Reader import reader as gfreader
-from simreadflow.util.file.write.Writer import writer as fwriter
-from simreadflow.simulate.dispatcher.batch.UMI import umi as generalstarter
-from simreadflow.read.similarity.distance.Hamming import hamming
-from umiche.path import to
+from umiche.deduplicate.trimer.Collapse import Collapse
+from umiche.fastq.Reader import Reader as rfastq
+from umiche.trim.Reader import Reader as trimreader
+from umiche.util.Hamming import Hamming
+
+from umiche.simu.Parameter import Parameter as params
+
+from umiche.util.Reader import Reader as freader
+from umiche.util.Writer import Writer as fwriter
+from umiche.util.Console import Console
 
 
-class selfHealing(generalstarter):
+class selfHealing:
 
-    def __init__(self, ):
-        super(selfHealing, self).__init__()
-        self.umitrim = umitrim
-        self.gfreader = gfreader()
-        self.rfastq = rfastq
+    def __init__(
+            self,
+            scenario,
+            param_fpn=None,
+            verbose=False,
+
+            **kwargs,
+    ):
+        self.scenario = scenario
+        self.kwargs = kwargs
+
+        self.params = params(param_fpn=param_fpn)
+
+        if 'fastq_fp' not in self.kwargs.keys():
+            self.fastq_fp = self.params.fastq_fp
+        else:
+            self.fastq_fp = self.kwargs['fastq_fp']
+
+        if 'umi_ref_fpn' not in self.kwargs.keys():
+            self.umi_ref_fpn = self.params.umi_ref_fpn
+        else:
+            self.umi_ref_fpn = self.kwargs['umi_ref_fpn']
+
+        self.rfastq = rfastq()
+        self.collapse = Collapse()
         self.trimreader = trimreader()
-        self.rannum = rannum()
+        self.freader = freader()
         self.fwriter = fwriter()
-        self.umi_raw = self.gfreader.generic(
-            df_fpn=to('data/simu/umi/seq_errs/trimer/umi.txt')
-        )[0].values
-        print({i: e for i, e in enumerate(self.umi_raw)})
-        self.umi_raw = pd.DataFrame.from_dict({i: e for i, e in enumerate(self.umi_raw)}, orient='index')
-        print(self.umi_raw)
-        self.umi_raw_monomer = self.umi_raw[0].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 3)])).to_dict()
-        print(self.umi_raw_monomer)
 
-    def rea(self, ):
+        self.console = Console()
+        self.console.verbose = verbose
+
+        self.df_umi_ref_lib = self.freader.generic(df_fpn=self.umi_ref_fpn)
+        self.df_umi_ref_lib = pd.DataFrame.from_dict({
+            i: e for i, e in enumerate(self.df_umi_ref_lib[0].values)
+        }, orient='index')
+        self.console.print(self.df_umi_ref_lib)
+        self.umi_monomer_ref_dict = self.df_umi_ref_lib[0].apply(lambda x: ''.join([i[0] for i in textwrap.wrap(x, 3)])).to_dict()
+        self.console.print(self.umi_monomer_ref_dict)
+
+    def rea(self, ) -> str:
         df_stat = pd.DataFrame()
-        for id, i_seq_err in enumerate(self.seq_errs):
+        for id, i_seq_err in enumerate(self.params.varied[self.scenario]):
             read_stime = time.time()
-            names, seqs, _, _ = self.rfastq().fromgz(
-                fastq_path=to('data/simu/umi/seq_errs/trimer/trimmed/'),
-                fastq_name='seq_err_' + str(id),
+            names, seqs, _, _ = self.rfastq.fromgz(
+                fastq_fpn=self.fastq_fp + 'seq_err_' + str(id) + '.fastq.gz',
             )
-            print('===>file read time: {:.3f}s'.format(time.time() - read_stime))
+            self.console.print('=========>read time: {:.3f}s'.format(time.time() - read_stime))
+
             df_fastq = self.trimreader.todf(names=names, seqs=seqs)
+
             mono_corr_stime = time.time()
-            df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
-            print('===>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+            df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.collapse.majority_vote(x))
+            # df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
+            self.console.print('=========>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+
             hm_stime = time.time()
-            df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: hamming().general(x['umi_mono_corr'], self.umi_raw_monomer[x['umi#']]), axis=1)
-            print('===>hamming time: {:.3f}s'.format(time.time() - hm_stime))
+            df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: Hamming().general(
+                x['umi_mono_corr'],
+                self.umi_monomer_ref_dict[x['umi#']],
+            ), axis=1)
+            self.console.print('=========>Hamming time: {:.3f}s'.format(time.time() - hm_stime))
             print(df_stat['umi_hm' + str(id)])
-        self.fwriter.generic(df=df_stat, sv_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/dasd.txt'), df_sep='\t')
-        return
 
-    def correct(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
-        umi_trimers = [umi[v: v+3] for v in vernier]
-        # umi_trimers = textwrap.wrap(umi, 3)
-        t = []
-        for umi_trimer in umi_trimers:
-            s = set(umi_trimer)
-            if len(s) == 3:
-                rand_index = self.rannum.uniform(low=0, high=3, num=1, use_seed=False)[0]
-                t.append(umi_trimer[rand_index])
-            elif len(s) == 2:
-                sdict = {umi_trimer.count(i): i for i in s}
-                t.append(sdict[2])
-            else:
-                t.append(umi_trimer[0])
-        return ''.join(t)
-
-    def correct_deprecate(self, umi):
-        vernier = [i for i in range(36) if i % 3 == 0]
-        umi_trimers = [umi[v: v+3] for v in vernier]
-        # umi_trimers = textwrap.wrap(umi, 3)
-        t = []
-        for umi_trimer in umi_trimers:
-            s = Counter(umi_trimer).most_common()
-            if len(s) == 3:
-                rand_index = self.rannum.uniform(low=0, high=3, num=1, use_seed=False)[0]
-                t.append(s[rand_index][0])
-            elif len(s) == 2:
-                t.append(s[0][0])
-            else:
-                t.append(umi_trimer[0])
-        return ''.join(t)
+        self.fwriter.generic(
+            df=df_stat,
+            sv_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/dasd.txt'),
+        )
+        return 'Finished.'
 
     def stat(self, x):
-        return hamming().general(x['umi_mono_corr'], self.umi_raw_monomer[x['umi#']])
+        return Hamming().general(x['umi_mono_corr'], self.umi_monomer_ref_dict[x['umi#']])
 
 
 if __name__ == "__main__":
-    p = selfHealing()
+    from umiche.path import to
+
+    p = selfHealing(
+        # scenario='pcr_nums',
+        # scenario='pcr_errs',
+        scenario='seq_errs',
+        # scenario='ampl_rates',
+        # scenario='umi_lens',
+        # scenario='seq_deps',
+        # scenario='umi_nums',
+
+        # umi_ref_fpn=to('data/simu/umi/trimer/seq_errs/umi.txt'),
+        # fastq_fp=to('data/simu/umi/trimer/seq_errs/trimmed/'),
+
+        param_fpn=to('data/trimer.yml'),
+
+        verbose=True, # False True
+    )
 
     print(p.rea())

@@ -46,6 +46,14 @@ class Parameter:
         return self.params['work_dir']
 
     @property
+    def fastq_fp(self, ):
+        return self.params['fastq_fp']
+
+    @property
+    def umi_ref_fpn(self, ):
+        return self.params['umi_ref_fpn']
+
+    @property
     def file_names(self, ):
         return {
             'pcr_nums': 'pcr_num_',

@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import pyfastx
 
 
-class read():
+class Reader():
 
     def __init__(self):
         pass

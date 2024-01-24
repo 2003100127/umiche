@@ -8,20 +8,29 @@ __lab__ = "Cribbslab"
 
 import pysam
 import pandas as pd
-from umiche.path import to
-from umiche.deduplicate.trimer.Collapse import collapse
+from umiche.deduplicate.trimer.Collapse import Collapse
+from umiche.util.Console import Console
 
 
-class setCoverOptimization:
+class SetCover:
 
-    def __init__(self, ):
-        self.collapse = collapse()
+    def __init__(
+            self,
+            verbose=False,
+    ):
+        self.collapse = Collapse()
 
-    def umi_greedy(self, input_umis):
+        self.console = Console()
+        self.console.verbose = verbose
+
+    def umi_greedy(
+            self,
+            umi_arr,
+    ):
         merged_umis = {}
         merged_umis_idx = {}
-        n_merged = len(input_umis)
-        left_umis = input_umis
+        n_merged = len(umi_arr)
+        left_umis = umi_arr
         n_steps = 0
         while n_merged > 1:
             umi_ids = dict()
@@ -32,14 +41,14 @@ class setCoverOptimization:
                     else:
                         umi_ids[uu] = [ii]
             umi_counts = {kk: len(vv) for kk, vv in umi_ids.items()}
-            umi_df = pd.DataFrame(
+            df_umi = pd.DataFrame(
                 {'umi_id': umi_counts.keys(), 'umi_count': umi_counts.values()}
             ).sort_values('umi_count', ascending=False).reset_index(drop=True)
 
-            n_merged = umi_df.umi_count[0]
+            n_merged = df_umi.umi_count[0]
             if n_merged > 1:
-                merged_umis_idx[n_steps] = umi_ids[umi_df.umi_id[0]]
-                merged_umis[n_steps] = umi_df.umi_id[0]
+                merged_umis_idx[n_steps] = umi_ids[df_umi.umi_id[0]]
+                merged_umis[n_steps] = df_umi.umi_id[0]
                 # fix umis in path
                 ll_umis = []
                 for rr_idx, ll_uu in enumerate(left_umis):
@@ -51,10 +60,15 @@ class setCoverOptimization:
                 n_steps += 1
             else:
                 break
-        shortest_path = len(input_umis) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
+        shortest_path = len(umi_arr) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
         return (shortest_path)
 
-    def count(self, inbam, tag, sep="_"):
+    def count(
+            self,
+            inbam,
+            tag,
+            sep="_",
+    ):
         tab = dict()
         # count = 0
         n_tag = 0
@@ -66,8 +80,10 @@ class setCoverOptimization:
                     n_tag += 1
                 else:
                     pass
-            print("The total number of input reads is ", i + 1)
-            print("The total number of input reads with XT tag is ", n_tag)
+
+            self.console.print("======>The total number of input reads is ".format(i + 1))
+            self.console.print("======>The total number of input reads with XT tag is ".format(n_tag))
+
             n = 0
             for kk, vv in tab.items():
                 if len(vv) == 1:
@@ -88,7 +104,9 @@ class setCoverOptimization:
 
 
 if __name__ == "__main__":
-    p = setCoverOptimization()
+    from umiche.path import to
+
+    p = SetCover()
     print(p.count(
         inbam=to('data/simu/trimer/pcr8/seq_errs/permute_0/trimmed/seq_err_18.bam'),
         tag='PO',

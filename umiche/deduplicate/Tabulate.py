@@ -17,7 +17,7 @@ from umiche.deduplicate.method.Adjacency import Adjacency as umiadj
 from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
 from umiche.deduplicate.method.Clustering import Clustering as umiclustering
-from umiche.deduplicate.trimer.SetCoverOptimization import setCoverOptimization as umiscp
+from umiche.deduplicate.trimer.SetCover import SetCover as umiscp
 
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
@@ -284,10 +284,13 @@ class Tabulate:
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='direc_repr_nodes'), axis=1)
         # print(self.df['ave_eds'])
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'), axis=1)
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'),
+            axis=1,
+        )
         self.df['num_diff_dedup_reads'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),
-            axis=1)
+            axis=1,
+        )
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()

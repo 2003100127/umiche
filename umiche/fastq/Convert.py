@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import os
 import pysam
 # import bamnostic as bs
-from umiche.fastq.Read import read as fastqread
+from umiche.fastq.Reader import read as fastqread
 from umiche.util.Folder import folder as crtfolder
 from umiche.util.Console import Console
 

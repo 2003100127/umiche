@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import numpy as np
 
 
-class number:
+class Number:
 
     def __init__(self, *args, **kwargs):
         self.args = args

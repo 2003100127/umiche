@@ -44,6 +44,7 @@ class protSC(Config.config):
             # df_met = (df_met - 50) / 50
             df_met['gc_tag'] = self.df_gt['gc_tag']
             metric_map = {'metric' + str(k): v for k, v in enumerate(self.seq_errs)}
+            print(metric_map)
             df_met_melt = pd.melt(df_met, 'gc_tag', var_name='seq_err')
             df_met_melt_ = pd.DataFrame(df_met_melt, columns = ['gc_tag', 'seq_err', 'value'])
             df_met_melt_['method'] = method
@@ -84,6 +85,7 @@ class protSC(Config.config):
         c = 0
         for i_row in range(row_num):
             for i_col in range(col_num):
+                print('asdsad', len( self.seq_errs))
                 ax[i_row][i_col].plot(
                     self.seq_errs,
                     self.df_direc.iloc[c].values[:15],
@@ -155,11 +157,11 @@ if __name__ == "__main__":
     DEFINE = {
         'fpns': {
             'methods': {
-                'directional': to('data/simu/monomer/sc/seq_errs/directional.txt'),
-                'mcl_ed': to('data/simu/monomer/sc/seq_errs/mcl_ed.txt'),
-                'mcl_val': to('data/simu/monomer/sc/seq_errs/mcl_val.txt'),
+                'directional': to('data/simu/sc/seq_errs/directional.txt'),
+                'mcl_ed': to('data/simu/sc/seq_errs/mcl_ed.txt'),
+                'mcl_val': to('data/simu/sc/seq_errs/mcl_val.txt'),
             },
-            'ground_truth': to('data/simu/monomer/sc/seq_errs/ground_truth.txt'),
+            'ground_truth': to('data/simu/sc/seq_errs/ground_truth.txt'),
         },
     }
     p = protSC(DEFINE['fpns'])

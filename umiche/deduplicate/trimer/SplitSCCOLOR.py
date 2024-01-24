@@ -8,45 +8,57 @@ __lab__ = "Cribbslab"
 
 import time
 import pandas as pd
-from umiche.path import to
-from simreadflow.util.sequence.fastq.Read import read as rfastq
-from simreadflow.util.sequence.fastq.Write import write as wfastq
-from simreadflow.util.random.Number import number as rannum
-from umiche.trim.Template import template as umitrim
-from umiche.trim.Reader import reader as trimreader
-from simreadflow.util.file.read.Reader import reader as gfreader
-from simreadflow.util.file.write.Writer import writer as fwriter
-from umiche.deduplicate.trimer.pipeline import Config
+from umiche.fastq.Reader import Reader as rfastq
+from umiche.fastq.Writer import Writer as wfastq
+
+from umiche.trim.Reader import Reader as trimreader
+from umiche.simu.Parameter import Parameter as params
+
+from umiche.util.Writer import Writer as fwriter
+from umiche.util.Console import Console
 
 
-class selfHealing(Config.config):
+class selfHealing:
 
-    def __init__(self, fastq_fp, cat):
-        super(selfHealing, self).__init__()
-        self.fastq_fp = fastq_fp
-        self.cat = cat
-        self.umitrim = umitrim
-        self.gfreader = gfreader()
+    def __init__(
+            self,
+            scenario,
+            param_fpn=None,
+            verbose=False,
+
+            **kwargs,
+    ):
+        self.scenario = scenario
+        self.kwargs = kwargs
+
+        self.params = params(param_fpn=param_fpn)
+
+        if 'fastq_fp' not in self.kwargs.keys():
+            self.fastq_fp = self.params.fastq_fp
+        else:
+            self.fastq_fp = self.kwargs['fastq_fp']
+
         self.rfastq = rfastq()
         self.wfastq = wfastq()
         self.trimreader = trimreader()
-        self.rannum = rannum()
         self.fwriter = fwriter()
 
+        self.console = Console()
+        self.console.verbose = verbose
+
     def rea(self, ):
-        for i_pn in range(self.permutation_num):
-        # for i_pn in [2]:
-            for id, i_seq_err in enumerate(self.seq_errs):
+        for perm_num_i in range(self.params.fixed['permutation_num']):
+            for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 read_stime = time.time()
-                print('permutation {}, No.{} with criterion: {}'.format(i_pn, id, i_seq_err))
+                print('=========>permutation {} under scenario No.{} {}'.format(perm_num_i, id, scenario_i))
                 names, seqs, _, _ = self.rfastq.fromgz(
-                    fastq_path=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/trimmed/',
-                    fastq_name=self.cat + '_' + str(id),
-                    method='pyfastx',
+                    fastq_fpn=self.fastq_fp + 'seq_err_' + str(id) + '.fastq.gz',
                 )
+
                 # df = self.trimreader.todf(names=names, seqs=seqs)
                 df = self.trimreader.todfFromTree(names=names, seqs=seqs)
                 # print(df)
+
                 # df['origin_info'] = df['name'].apply(lambda x: x.split('_')[0])
                 df['origin_info'] = df.apply(lambda x: str(x['umi#']) + '_' + x['umi_src'], axis=1)
                 mono_corr_stime = time.time()
@@ -109,17 +121,17 @@ class selfHealing(Config.config):
                 print(df_merge)
                 self.wfastq.togz(
                     list_2d=df_lmr[['seq_raw', 'to_fas']].values,
-                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/lmr/',
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(perm_num_i) + '/lmr/',
                     fn=self.cat + '_' + str(id),
                 )
                 self.wfastq.togz(
                     list_2d=df[['seq_raw', 'to_fas']].values,
-                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/ref/',
+                    sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(perm_num_i) + '/ref/',
                     fn=self.cat + '_' + str(id),
                 )
                 self.wfastq.togz(
                     list_2d=df_merge.values,
-                                        sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(i_pn) + '/bipartite/',
+                                        sv_fp=self.fastq_fp + 'seq_errs/permute_' + str(perm_num_i) + '/bipartite/',
                     fn=self.cat + '_' + str(id),
                 )
                 print('===>getting it done with time: {:.3f}s'.format(time.time() - mono_corr_stime))
@@ -180,6 +192,8 @@ class selfHealing(Config.config):
 
 
 if __name__ == "__main__":
+    from umiche.path import to
+
     p = selfHealing(
         fastq_fp=to('data/simu/trimer/tree1000/'),
         cat='seq_err',
