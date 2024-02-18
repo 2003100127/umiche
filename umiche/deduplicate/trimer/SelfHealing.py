@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import time
 import textwrap
 import pandas as pd
-from umiche.deduplicate.trimer.Collapse import Collapse
+from umiche.deduplicate.method.trimer import Collapse
 from umiche.fastq.Reader import Reader as rfastq
 from umiche.trim.Reader import Reader as trimreader
 from umiche.util.Hamming import Hamming
@@ -22,7 +22,7 @@ from umiche.util.Console import Console
 
 
 class selfHealing:
-
+ 
     def __init__(
             self,
             scenario,
@@ -65,27 +65,48 @@ class selfHealing:
 
     def rea(self, ) -> str:
         df_stat = pd.DataFrame()
-        for id, i_seq_err in enumerate(self.params.varied[self.scenario]):
-            read_stime = time.time()
-            names, seqs, _, _ = self.rfastq.fromgz(
-                fastq_fpn=self.fastq_fp + 'seq_err_' + str(id) + '.fastq.gz',
-            )
-            self.console.print('=========>read time: {:.3f}s'.format(time.time() - read_stime))
 
-            df_fastq = self.trimreader.todf(names=names, seqs=seqs)
+        for perm_num_i in range(self.params.fixed['permutation_num']):
+            for id, scenario_i in enumerate(self.params.varied[self.scenario]):
 
-            mono_corr_stime = time.time()
-            df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.collapse.majority_vote(x))
-            # df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
-            self.console.print('=========>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+                read_stime = time.time()
+                if self.scenario == 'pcr_nums':
+                    self.fn_mark = str(id)  # scenario_i
+                elif self.scenario == 'pcr_errs':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'seq_errs':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'ampl_rates':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'seq_deps':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'umi_lens':
+                    self.fn_mark = str(id)
+                elif self.scenario == 'umi_nums':
+                    self.fn_mark = str(id)
+                else:
+                    self.fn_mark = str(scenario_i)
+                self.fn_prefix = self.params.file_names[self.scenario] + self.fn_mark
 
-            hm_stime = time.time()
-            df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: Hamming().general(
-                x['umi_mono_corr'],
-                self.umi_monomer_ref_dict[x['umi#']],
-            ), axis=1)
-            self.console.print('=========>Hamming time: {:.3f}s'.format(time.time() - hm_stime))
-            print(df_stat['umi_hm' + str(id)])
+                names, seqs, _, _ = self.rfastq.fromgz(
+                    fastq_fpn=self.fastq_fp + self.fn_prefix + '.fastq.gz',
+                )
+                self.console.print('=========>read time: {:.3f}s'.format(time.time() - read_stime))
+
+                df_fastq = self.trimreader.todf(names=names, seqs=seqs)
+
+                mono_corr_stime = time.time()
+                df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.collapse.majority_vote(x))
+                # df_fastq['umi_mono_corr'] = df_fastq['umi'].apply(lambda x: self.correct(x))
+                self.console.print('=========>mono_corr time: {:.3f}s'.format(time.time() - mono_corr_stime))
+
+                hm_stime = time.time()
+                df_stat['umi_hm' + str(id)] = df_fastq.apply(lambda x: Hamming().general(
+                    x['umi_mono_corr'],
+                    self.umi_monomer_ref_dict[x['umi#']],
+                ), axis=1)
+                self.console.print('=========>Hamming time: {:.3f}s'.format(time.time() - hm_stime))
+                print(df_stat['umi_hm' + str(id)])
 
         self.fwriter.generic(
             df=df_stat,

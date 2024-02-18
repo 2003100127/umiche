@@ -8,8 +8,6 @@ __lab__ = "Cribbslab"
 
 from typing import Set
 
-# import gurobipy as gp
-# from gurobipy import GRB
 import itertools
 import collections
 from umiche.util.Number import Number as rannum

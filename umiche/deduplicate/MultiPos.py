@@ -112,52 +112,56 @@ class MultiPos:
         self.console.print('======>Columns in the bam df: {}'.format(self.df_bam.columns.tolist()))
         self.console.print('======># of raw reads:\n{}'.format(self.df_bam))
 
-        self.console.print('===>start building umi graphs...')
-        umi_graph_build_stime = time.time()
-        pos_gps = []
-        res_sum = []
-        for pos_g in self.pos_gp_keys:
-            umi_vignette = self.umibuild(
-                df=self.df_bam_gp.get_group(pos_g),
-                ed_thres=self.ed_thres,
-                verbose=verbose,
-            ).data_summary
-            # print(umi_vignette)
-            # if len(umi_vignette['int_to_umi_dict']) == 1:
-            #     print(True)
-            #     print(umi_vignette['int_to_umi_dict'])
-            #     continue
-            # else:
-            cc = self.umiclust.cc(umi_vignette['graph_adj'])
-            # import json
-            # with open('data.json', 'w') as f:
-            #     json.dump(cc, f)
-            pos_gps.append(pos_g)
-            res_sum.append([
-                umi_vignette,
-                cc,
-                umi_vignette['ave_ed'],
-                [*umi_vignette['int_to_umi_dict'].keys()],
-            ])
-            ### @@ self.df['uniq_repr_nodes'] or [*umi_vignette['int_to_umi_dict'].keys()]
-            # [0, 1, 2, ..., 1948]
-        self.df = pd.DataFrame(
-            data=res_sum,
-            columns=['vignette', 'cc', 'ave_ed', 'uniq_repr_nodes'],
-            index=pos_gps,
-        )
-        ### @@  self.df
-        # vignette  ...   uniq_repr_nodes
-        # 1  {'graph_adj': {0: [77, 81, 97, 153, 205, 228, ...  ...  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,...
-        # [1 rows x 3 columns]
-        self.console.print('===>time for building umi graphs: {:.2f}s'.format(time.time() - umi_graph_build_stime))
+        if 'is_build_graph' in self.kwargs.keys():
+            if not self.kwargs['is_build_graph']:
+                self.df = pd.DataFrame()
+            else:
+                self.console.print('===>start building umi graphs...')
+                umi_graph_build_stime = time.time()
+                pos_gps = []
+                res_sum = []
+                for pos_g in self.pos_gp_keys:
+                    umi_vignette = self.umibuild(
+                        df=self.df_bam_gp.get_group(pos_g),
+                        ed_thres=self.ed_thres,
+                        verbose=verbose,
+                    ).data_summary
+                    # print(umi_vignette)
+                    # if len(umi_vignette['int_to_umi_dict']) == 1:
+                    #     print(True)
+                    #     print(umi_vignette['int_to_umi_dict'])
+                    #     continue
+                    # else:
+                    cc = self.umiclust.cc(umi_vignette['graph_adj'])
+                    # import json
+                    # with open('data.json', 'w') as f:
+                    #     json.dump(cc, f)
+                    pos_gps.append(pos_g)
+                    res_sum.append([
+                        umi_vignette,
+                        cc,
+                        umi_vignette['ave_ed'],
+                        [*umi_vignette['int_to_umi_dict'].keys()],
+                    ])
+                    ### @@ self.df['uniq_repr_nodes'] or [*umi_vignette['int_to_umi_dict'].keys()]
+                    # [0, 1, 2, ..., 1948]
+                self.df = pd.DataFrame(
+                    data=res_sum,
+                    columns=['vignette', 'cc', 'ave_ed', 'uniq_repr_nodes'],
+                    index=pos_gps,
+                )
+                ### @@  self.df
+                # vignette  ...   uniq_repr_nodes
+                # 1  {'graph_adj': {0: [77, 81, 97, 153, 205, 228, ...  ...  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,...
+                # [1 rows x 3 columns]
+                self.console.print('===>time for building umi graphs: {:.2f}s'.format(time.time() - umi_graph_build_stime))
 
-        self.df['num_uniq_umis'] = self.df['uniq_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
-        ### @@ self.df['num_uniq_umis']
-        # 1    1949
-        # Name: num_uniq_umis, dtype: int64
-        # self.console.print('===>start deduplication by the {} method...'.format(self.method))
-        # sys.stdout.close()
+                self.df['num_uniq_umis'] = self.df['uniq_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+                ### @@ self.df['num_uniq_umis']
+                # 1    1949
+                # Name: num_uniq_umis, dtype: int64
+                # self.console.print('===>start deduplication by the {} method...'.format(self.method))
+                # sys.stdout.close()
 
     def unique(self, ) -> pd.DataFrame:
         return umitab(
@@ -248,13 +252,26 @@ class MultiPos:
             **self.kwargs
         )
 
+    def set_cover(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).set_cover(
+            **self.kwargs
+        )
+
 
 if __name__ == "__main__":
     from umiche.path import to
 
     umiche = MultiPos(
         # bam_fpn=to('data/example.bam'),
-        bam_fpn=to('data/example_bundle.bam'),
+        # bam_fpn=to('data/example_bundle.bam'),
+        bam_fpn=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
         pos_tag='PO',
         mcl_fold_thres=1.5,
         inflat_val=1.6,
@@ -262,14 +279,18 @@ if __name__ == "__main__":
         iter_num=100,
         ed_thres=1,
         work_dir=to('data/'),
-        verbose=False, # False True
         heterogeneity=True, # False
+
+        is_build_graph=False,
+
+        verbose=True,  # False True
     )
 
     # print(umiche.unique())
     # print(umiche.cluster())
     # print(umiche.adjacency())
-    print(umiche.directional())
+    # print(umiche.directional())
     # print(umiche.mcl())
     # print(umiche.mcl_val())
     # print(umiche.mcl_ed())
+    print(umiche.set_cover())

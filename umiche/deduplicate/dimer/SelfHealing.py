@@ -21,10 +21,10 @@ from simreadflow.util.file.write.Writer import writer as fwriter
 from umiche.path import to
 
 
-class selfHealing(generalstarter):
+class Shakeup(generalstarter):
 
     def __init__(self, umi_ref_fpn, fastq_fp, cat):
-        super(selfHealing, self).__init__()
+        super(Shakeup, self).__init__()
         self.umi_ref_fpn = umi_ref_fpn
         self.fastq_fp = fastq_fp
         self.cat = cat
@@ -81,7 +81,7 @@ class selfHealing(generalstarter):
 
 
 if __name__ == "__main__":
-    p = selfHealing(
+    p = Shakeup(
         umi_ref_fpn=to('data/simu/umi/seq_errs/dimer/umi.txt'),
         fastq_fp=to('data/simu/umi/seq_errs/dimer/trimmed/'),
         cat='seq_err',

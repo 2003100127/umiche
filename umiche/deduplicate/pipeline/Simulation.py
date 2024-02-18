@@ -13,7 +13,7 @@ from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
-from umiche.plot.scenario.TraceSingle import Heterogeneity as plotv
+from umiche.plot.scenario.TraceSingle import TraceSingle as plotv
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
 

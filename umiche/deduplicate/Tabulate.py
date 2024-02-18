@@ -17,7 +17,7 @@ from umiche.deduplicate.method.Adjacency import Adjacency as umiadj
 from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
 from umiche.deduplicate.method.Clustering import Clustering as umiclustering
-from umiche.deduplicate.trimer.SetCover import SetCover as umiscp
+from umiche.deduplicate.method.trimer.SetCover import SetCover as umisc
 
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
@@ -49,18 +49,16 @@ class Tabulate:
         self.console = Console()
         self.console.verbose = verbose
 
-    def set_cover(self, ):
-        self.umiscp = umiscp()
-
+    def set_cover(
+            self,
+            **kwargs
+    ):
         dedup_umi_stime = time.time()
-        self.dedup_num = self.umiscp.count(
-            inbam=self.bam_fpn,
-            tag=self.pos_tag,
-            sep='_',
+        print(self.df_bam)
+        self.dedup_num = umisc().greedy(
+            multimer_list=self.df_bam.umi
         )
         print(self.dedup_num)
-        # print(self.df_bam.columns)
-        # print(self.df_bam)
         return
 
     def unique(self, ):

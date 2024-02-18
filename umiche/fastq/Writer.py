@@ -33,8 +33,8 @@ class Writer:
         f = gzip.open(sv_fpn, 'wt')
         for i, read in enumerate(list_2d):
             seq = str(read[0])
-            print(seq)
-            print('@' + symbol.join(read[1:]) + '\n')
+            # print(seq)
+            # print('@' + symbol.join(read[1:]) + '\n')
             # print('No.{} saving in FASTQ format.'.format(i + 1))
             f.write('@' + symbol.join(read[1:]) + '\n')
             f.write(seq + '\n')
