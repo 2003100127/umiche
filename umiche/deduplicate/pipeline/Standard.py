@@ -157,12 +157,12 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        # method='directional',
+        method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='set_cover',
-        method='majority_vote',
+        # method='majority_vote',
 
         # is_trim=True,
         # is_tobam=False,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        is_voting=False,
+        is_voting=True,
         voting_method='majority_vote', # majority_vote set_cover
 
         param_fpn=to('data/params_trimer.yml'),
