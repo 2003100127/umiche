@@ -273,16 +273,16 @@ class SetCover:
                 n_steps += 1
             else:
                 break
-        print(df_umi.loc[df_umi['val_cnt'] == 1])
-        print(df_umi.loc[df_umi['val_cnt'] == 1].shape)
-        print([*mono_umi_set_list_remaining.keys()])
-        print(len(mono_umi_set_list_remaining))
-        # print(mono_umi_set_list_remaining)
+        multimer_umi_solved_by_sc = [*merged_mono_umi_dict.values()]
+        multimer_umi_not_solved = [*mono_umi_set_list_remaining.keys()]
+        print('=========>number of shortlisted multimer UMIs solved by set cover'.format(len(multimer_umi_solved_by_sc)))
+        print('=========>number of shortlisted multimer UMIs cannot be solved by set cover'.format(len(multimer_umi_not_solved)))
         # solutiom_unique_umis = set(merged_umis.values())
         # solution_umis = [ii for ii, cc in enumerate(mono_umi_set_list) if len(cc.intersection(solutiom_unique_umis)) > 0]
-        shortest_path = len(mono_umi_set_list) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
-        print('shortest_path: ', shortest_path)
-        return (shortest_path)
+        shortlisted_multimer_umi_list = multimer_umi_solved_by_sc + multimer_umi_not_solved
+        dedup_cnt = len(mono_umi_set_list) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
+        print('dedup_cnt: ', dedup_cnt)
+        return dedup_cnt, shortlisted_multimer_umi_list
 
 
 if __name__ == "__main__":

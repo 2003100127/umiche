@@ -186,7 +186,7 @@ class Gadgetry:
             self,
             df_row,
             by_col,
-    ):
+    ) -> list:
         """
         It outputs bamids of UMIs that are representative of all nodes in each group.
 

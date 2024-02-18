@@ -54,11 +54,31 @@ class Tabulate:
             **kwargs
     ):
         dedup_umi_stime = time.time()
-        print(self.df_bam)
-        self.dedup_num = umisc().greedy(
-            multimer_list=self.df_bam.umi
+        self.df_umi_uniq = self.df_bam.drop_duplicates(subset=['umi'], keep='first')
+        print(self.df_umi_uniq)
+        series_uniq_umi = self.df_umi_uniq.umi
+        print(series_uniq_umi)
+        self.umi_to_int_dict = {k: id for id, k in enumerate(series_uniq_umi)}
+
+        dedup_num, shortlisted_multimer_umi_list = umisc().greedy(
+            multimer_list=series_uniq_umi.values
         )
-        print(self.dedup_num)
+        print(dedup_num)
+
+        sc_bam_ids = []
+        for i in shortlisted_multimer_umi_list:
+            sc_bam_ids.append(series_uniq_umi.loc[series_uniq_umi.isin([i])].index[0])
+
+        print(sc_bam_ids)
+        self.console.print('======>start writing deduplicated reads to BAM...')
+        dedup_reads_write_stime = time.time()
+        print(self.work_dir)
+        self.aliwriter.tobam(
+            tobam_fpn=self.work_dir + 'sc_dedup.bam',
+            tmpl_bam_fpn=self.bam_fpn,
+            whitelist=sc_bam_ids,
+        )
+        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return
 
     def unique(self, ):
