@@ -299,7 +299,8 @@ class SetCover:
         -------
 
         """
-        umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi) for multimer_umi in multimer_list}
+        # umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi) for multimer_umi in multimer_list}
+        umi_dict = {multimer_umi: self.collapse.split_by_mv(multimer_umi) for multimer_umi in multimer_list}
 
         multimer_umi_lens = []
         merged_mono_umi_dict = {}
@@ -329,7 +330,11 @@ class SetCover:
                         mono_umi_to_trimer_id_dict[mono_umi] = [trimer_umi_to_id_map[multimer_umi]]
 
             umi_to_cnt_map = {k: len(v) for k, v in mono_umi_to_trimer_id_dict.items()}
-            umi_max = max(umi_to_cnt_map, key=umi_to_cnt_map.get)
+            # print(umi_to_cnt_map)
+            if umi_to_cnt_map:
+                umi_max = max(umi_to_cnt_map, key=umi_to_cnt_map.get)
+            else:
+                break
 
             if umi_to_cnt_map[umi_max] > 1:
                 multimer_umi_ids = mono_umi_to_trimer_id_dict[umi_max]

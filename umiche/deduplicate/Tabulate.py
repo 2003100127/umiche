@@ -53,7 +53,6 @@ class Tabulate:
             self,
             **kwargs
     ):
-        dedup_umi_stime = time.time()
         self.df_umi_uniq = self.df_bam.drop_duplicates(subset=['umi'], keep='first')
         # print(self.df_umi_uniq)
         series_uniq_umi = self.df_umi_uniq.umi
@@ -69,18 +68,16 @@ class Tabulate:
         for i in shortlisted_multimer_umi_list:
             sc_bam_ids.append(series_uniq_umi.loc[series_uniq_umi.isin([i])].index[0])
 
-        print(sc_bam_ids)
         self.console.print('======>start writing deduplicated reads to BAM...')
         dedup_reads_write_stime = time.time()
-        print(self.work_dir)
+        # print(self.work_dir)
 
         import os
         from umiche.util.Folder import Folder as crtfolder
-
-        crtfolder().osmkdir(DIRECTORY=os.path.dirname(sv_fpn))
+        crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_setcover_bam_fpn']))
 
         self.aliwriter.tobam(
-            tobam_fpn=self.work_dir + 'sc_dedup.bam',
+            tobam_fpn=kwargs['sv_setcover_bam_fpn'],
             tmpl_bam_fpn=self.bam_fpn,
             whitelist=sc_bam_ids,
         )

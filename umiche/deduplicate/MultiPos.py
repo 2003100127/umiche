@@ -91,8 +91,8 @@ class MultiPos:
         self.df_bam = self.df_bam.loc[self.df_bam['reference_id'] != -1]
         self.console.print('======># of reads with qualified chrs: {}'.format(self.df_bam.shape[0]))
 
-        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
-        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
+        # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
+        self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
         self.console.print('======>edit distance thres: {}'.format(self.ed_thres))
@@ -116,6 +116,9 @@ class MultiPos:
             if not self.kwargs['is_build_graph']:
                 self.df = pd.DataFrame()
             else:
+                from umiche.deduplicate.method.trimer.Collapse import Collapse as tricoll
+                self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: list(tricoll().split_by_mv(x))[0])
+                # print(self.df_bam['umi'])
                 self.console.print('===>start building umi graphs...')
                 umi_graph_build_stime = time.time()
                 pos_gps = []
@@ -271,7 +274,8 @@ if __name__ == "__main__":
     umiche = MultiPos(
         # bam_fpn=to('data/example.bam'),
         # bam_fpn=to('data/example_bundle.bam'),
-        bam_fpn=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
+        # bam_fpn=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
+        bam_fpn=to('data/simu/umiche/trimer/seq_errs/permute_0/trimmed/bam/seq_err_17.bam'),
         pos_tag='PO',
         mcl_fold_thres=1.5,
         inflat_val=1.6,

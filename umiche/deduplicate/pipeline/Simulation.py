@@ -13,7 +13,6 @@ from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
-from umiche.plot.scenario.TraceSingle import TraceSingle as plotv
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
 
@@ -29,14 +28,15 @@ class Simulation:
             is_tobam=False,
             is_dedup=False,
             verbose=False,
+            **kwargs,
     ):
         self.scenario = scenario
         self.method = method
+        self.kwargs = kwargs
 
         self.params = params(param_fpn=param_fpn)
         self.gbfscc = gbfscc()
         self.fwriter = fwriter()
-        self.plotv = plotv()
 
         self.verbose = verbose
         self.console = Console()
@@ -47,6 +47,7 @@ class Simulation:
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
+                self.console.print("===>No.{} scenario: {}".format(id+1, scenario_i))
                 if self.scenario == 'pcr_nums':
                     self.fn_mark = str(scenario_i)
                 elif self.scenario == 'pcr_errs':
@@ -77,16 +78,29 @@ class Simulation:
                 if is_dedup:
                     self.console.print("======>reads are being deduplicated.")
                     dedup_ob = deduppos(
-                        bam_fpn=self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam',                        pos_tag='PO',
+                        bam_fpn=self.fastq_location + 'trimmed/bam/set_cover/' + self.fn_prefix + '.bam',
+                        pos_tag='PO',
                         mcl_fold_thres=self.params.dedup['mcl_fold_thres'],
                         inflat_val=self.params.dedup['inflat_val'],
                         exp_val=self.params.dedup['exp_val'],
                         iter_num=self.params.dedup['iter_num'],
                         ed_thres=self.params.dedup['ed_thres'],
                         work_dir=self.params.work_dir,
+                        sv_setcover_bam_fpn=self.fastq_location + 'trimmed/bam/set_cover/' + self.fn_prefix + '.bam',
+                        heterogeneity=False, # False True
+                        is_build_graph=True, # False True
                         verbose=False,
+                        **self.kwargs
                     )
-                    print(dedup_ob.directional().columns)
+                    df = self.tool(dedup_ob)[self.method]()
+
+                    print(df.dedup_cnt)
+                    # if self.method == "unique":
+                    #     print("No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
+                    #     dedup_arr.append(df.num_uniq_umis.values[0])
+                    # else:
+                    #     print("No.{}, dedup cnt: {:.2f}\t{}".format(id, c, df.dedup_cnt.values[0]))
+                    #     dedup_arr.append(df.dedup_cnt.values[0])
                     # dedup_arr.append(dedup_ob.dedup_num)
             # df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
@@ -95,6 +109,23 @@ class Simulation:
         #     sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
         #     header=True,
         # )
+
+    def tool(self, dedup_ob):
+        return {
+            'unique': dedup_ob.unique,
+            'cluster': dedup_ob.cluster,
+            'adjacency': dedup_ob.adjacency,
+            'directional': dedup_ob.directional,
+            'mcl': dedup_ob.mcl,
+            'mcl_val': dedup_ob.mcl_val,
+            'mcl_ed': dedup_ob.mcl_ed,
+            'mcl_cc_all_node_umis': dedup_ob.mcl_cc_all_node_umis,
+            # 'dbscan_seq_onehot': dedup_ob.dbscan_seq_onehot,
+            # 'birch_seq_onehot': dedup_ob.birch_seq_onehot,
+            # 'hdbscan_seq_onehot': dedup_ob.hdbscan_seq_onehot,
+            # 'aprop_seq_onehot': dedup_ob.aprop_seq_onehot,
+            'set_cover': dedup_ob.set_cover,
+        }
 
 
 if __name__ == "__main__":
@@ -128,5 +159,8 @@ if __name__ == "__main__":
         is_tobam=False,
         is_dedup=True,
 
-        param_fpn=to('data/params.yml')
+        param_fpn=to('data/params_trimer.yml'),
+        # param_fpn=to('data/params.yml'),
+
+        verbose=True
     )
