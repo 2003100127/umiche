@@ -182,7 +182,7 @@ class SetCover:
                         n += count
         return n
 
-    def greedy(
+    def greedy1(
             self,
             multimer_list,
     ):
@@ -203,8 +203,7 @@ class SetCover:
         merged_umis_idx = {}
         trimer_umi_to_id_map = {trimer_umi: k for k, trimer_umi in enumerate(umi_dict.keys())}
         trimer_id_to_umi_map = {k: trimer_umi for k, trimer_umi in enumerate(umi_dict.keys())}
-        trimer_umi_list = [*umi_dict.keys()]
-        # @@ trimer_umi_list[0]
+        # @@ [*umi_dict.keys()]
         # ['GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG',
         # 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
         # ...,
@@ -250,8 +249,10 @@ class SetCover:
             if n_merged > 1:
                 merged_umis_idx[n_steps] = mono_umi_to_trimer_id_dict[df_umi.mono_umi[0]]
                 merged_umis[n_steps] = df_umi.mono_umi[0]
+
                 merged_mono_umi_dict[df_umi.mono_umi[0]] = trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[df_umi.mono_umi[0]][0]]
                 print(merged_mono_umi_dict)
+
                 # fix umis in path
                 mono_umi_set_list_remaining_tmp = {}
                 # print(len(mono_umi_set_list_remaining))
@@ -283,6 +284,76 @@ class SetCover:
         dedup_cnt = len(mono_umi_set_list) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
         print('dedup_cnt: ', dedup_cnt)
         return dedup_cnt, shortlisted_multimer_umi_list
+
+    def greedy(
+            self,
+            multimer_list,
+    ):
+        """
+
+        Parameters
+        ----------
+        umi_arr
+
+        Returns
+        -------
+
+        """
+        umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi) for multimer_umi in multimer_list}
+
+        multimer_umi_lens = []
+        merged_mono_umi_dict = {}
+        trimer_umi_to_id_map = {trimer_umi: k for k, trimer_umi in enumerate(umi_dict.keys())}
+        trimer_id_to_umi_map = {k: trimer_umi for k, trimer_umi in enumerate(umi_dict.keys())}
+        # @@ [*umi_dict.keys()]
+        # ['GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG',
+        # 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
+        # ...,
+        # 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT',]
+        mono_umi_set_list = [*umi_dict.values()]
+        # @@ mono_umi_set_list
+        # [{'GTGCCTATCGAG', 'GTGACGATCGAT', ..., 'GTGCCGATCGAT'},
+        # {'GATTGCAGAGAT', 'GATTTTAGCGAT', ..., 'GATTGCAGCGAT'},
+        # ...,
+        # {'AGACATGTGTTT', 'AGACATGTCTTT', ..., 'AGACATGTTTCT'}]
+        mono_umi_set_list_remaining = umi_dict
+        num_steps = 0
+        is_empty_set_overlap = False
+        while not is_empty_set_overlap:
+            mono_umi_to_trimer_id_dict = {}
+            for multimer_umi, mono_umi_set in mono_umi_set_list_remaining.items():
+                for mono_umi in mono_umi_set:
+                    if mono_umi in mono_umi_to_trimer_id_dict:
+                        mono_umi_to_trimer_id_dict[mono_umi].append(trimer_umi_to_id_map[multimer_umi])
+                    else:
+                        mono_umi_to_trimer_id_dict[mono_umi] = [trimer_umi_to_id_map[multimer_umi]]
+
+            umi_to_cnt_map = {k: len(v) for k, v in mono_umi_to_trimer_id_dict.items()}
+            umi_max = max(umi_to_cnt_map, key=umi_to_cnt_map.get)
+
+            if umi_to_cnt_map[umi_max] > 1:
+                multimer_umi_ids = mono_umi_to_trimer_id_dict[umi_max]
+                multimer_umi_lens.append(len(multimer_umi_ids) - 1)
+
+                merged_mono_umi_dict[umi_max] = trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[umi_max][0]]
+
+                for multimer_umi_id in multimer_umi_ids:
+                    mono_umi_set_list_remaining.pop(trimer_id_to_umi_map[multimer_umi_id], None)
+                num_steps += 1
+                is_empty_set_overlap = False
+            else:
+                is_empty_set_overlap = True
+
+        multimer_umi_solved_by_sc = [*merged_mono_umi_dict.values()]
+        multimer_umi_not_solved = [*mono_umi_set_list_remaining.keys()]
+        shortlisted_multimer_umi_list = multimer_umi_solved_by_sc + multimer_umi_not_solved
+        print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
+        print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
+        print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
+
+        dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
+        print('=========>dedup cnt: {}'.format(dedup_cnt))
+        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list
 
 
 if __name__ == "__main__":

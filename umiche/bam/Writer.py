@@ -6,8 +6,8 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
-import pandas as pd
 import pysam
+import pandas as pd
 from umiche.util.Console import Console
 
 

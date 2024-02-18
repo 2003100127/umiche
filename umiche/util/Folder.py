@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import os
 
 
-class folder:
+class Folder:
 
     def osmkdir(self, DIRECTORY):
         """
