@@ -26,7 +26,7 @@ class Collapse:
     def majority_vote(
             self,
             umi,
-            recur_len=3,
+            recur_len=2,
     ) -> str:
         """
 
@@ -85,7 +85,7 @@ class Collapse:
     def split_to_all(
             self,
             umi,
-            recur_len=3,
+            recur_len=2,
         ) -> Set:
         """
 
@@ -144,7 +144,7 @@ class Collapse:
     def split_by_mv(
             self,
             umi,
-            recur_len=3,
+            recur_len=2,
     ) -> Set:
         """
 
@@ -315,17 +315,21 @@ class Collapse:
 
 if __name__ == "__main__":
     p = Collapse()
-    set1 = p.umi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
-    set2 = p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
-    print(set1)
-    print(set2)
-    print(set1 == set2)
+    # set1 = p.umi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
+    # set2 = p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
+    # print(set1)
+    # print(set2)
+    # print(set1 == set2)
+    #
+    # set3 = p.cmi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
+    # set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
+    # print(set3)
+    # print(set4)
+    # print(set3 == set4)
+    #
+    # umi_collapsed = p.majority_vote('CTGCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC') # T1TTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC
+    # print(umi_collapsed)
 
-    set3 = p.cmi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
-    set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
-    print(set3)
-    print(set4)
-    print(set3 == set4)
-
-    umi_collapsed = p.majority_vote('CTGCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC') # T1TTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC
-    print(umi_collapsed)
+    print(p.split_by_mv('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+    print(p.split_to_all('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+    print(p.majority_vote('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))

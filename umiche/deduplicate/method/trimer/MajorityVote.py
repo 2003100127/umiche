@@ -24,6 +24,7 @@ class MajorityVote:
     def track(
             self,
             multimer_list,
+            recur_len,
     ):
         """
 
@@ -35,8 +36,14 @@ class MajorityVote:
         -------
 
         """
-        multimer_umi_to_mono_umi_map = {multimer_umi: self.collapse.majority_vote(multimer_umi) for multimer_umi in multimer_list}
-        mono_umi_to_multimer_umi_map = {self.collapse.majority_vote(multimer_umi): multimer_umi for multimer_umi in multimer_list}
+        multimer_umi_to_mono_umi_map = {multimer_umi: self.collapse.majority_vote(
+            umi=multimer_umi,
+            recur_len=recur_len,
+        ) for multimer_umi in multimer_list}
+        mono_umi_to_multimer_umi_map = {self.collapse.majority_vote(
+            umi=multimer_umi,
+            recur_len=recur_len,
+        ): multimer_umi for multimer_umi in multimer_list}
 
         uniq_multimer_cnt = len(multimer_umi_to_mono_umi_map)
 

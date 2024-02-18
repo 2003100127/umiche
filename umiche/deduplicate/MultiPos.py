@@ -97,7 +97,10 @@ class MultiPos:
 
         if 'is_voting' in self.kwargs.keys() and self.kwargs['is_voting'] is True:
             from umiche.deduplicate.method.trimer.Collapse import Collapse as tricoll
-            self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: list(tricoll().split_by_mv(x))[0])
+            self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: tricoll().majority_vote(
+                umi=x,
+                recur_len=self.kwargs['umi_unit_pattern'],
+            ))
 
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))

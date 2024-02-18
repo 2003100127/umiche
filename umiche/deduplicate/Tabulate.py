@@ -61,7 +61,8 @@ class Tabulate:
         self.umi_to_int_dict = {k: id for id, k in enumerate(series_uniq_umi)}
 
         dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list = umisc().greedy(
-            multimer_list=series_uniq_umi.values
+            multimer_list=series_uniq_umi.values,
+            recur_len=kwargs['umi_unit_pattern'],
         )
         print(dedup_cnt)
         self.df.loc[0, 'dedup_cnt'] = dedup_cnt
@@ -97,7 +98,8 @@ class Tabulate:
         self.umi_to_int_dict = {k: id for id, k in enumerate(series_uniq_umi)}
 
         dedup_cnt, uniq_multimer_cnt, shortlisted_multimer_umi_list = umimv().track(
-            multimer_list=series_uniq_umi.values
+            multimer_list=series_uniq_umi.values,
+            recur_len=kwargs['umi_unit_pattern'],
         )
         print(dedup_cnt)
         self.df.loc[0, 'dedup_cnt'] = dedup_cnt

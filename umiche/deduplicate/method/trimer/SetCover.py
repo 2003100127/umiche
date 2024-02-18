@@ -288,6 +288,7 @@ class SetCover:
     def greedy(
             self,
             multimer_list,
+            recur_len,
     ):
         """
 
@@ -299,7 +300,7 @@ class SetCover:
         -------
 
         """
-        umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi) for multimer_umi in multimer_list}
+        umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi, recur_len=recur_len) for multimer_umi in multimer_list}
         # umi_dict = {multimer_umi: self.collapse.split_by_mv(multimer_umi) for multimer_umi in multimer_list}
 
         multimer_umi_lens = []

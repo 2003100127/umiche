@@ -45,6 +45,7 @@ class Standard:
         self.params = params(param_fpn=param_fpn)
         self.gbfscc = gbfscc()
         self.fwriter = fwriter()
+        print('UMI homopolymer recurring pattern: {}'.format(self.params.fixed['umi_unit_pattern']))
 
         self.verbose = verbose
         self.console = Console()
@@ -90,7 +91,8 @@ class Standard:
                     else:
                         self.is_build_graph = True
                     if self.is_voting:
-                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.voting_method + '/' + self.fn_prefix + '.bam'
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
+                        # bam_fpn = self.fastq_location + 'trimmed/bam/' + self.voting_method + '/' + self.fn_prefix + '.bam'
                     else:
                         bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
                     # print(self.is_voting)
@@ -107,6 +109,7 @@ class Standard:
                         heterogeneity=False, # False True
                         is_build_graph=self.is_build_graph, # False True
                         is_voting=self.is_voting, # False True
+                        umi_unit_pattern=self.params.fixed['umi_unit_pattern'],
                         verbose=self.verbose,
                         # **self.kwargs
                     )
