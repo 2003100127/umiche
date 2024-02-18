@@ -17,7 +17,7 @@ from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
 
 
-class Simulation:
+class Standard:
 
     def __init__(
             self,
@@ -33,6 +33,14 @@ class Simulation:
         self.scenario = scenario
         self.method = method
         self.kwargs = kwargs
+        if 'is_voting' in self.kwargs.keys():
+            self.is_voting = self.kwargs['is_voting']
+        else:
+            self.is_voting = False
+        if 'voting_method' in self.kwargs.keys():
+            self.voting_method = self.kwargs['voting_method']
+        else:
+            self.voting_method = ''
 
         self.params = params(param_fpn=param_fpn)
         self.gbfscc = gbfscc()
@@ -77,8 +85,17 @@ class Simulation:
                     ).tobam()
                 if is_dedup:
                     self.console.print("======>reads are being deduplicated.")
+                    if self.method == 'set_cover' or self.method == 'majority_vote':
+                        self.is_build_graph = False
+                    else:
+                        self.is_build_graph = True
+                    if self.is_voting:
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.voting_method + '/' + self.fn_prefix + '.bam'
+                    else:
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
+                    # print(self.is_voting)
                     dedup_ob = deduppos(
-                        bam_fpn=self.fastq_location + 'trimmed/bam/set_cover/' + self.fn_prefix + '.bam',
+                        bam_fpn=bam_fpn,
                         pos_tag='PO',
                         mcl_fold_thres=self.params.dedup['mcl_fold_thres'],
                         inflat_val=self.params.dedup['inflat_val'],
@@ -86,23 +103,21 @@ class Simulation:
                         iter_num=self.params.dedup['iter_num'],
                         ed_thres=self.params.dedup['ed_thres'],
                         work_dir=self.params.work_dir,
-                        sv_setcover_bam_fpn=self.fastq_location + 'trimmed/bam/set_cover/' + self.fn_prefix + '.bam',
+                        sv_interm_bam_fpn=self.fastq_location + 'trimmed/bam/' + self.method + '/' + self.fn_prefix + '.bam',
                         heterogeneity=False, # False True
-                        is_build_graph=True, # False True
-                        verbose=False,
-                        **self.kwargs
+                        is_build_graph=self.is_build_graph, # False True
+                        is_voting=self.is_voting, # False True
+                        verbose=self.verbose,
+                        # **self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
-
-                    print(df.dedup_cnt)
-                    # if self.method == "unique":
-                    #     print("No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
-                    #     dedup_arr.append(df.num_uniq_umis.values[0])
-                    # else:
-                    #     print("No.{}, dedup cnt: {:.2f}\t{}".format(id, c, df.dedup_cnt.values[0]))
-                    #     dedup_arr.append(df.dedup_cnt.values[0])
-                    # dedup_arr.append(dedup_ob.dedup_num)
-            # df_dedup['pn' + str(perm_num_i)] = dedup_arr
+                    if self.method == "unique":
+                        print("No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
+                        dedup_arr.append(df.num_uniq_umis.values[0])
+                    else:
+                        print("No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
+                        dedup_arr.append(df.dedup_cnt.values[0])
+            df_dedup['pn' + str(perm_num_i)] = dedup_arr
             # print(df_dedup)
         # self.fwriter.generic(
         #     df=df_dedup,
@@ -125,13 +140,14 @@ class Simulation:
             # 'hdbscan_seq_onehot': dedup_ob.hdbscan_seq_onehot,
             # 'aprop_seq_onehot': dedup_ob.aprop_seq_onehot,
             'set_cover': dedup_ob.set_cover,
+            'majority_vote': dedup_ob.majority_vote,
         }
 
 
 if __name__ == "__main__":
     from umiche.path import to
 
-    p = Simulation(
+    p = Standard(
         # scenario='pcr_nums',
         # scenario='pcr_errs',
         scenario='seq_errs',
@@ -141,11 +157,12 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='set_cover',
+        method='majority_vote',
 
         # is_trim=True,
         # is_tobam=False,
@@ -158,9 +175,11 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
+        is_voting=False,
+        voting_method='majority_vote', # majority_vote set_cover
 
         param_fpn=to('data/params_trimer.yml'),
         # param_fpn=to('data/params.yml'),
 
-        verbose=True
+        verbose=False,
     )

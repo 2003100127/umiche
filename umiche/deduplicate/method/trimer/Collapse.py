@@ -317,9 +317,9 @@ if __name__ == "__main__":
     p = Collapse()
     set1 = p.umi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
     set2 = p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
-    # print(set1)
-    # print(set2)
-    # print(set1 == set2)
+    print(set1)
+    print(set2)
+    print(set1 == set2)
 
     set3 = p.cmi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
     set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
@@ -327,5 +327,5 @@ if __name__ == "__main__":
     print(set4)
     print(set3 == set4)
 
-    umi_collapsed = p.majority_vote('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC') # T1TTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC
+    umi_collapsed = p.majority_vote('CTGCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC') # T1TTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC
     print(umi_collapsed)

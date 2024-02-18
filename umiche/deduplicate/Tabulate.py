@@ -18,6 +18,7 @@ from umiche.deduplicate.method.Directional import Directional as umidirec
 from umiche.deduplicate.method.MarkovClustering import MarkovClustering as umimcl
 from umiche.deduplicate.method.Clustering import Clustering as umiclustering
 from umiche.deduplicate.method.trimer.SetCover import SetCover as umisc
+from umiche.deduplicate.method.trimer.MajorityVote import MajorityVote as umimv
 
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
@@ -51,7 +52,7 @@ class Tabulate:
 
     def set_cover(
             self,
-            **kwargs
+            **kwargs,
     ):
         self.df_umi_uniq = self.df_bam.drop_duplicates(subset=['umi'], keep='first')
         # print(self.df_umi_uniq)
@@ -63,6 +64,7 @@ class Tabulate:
             multimer_list=series_uniq_umi.values
         )
         print(dedup_cnt)
+        self.df.loc[0, 'dedup_cnt'] = dedup_cnt
 
         sc_bam_ids = []
         for i in shortlisted_multimer_umi_list:
@@ -74,15 +76,50 @@ class Tabulate:
 
         import os
         from umiche.util.Folder import Folder as crtfolder
-        crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_setcover_bam_fpn']))
+        crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_interm_bam_fpn']))
 
         self.aliwriter.tobam(
-            tobam_fpn=kwargs['sv_setcover_bam_fpn'],
+            tobam_fpn=kwargs['sv_interm_bam_fpn'],
             tmpl_bam_fpn=self.bam_fpn,
             whitelist=sc_bam_ids,
         )
         self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return
+        return self.df
+
+    def majority_vote(
+            self,
+            **kwargs,
+    ):
+        self.df_umi_uniq = self.df_bam.drop_duplicates(subset=['umi'], keep='first')
+        # print(self.df_umi_uniq)
+        series_uniq_umi = self.df_umi_uniq.umi
+        # print(series_uniq_umi)
+        self.umi_to_int_dict = {k: id for id, k in enumerate(series_uniq_umi)}
+
+        dedup_cnt, uniq_multimer_cnt, shortlisted_multimer_umi_list = umimv().track(
+            multimer_list=series_uniq_umi.values
+        )
+        print(dedup_cnt)
+        self.df.loc[0, 'dedup_cnt'] = dedup_cnt
+        sc_bam_ids = []
+        for i in shortlisted_multimer_umi_list:
+            sc_bam_ids.append(series_uniq_umi.loc[series_uniq_umi.isin([i])].index[0])
+
+        self.console.print('======>start writing deduplicated reads to BAM...')
+        dedup_reads_write_stime = time.time()
+        # print(self.work_dir)
+
+        import os
+        from umiche.util.Folder import Folder as crtfolder
+        crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_interm_bam_fpn']))
+
+        self.aliwriter.tobam(
+            tobam_fpn=kwargs['sv_interm_bam_fpn'],
+            tmpl_bam_fpn=self.bam_fpn,
+            whitelist=sc_bam_ids,
+        )
+        self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        return self.df
 
     def unique(self, ):
         dedup_umi_stime = time.time()

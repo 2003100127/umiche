@@ -68,6 +68,7 @@ class MultiPos:
         self.heterogeneity = heterogeneity
         self.verbose = verbose
         self.kwargs = kwargs
+        # print(self.kwargs)
 
         self.umiclust = umiclust()
 
@@ -93,6 +94,11 @@ class MultiPos:
 
         # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
         self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
+
+        if 'is_voting' in self.kwargs.keys() and self.kwargs['is_voting'] is True:
+            from umiche.deduplicate.method.trimer.Collapse import Collapse as tricoll
+            self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: list(tricoll().split_by_mv(x))[0])
+
         self.console.print('======># of unique umis: {}'.format(self.df_bam['umi'].unique().shape[0]))
         self.console.print('======># of redundant umis: {}'.format(self.df_bam['umi'].shape[0]))
         self.console.print('======>edit distance thres: {}'.format(self.ed_thres))
@@ -116,8 +122,6 @@ class MultiPos:
             if not self.kwargs['is_build_graph']:
                 self.df = pd.DataFrame()
             else:
-                from umiche.deduplicate.method.trimer.Collapse import Collapse as tricoll
-                self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: list(tricoll().split_by_mv(x))[0])
                 # print(self.df_bam['umi'])
                 self.console.print('===>start building umi graphs...')
                 umi_graph_build_stime = time.time()
@@ -264,6 +268,18 @@ class MultiPos:
             heterogeneity=self.heterogeneity,
             verbose=False,
         ).set_cover(
+            **self.kwargs
+        )
+
+    def majority_vote(self, ) -> pd.DataFrame:
+        return umitab(
+            df=self.df,
+            df_bam=self.df_bam,
+            bam_fpn=self.bam_fpn,
+            work_dir=self.work_dir,
+            heterogeneity=self.heterogeneity,
+            verbose=False,
+        ).majority_vote(
             **self.kwargs
         )
 
