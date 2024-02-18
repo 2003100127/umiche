@@ -175,10 +175,11 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        is_voting=True,
-        voting_method='majority_vote', # majority_vote set_cover
+        is_voting=True, # True False
+        voting_method='set_cover', # majority_vote set_cover
 
-        param_fpn=to('data/params_trimer.yml'),
+        param_fpn=to('data/params_dimer.yml'),
+        # param_fpn=to('data/params_trimer.yml'),
         # param_fpn=to('data/params.yml'),
 
         verbose=False,
