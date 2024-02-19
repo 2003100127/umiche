@@ -63,12 +63,12 @@ class Standard:
         df_slv = pd.DataFrame()
         df_not_slv = pd.DataFrame()
         for perm_num_i in range(self.params.fixed['permutation_num']):
-            self.console.print("===>permutation number {}".format(perm_num_i))
+            print("===>Permutation number: {}".format(perm_num_i))
             dedup_arr = []
             slv_arr = []
             not_slv_arr = []
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
-                self.console.print("===>No.{} scenario: {}".format(id+1, scenario_i))
+                self.console.print("======>No.{} scenario: {}".format(id+1, scenario_i))
                 if self.scenario == 'pcr_nums':
                     self.fn_mark = str(scenario_i)
                 elif self.scenario == 'pcr_errs':
@@ -99,7 +99,11 @@ class Standard:
                 if is_dedup:
                     self.console.print("======>reads are being deduplicated.")
                     if self.is_collapse_block:
-                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.deduped_method + '/' + self.fn_prefix + '.bam'
+                        if self.deduped_method == '' and self.split_method == '':
+                            plus = ''
+                        else:
+                            plus = self.deduped_method + '_' + self.split_method
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + plus + '/' + self.fn_prefix + '.bam'
                     else:
                         bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
                     if self.method == 'set_cover' or self.method == 'majority_vote':
@@ -116,7 +120,7 @@ class Standard:
                         iter_num=self.params.dedup['iter_num'],
                         ed_thres=self.params.dedup['ed_thres'],
                         work_dir=self.params.work_dir,
-                        sv_interm_bam_fpn=self.fastq_location + 'trimmed/bam/' + self.method + '/' + self.fn_prefix + '.bam',
+                        sv_interm_bam_fpn=self.fastq_location + 'trimmed/bam/' + self.method + '_' + self.split_method + '/' + self.fn_prefix + '.bam',
                         heterogeneity=False, # False True
                         is_build_graph=self.is_build_graph,
                         is_collapse_block=self.is_collapse_block,
@@ -130,7 +134,7 @@ class Standard:
                     if self.method == "unique":
                         print("============>No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
                         dedup_arr.append(df.num_uniq_umis.values[0])
-                    if self.method == "set_cover":
+                    elif self.method == "set_cover":
                         print("============>No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
                         # print("============>No.{}, num solved: {}".format(id, df.num_solved.values[0]))
                         # print("============>No.{}, num not solved: {}".format(id, df.num_not_solved.values[0]))
@@ -154,18 +158,18 @@ class Standard:
         crtfolder().osmkdir(DIRECTORY=self.sv_dedup_dir)
         self.fwriter.generic(
             df=df_dedup,
-            sv_fpn=self.sv_dedup_dir + self.method + '_' + self.deduped_method + '_' + self.split_method + '_collblockby_' + self.collapse_block_method + '.txt',
+            sv_fpn=self.sv_dedup_dir + self.method + '_dedupby_' + self.deduped_method + '_splitby_' + self.split_method + '_collblockby_' + self.collapse_block_method + '_dedup.txt',
             header=True,
         )
         if self.method == 'set_cover':
             self.fwriter.generic(
                 df=df_slv,
-                sv_fpn=self.sv_dedup_dir + self.method + '_solved.txt',
+                sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '.txt',
                 header=True,
             )
             self.fwriter.generic(
                 df=df_not_slv,
-                sv_fpn=self.sv_dedup_dir + self.method + '_not_solved.txt',
+                sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '.txt',
                 header=True,
             )
 
@@ -220,21 +224,27 @@ if __name__ == "__main__":
         is_tobam=False,
         is_dedup=True,
 
-        # @@ for directional on monomer umis deduplicated by set_cover
-        is_collapse_block=False, # True False
+        # @@ for directional on multimer umis deduplicated by set_cover
+        is_collapse_block=False,
         deduped_method='set_cover',
         split_method='split_to_all', # split_to_all split_by_mv
 
-        # @@ for directional on monomer umis deduplicated by majority_vote
-        # is_collapse_block=True,  # True False
+        # @@ for directional on multimer umis deduplicated by majority_vote
+        # is_collapse_block=False,
         # deduped_method='majority_vote',
         # split_method='',
 
-        # @@ for directional but on monomer umis without other methods.
+        # @@ for directional but on monomer umis of set_cover or majority_vote
         # is_collapse_block=True, # True False
-        # deduped_method='',
-        # split_method='',
+        # collapse_block_method='take_by_order', # majority_vote take_by_order
+        # deduped_method='set_cover', # majority_vote set_cover
+        # split_method='split_by_mv', # split_to_all split_by_mv
+
+        # @@ for directional but on monomer umis without other methods.
+        # is_collapse_block=True,  # True False
         # collapse_block_method='majority_vote',  # majority_vote take_by_order
+        # deduped_method='',  # majority_vote set_cover
+        # split_method='',  # split_to_all split_by_mv
 
         # param_fpn=to('data/params_dimer.yml'),
         param_fpn=to('data/params_trimer.yml'),

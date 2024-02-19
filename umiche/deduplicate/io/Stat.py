@@ -38,7 +38,7 @@ class Stat:
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
                 )
-                df_sce_met = (df_sce_met - 50) / 50
+                df_sce_met = (df_sce_met - self.umi_gt_cnt) / self.umi_gt_cnt
                 df_sce_met['mean'] = df_sce_met.mean(axis=1)
                 df_sce_met['max'] = df_sce_met.max(axis=1)
                 df_sce_met['min'] = df_sce_met.min(axis=1)
@@ -61,7 +61,7 @@ class Stat:
                     header=0,
                 )
                 df_sce_met_T = df_sce_met.T
-                df_sce_met_T = (df_sce_met_T - 50) / 50
+                df_sce_met_T = (df_sce_met_T - self.umi_gt_cnt) / self.umi_gt_cnt
                 df_sce_met_T.columns = [str(x) for x in self.params.varied[scenario]]
                 df_sce_met_T['method'] = method_formal
                 df = pd.concat([df, df_sce_met_T], axis=0)
@@ -140,8 +140,8 @@ class Stat:
             # print(scenario)
             df_inflat[scenario_formal] = df_inflat_sub['cnt']
             df_exp[scenario_formal] = df_exp_sub['cnt']
-        df_inflat = (df_inflat - 50) / 50
-        df_exp = (df_exp - 50) / 50
+        df_inflat = (df_inflat - self.umi_gt_cnt) / self.umi_gt_cnt
+        df_exp = (df_exp - self.umi_gt_cnt) / self.umi_gt_cnt
         df_inflat.index = df_inflat_sub['id'].values
         df_exp.index = df_exp_sub['id'].astype(int).values
         return df_inflat, df_exp
