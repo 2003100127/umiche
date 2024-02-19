@@ -170,24 +170,24 @@ class Standard:
         #     header=True,
         # )
         if self.method == 'set_cover':
-        #     self.fwriter.generic(
-        #         df=df_slv,
-        #         sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '.txt',
-        #         header=True,
-        #     )
-        #     self.fwriter.generic(
-        #         df=df_not_slv,
-        #         sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '.txt',
-        #         header=True,
-        #     )
+            # self.fwriter.generic(
+            #     df=df_slv,
+            #     sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '_dedup.txt',
+            #     header=True,
+            # )
+            # self.fwriter.generic(
+            #     df=df_not_slv,
+            #     sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '_dedup.txt',
+            #     header=True,
+            # )
             self.fwriter.generic(
                 df=df_mono_len,
-                sv_fpn=self.sv_dedup_dir + self.method + '_mono_len_' + self.split_method + '.txt',
+                sv_fpn=self.sv_dedup_dir + self.method + '_mono_len_' + self.split_method + '_dedup.txt',
                 header=True,
             )
             self.fwriter.generic(
                 df=df_multi_len,
-                sv_fpn=self.sv_dedup_dir + self.method + '_multi_len_' + self.split_method + '.txt',
+                sv_fpn=self.sv_dedup_dir + self.method + '_multi_len_' + self.split_method + '_dedup.txt',
                 header=True,
             )
 

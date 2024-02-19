@@ -55,6 +55,22 @@ class Stat:
         return df
 
     @property
+    def df_dedup_set_cover_len(self, ):
+        df = pd.DataFrame()
+        for scenario, scenario_formal in self.scenarios.items():
+            for method, method_formal in self.methods.items():
+                df_sce_met = self.freader.generic(
+                    df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
+                    header=0,
+                )
+                print(df_sce_met.applymap(lambda x: len([int(x) for x in x.split(';')])))
+                df_sce_met['scenario'] = scenario_formal
+                df_sce_met['method'] = method_formal
+                df_sce_met['metric'] = [str(x) for x in self.params.varied[scenario]]
+                df = pd.concat([df, df_sce_met], axis=0)
+        return df
+
+    @property
     def df_dedup_perm_melt(self, ):
         df = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
