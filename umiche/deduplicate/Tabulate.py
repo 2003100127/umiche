@@ -60,15 +60,19 @@ class Tabulate:
         # print(series_uniq_umi)
         self.umi_to_int_dict = {k: id for id, k in enumerate(series_uniq_umi)}
 
-        dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list = umisc().greedy(
+        dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens = umisc().greedy(
             multimer_list=series_uniq_umi.values,
             recur_len=kwargs['umi_unit_pattern'],
             split_method=kwargs['split_method'],
         )
+        # print(monomer_umi_lens)
+        # print(multimer_umi_lens)
         # print(dedup_cnt)
         self.df.loc[0, 'dedup_cnt'] = dedup_cnt
         self.df.loc[0, 'num_solved'] = len(multimer_umi_solved_by_sc)
         self.df.loc[0, 'num_not_solved'] = len(multimer_umi_not_solved)
+        self.df.loc[0, 'monomer_umi_len'] = ';'.join([str(i) for i in monomer_umi_lens])
+        self.df.loc[0, 'multimer_umi_len'] = ';'.join([str(i) for i in multimer_umi_lens])
 
         sc_bam_ids = []
         for i in shortlisted_multimer_umi_list:

@@ -310,6 +310,7 @@ class SetCover:
             recur_len=recur_len,
         ) for multimer_umi in multimer_list}
 
+        monomer_umi_lens = []
         multimer_umi_lens = []
         merged_mono_umi_dict = {}
         trimer_umi_to_id_map = {trimer_umi: k for k, trimer_umi in enumerate(umi_dict.keys())}
@@ -337,6 +338,7 @@ class SetCover:
                     else:
                         mono_umi_to_trimer_id_dict[mono_umi] = [trimer_umi_to_id_map[multimer_umi]]
 
+            monomer_umi_lens.append(len(mono_umi_to_trimer_id_dict))
             umi_to_cnt_map = {k: len(v) for k, v in mono_umi_to_trimer_id_dict.items()}
             # print(umi_to_cnt_map)
             if umi_to_cnt_map:
@@ -366,7 +368,7 @@ class SetCover:
 
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
         self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
-        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, multimer_umi_lens
+        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens
 
 
 if __name__ == "__main__":

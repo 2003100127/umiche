@@ -62,11 +62,15 @@ class Standard:
         df_dedup = pd.DataFrame()
         df_slv = pd.DataFrame()
         df_not_slv = pd.DataFrame()
+        df_mono_len = pd.DataFrame()
+        df_multi_len = pd.DataFrame()
         for perm_num_i in range(self.params.fixed['permutation_num']):
             print("===>Permutation number: {}".format(perm_num_i))
             dedup_arr = []
             slv_arr = []
             not_slv_arr = []
+            mono_len_arr = []
+            multi_len_arr = []
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 self.console.print("======>No.{} scenario: {}".format(id+1, scenario_i))
                 if self.scenario == 'pcr_nums':
@@ -141,6 +145,8 @@ class Standard:
                         dedup_arr.append(df.dedup_cnt.values[0])
                         slv_arr.append(df.num_solved.values[0])
                         not_slv_arr.append(df.num_not_solved.values[0])
+                        mono_len_arr.append(df.monomer_umi_len.values[0])
+                        multi_len_arr.append(df.multimer_umi_len.values[0])
                     else:
                         print("============>No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
                         dedup_arr.append(df.dedup_cnt.values[0])
@@ -148,6 +154,8 @@ class Standard:
             if self.method == 'set_cover':
                 df_slv['pn' + str(perm_num_i)] = slv_arr
                 df_not_slv['pn' + str(perm_num_i)] = not_slv_arr
+                df_mono_len['pn' + str(perm_num_i)] = mono_len_arr
+                df_multi_len['pn' + str(perm_num_i)] = multi_len_arr
             # print(df_dedup)
         if not self.is_collapse_block:
             remark = 'collapse_block'
@@ -156,20 +164,30 @@ class Standard:
         self.sv_dedup_dir = self.params.work_dir + self.scenario + '/' + remark + '/'
         from umiche.util.Folder import Folder as crtfolder
         crtfolder().osmkdir(DIRECTORY=self.sv_dedup_dir)
-        self.fwriter.generic(
-            df=df_dedup,
-            sv_fpn=self.sv_dedup_dir + self.method + '_dedupby_' + self.deduped_method + '_splitby_' + self.split_method + '_collblockby_' + self.collapse_block_method + '_dedup.txt',
-            header=True,
-        )
+        # self.fwriter.generic(
+        #     df=df_dedup,
+        #     sv_fpn=self.sv_dedup_dir + self.method + '_dedupby_' + self.deduped_method + '_splitby_' + self.split_method + '_collblockby_' + self.collapse_block_method + '_dedup.txt',
+        #     header=True,
+        # )
         if self.method == 'set_cover':
+        #     self.fwriter.generic(
+        #         df=df_slv,
+        #         sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '.txt',
+        #         header=True,
+        #     )
+        #     self.fwriter.generic(
+        #         df=df_not_slv,
+        #         sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '.txt',
+        #         header=True,
+        #     )
             self.fwriter.generic(
-                df=df_slv,
-                sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '.txt',
+                df=df_mono_len,
+                sv_fpn=self.sv_dedup_dir + self.method + '_mono_len_' + self.split_method + '.txt',
                 header=True,
             )
             self.fwriter.generic(
-                df=df_not_slv,
-                sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '.txt',
+                df=df_multi_len,
+                sv_fpn=self.sv_dedup_dir + self.method + '_multi_len_' + self.split_method + '.txt',
                 header=True,
             )
 
