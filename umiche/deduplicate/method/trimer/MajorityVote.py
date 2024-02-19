@@ -50,7 +50,7 @@ class MajorityVote:
         shortlisted_multimer_umi_list = [*mono_umi_to_multimer_umi_map.values()]
         dedup_cnt = len(shortlisted_multimer_umi_list)
         self.console.print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
-        print('=========>dedup cnt: {}'.format(dedup_cnt))
+        self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
         return dedup_cnt, uniq_multimer_cnt, shortlisted_multimer_umi_list
 
 

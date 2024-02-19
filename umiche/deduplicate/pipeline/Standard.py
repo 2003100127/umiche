@@ -33,14 +33,22 @@ class Standard:
         self.scenario = scenario
         self.method = method
         self.kwargs = kwargs
-        if 'is_voting' in self.kwargs.keys():
-            self.is_voting = self.kwargs['is_voting']
+        if 'is_collapse_block' in self.kwargs.keys():
+            self.is_collapse_block = self.kwargs['is_collapse_block']
         else:
-            self.is_voting = False
-        if 'voting_method' in self.kwargs.keys():
-            self.voting_method = self.kwargs['voting_method']
+            self.is_collapse_block = False
+        if 'deduped_method' in self.kwargs.keys():
+            self.deduped_method = self.kwargs['deduped_method']
         else:
-            self.voting_method = ''
+            self.deduped_method = ''
+        if 'split_method' in self.kwargs.keys():
+            self.split_method = self.kwargs['split_method']
+        else:
+            self.split_method = ''
+        if 'collapse_block_method' in self.kwargs.keys():
+            self.collapse_block_method = self.kwargs['collapse_block_method']
+        else:
+            self.collapse_block_method = ''
 
         self.params = params(param_fpn=param_fpn)
         self.gbfscc = gbfscc()
@@ -52,9 +60,13 @@ class Standard:
         self.console.verbose = self.verbose
 
         df_dedup = pd.DataFrame()
+        df_slv = pd.DataFrame()
+        df_not_slv = pd.DataFrame()
         for perm_num_i in range(self.params.fixed['permutation_num']):
             self.console.print("===>permutation number {}".format(perm_num_i))
             dedup_arr = []
+            slv_arr = []
+            not_slv_arr = []
             for id, scenario_i in enumerate(self.params.varied[self.scenario]):
                 self.console.print("===>No.{} scenario: {}".format(id+1, scenario_i))
                 if self.scenario == 'pcr_nums':
@@ -86,16 +98,15 @@ class Standard:
                     ).tobam()
                 if is_dedup:
                     self.console.print("======>reads are being deduplicated.")
+                    if self.is_collapse_block:
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.deduped_method + '/' + self.fn_prefix + '.bam'
+                    else:
+                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
                     if self.method == 'set_cover' or self.method == 'majority_vote':
                         self.is_build_graph = False
                     else:
                         self.is_build_graph = True
-                    if self.is_voting:
-                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
-                        # bam_fpn = self.fastq_location + 'trimmed/bam/' + self.voting_method + '/' + self.fn_prefix + '.bam'
-                    else:
-                        bam_fpn = self.fastq_location + 'trimmed/bam/' + self.fn_prefix + '.bam'
-                    # print(self.is_voting)
+                    # print(self.is_collapse_block)
                     dedup_ob = deduppos(
                         bam_fpn=bam_fpn,
                         pos_tag='PO',
@@ -107,26 +118,56 @@ class Standard:
                         work_dir=self.params.work_dir,
                         sv_interm_bam_fpn=self.fastq_location + 'trimmed/bam/' + self.method + '/' + self.fn_prefix + '.bam',
                         heterogeneity=False, # False True
-                        is_build_graph=self.is_build_graph, # False True
-                        is_voting=self.is_voting, # False True
+                        is_build_graph=self.is_build_graph,
+                        is_collapse_block=self.is_collapse_block,
                         umi_unit_pattern=self.params.fixed['umi_unit_pattern'],
+                        split_method=self.split_method,
+                        collapse_block_method=self.collapse_block_method,
                         verbose=self.verbose,
                         # **self.kwargs
                     )
                     df = self.tool(dedup_ob)[self.method]()
                     if self.method == "unique":
-                        print("No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
+                        print("============>No.{}, dedup cnt: {}".format(id, df.num_uniq_umis.values[0]))
                         dedup_arr.append(df.num_uniq_umis.values[0])
+                    if self.method == "set_cover":
+                        print("============>No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
+                        # print("============>No.{}, num solved: {}".format(id, df.num_solved.values[0]))
+                        # print("============>No.{}, num not solved: {}".format(id, df.num_not_solved.values[0]))
+                        dedup_arr.append(df.dedup_cnt.values[0])
+                        slv_arr.append(df.num_solved.values[0])
+                        not_slv_arr.append(df.num_not_solved.values[0])
                     else:
-                        print("No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
+                        print("============>No.{}, dedup cnt: {}".format(id, df.dedup_cnt.values[0]))
                         dedup_arr.append(df.dedup_cnt.values[0])
             df_dedup['pn' + str(perm_num_i)] = dedup_arr
+            if self.method == 'set_cover':
+                df_slv['pn' + str(perm_num_i)] = slv_arr
+                df_not_slv['pn' + str(perm_num_i)] = not_slv_arr
             # print(df_dedup)
-        # self.fwriter.generic(
-        #     df=df_dedup,
-        #     sv_fpn=fastq_fp + self.scenario + '/' + str(self.method) + '_' + self.comp_cat + '.txt',
-        #     header=True,
-        # )
+        if not self.is_collapse_block:
+            remark = 'collapse_block'
+        else:
+            remark = 'no_collapse_block'
+        self.sv_dedup_dir = self.params.work_dir + self.scenario + '/' + remark + '/'
+        from umiche.util.Folder import Folder as crtfolder
+        crtfolder().osmkdir(DIRECTORY=self.sv_dedup_dir)
+        self.fwriter.generic(
+            df=df_dedup,
+            sv_fpn=self.sv_dedup_dir + self.method + '_' + self.deduped_method + '_' + self.split_method + '_collblockby_' + self.collapse_block_method + '.txt',
+            header=True,
+        )
+        if self.method == 'set_cover':
+            self.fwriter.generic(
+                df=df_slv,
+                sv_fpn=self.sv_dedup_dir + self.method + '_solved.txt',
+                header=True,
+            )
+            self.fwriter.generic(
+                df=df_not_slv,
+                sv_fpn=self.sv_dedup_dir + self.method + '_not_solved.txt',
+                header=True,
+            )
 
     def tool(self, dedup_ob):
         return {
@@ -160,11 +201,11 @@ if __name__ == "__main__":
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
-        # method='set_cover',
+        method='set_cover',
         # method='majority_vote',
 
         # is_trim=True,
@@ -178,12 +219,26 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
-        is_voting=True, # True False
-        voting_method='set_cover', # majority_vote set_cover
 
-        param_fpn=to('data/params_dimer.yml'),
-        # param_fpn=to('data/params_trimer.yml'),
+        # @@ for directional on monomer umis deduplicated by set_cover
+        is_collapse_block=False, # True False
+        deduped_method='set_cover',
+        split_method='split_to_all', # split_to_all split_by_mv
+
+        # @@ for directional on monomer umis deduplicated by majority_vote
+        # is_collapse_block=True,  # True False
+        # deduped_method='majority_vote',
+        # split_method='',
+
+        # @@ for directional but on monomer umis without other methods.
+        # is_collapse_block=True, # True False
+        # deduped_method='',
+        # split_method='',
+        # collapse_block_method='majority_vote',  # majority_vote take_by_order
+
+        # param_fpn=to('data/params_dimer.yml'),
+        param_fpn=to('data/params_trimer.yml'),
         # param_fpn=to('data/params.yml'),
 
-        verbose=False,
+        verbose=False, # True False
     )

@@ -26,7 +26,7 @@ class Collapse:
     def majority_vote(
             self,
             umi,
-            recur_len=2,
+            recur_len=3,
     ) -> str:
         """
 
@@ -63,7 +63,23 @@ class Collapse:
                 combos.append(umi_block[0])
         return ''.join(combos)
 
-    def majority_vote_most_common_deprecated(self, umi):
+    def take_by_order(
+            self,
+            umi,
+            pos=0,
+            recur_len=3,
+    ):
+        scales = [i for i in range(len(umi)) if i % recur_len == 0]
+        umi_blocks = [umi[v: v + recur_len] for v in scales]
+        combos = []
+        for umi_block in umi_blocks:
+            combos.append(umi_block[pos])
+        return ''.join(combos)
+
+    def majority_vote_most_common_deprecated(
+            self,
+            umi,
+    ):
         from collections import Counter
         vernier = [i for i in range(36) if i % 3 == 0]
         umi_trimers = [umi[v: v+3] for v in vernier]
@@ -85,7 +101,7 @@ class Collapse:
     def split_to_all(
             self,
             umi,
-            recur_len=2,
+            recur_len=3,
         ) -> Set:
         """
 
@@ -144,7 +160,7 @@ class Collapse:
     def split_by_mv(
             self,
             umi,
-            recur_len=2,
+            recur_len=3,
     ) -> Set:
         """
 

@@ -289,6 +289,7 @@ class SetCover:
             self,
             multimer_list,
             recur_len,
+            split_method='split_to_all',
     ):
         """
 
@@ -300,8 +301,14 @@ class SetCover:
         -------
 
         """
-        umi_dict = {multimer_umi: self.collapse.split_to_all(multimer_umi, recur_len=recur_len) for multimer_umi in multimer_list}
-        # umi_dict = {multimer_umi: self.collapse.split_by_mv(multimer_umi) for multimer_umi in multimer_list}
+        if split_method == 'split_to_all':
+            split_func = self.collapse.split_to_all
+        else:
+            split_func = self.collapse.split_by_mv
+        umi_dict = {multimer_umi: split_func(
+            umi=multimer_umi,
+            recur_len=recur_len,
+        ) for multimer_umi in multimer_list}
 
         multimer_umi_lens = []
         merged_mono_umi_dict = {}
@@ -353,12 +360,12 @@ class SetCover:
         multimer_umi_solved_by_sc = [*merged_mono_umi_dict.values()]
         multimer_umi_not_solved = [*mono_umi_set_list_remaining.keys()]
         shortlisted_multimer_umi_list = multimer_umi_solved_by_sc + multimer_umi_not_solved
-        print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
-        print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
-        print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
+        self.console.print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
+        self.console.print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
+        self.console.print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
 
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
-        print('=========>dedup cnt: {}'.format(dedup_cnt))
+        self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
         return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list
 
 
@@ -367,9 +374,6 @@ if __name__ == "__main__":
 
     p = SetCover()
 
-    print(p.greedy(
-        multimer_list=multimer_list,
-    ))
     # print(p.count_li(
     #     inbam=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
     #     tag='PO',

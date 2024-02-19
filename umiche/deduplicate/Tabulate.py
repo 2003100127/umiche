@@ -63,9 +63,12 @@ class Tabulate:
         dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list = umisc().greedy(
             multimer_list=series_uniq_umi.values,
             recur_len=kwargs['umi_unit_pattern'],
+            split_method=kwargs['split_method'],
         )
-        print(dedup_cnt)
+        # print(dedup_cnt)
         self.df.loc[0, 'dedup_cnt'] = dedup_cnt
+        self.df.loc[0, 'num_solved'] = len(multimer_umi_solved_by_sc)
+        self.df.loc[0, 'num_not_solved'] = len(multimer_umi_not_solved)
 
         sc_bam_ids = []
         for i in shortlisted_multimer_umi_list:
@@ -101,7 +104,7 @@ class Tabulate:
             multimer_list=series_uniq_umi.values,
             recur_len=kwargs['umi_unit_pattern'],
         )
-        print(dedup_cnt)
+        # print(dedup_cnt)
         self.df.loc[0, 'dedup_cnt'] = dedup_cnt
         sc_bam_ids = []
         for i in shortlisted_multimer_umi_list:

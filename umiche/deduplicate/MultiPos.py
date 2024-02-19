@@ -95,9 +95,13 @@ class MultiPos:
         # self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[1])
         self.df_bam['umi'] = self.df_bam['query_name'].apply(lambda x: x.split(umi_)[-1])
 
-        if 'is_voting' in self.kwargs.keys() and self.kwargs['is_voting'] is True:
-            from umiche.deduplicate.method.trimer.Collapse import Collapse as tricoll
-            self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: tricoll().majority_vote(
+        if 'is_collapse_block' in self.kwargs.keys() and self.kwargs['is_collapse_block'] is True:
+            from umiche.deduplicate.method.trimer.Collapse import Collapse as coll
+            if self.kwargs['collapse_block_method'] == 'majority_vote':
+                collapse_func = coll().majority_vote
+            if self.kwargs['collapse_block_method'] == 'take_by_order':
+                collapse_func = coll().take_by_order
+            self.df_bam['umi'] = self.df_bam['umi'].apply(lambda x: collapse_func(
                 umi=x,
                 recur_len=self.kwargs['umi_unit_pattern'],
             ))
@@ -114,8 +118,6 @@ class MultiPos:
         # ...      ...                            ...  ...        ...     ...
         # 20683  20683  SRR2057595.11966225_ACCGGTTGG  ...  ACCGGTTGG       1
         # [20684 rows x 13 columns]
-        self.df_bam_gp = self.df_bam.groupby(by=[self.pos_tag])
-        self.pos_gp_keys = self.df_bam_gp.groups.keys()
 
         self.console.print('======># of columns in the bam df: {}'.format(len(self.df_bam.columns)))
         self.console.print('======>Columns in the bam df: {}'.format(self.df_bam.columns.tolist()))
@@ -127,6 +129,8 @@ class MultiPos:
             else:
                 # print(self.df_bam['umi'])
                 self.console.print('===>start building umi graphs...')
+                self.df_bam_gp = self.df_bam.groupby(by=[self.pos_tag])
+                self.pos_gp_keys = self.df_bam_gp.groups.keys()
                 umi_graph_build_stime = time.time()
                 pos_gps = []
                 res_sum = []
