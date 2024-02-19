@@ -22,12 +22,14 @@ class Stat:
             methods: Dict,
             umi_gt_cnt: int = 50,
             param_fpn : str = None,
+            is_trans : bool = True,
     ):
         self.scenarios = scenarios
         self.methods = methods
         self.umi_gt_cnt = umi_gt_cnt
         self.freader = freader()
         self.params = params(param_fpn=param_fpn)
+        self.is_trans = is_trans
 
     @property
     def df_dedup(self, ):
@@ -38,7 +40,8 @@ class Stat:
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
                 )
-                df_sce_met = (df_sce_met - self.umi_gt_cnt) / self.umi_gt_cnt
+                if self.is_trans:
+                    df_sce_met = (df_sce_met - self.umi_gt_cnt) / self.umi_gt_cnt
                 df_sce_met['mean'] = df_sce_met.mean(axis=1)
                 df_sce_met['max'] = df_sce_met.max(axis=1)
                 df_sce_met['min'] = df_sce_met.min(axis=1)

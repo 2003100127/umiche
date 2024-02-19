@@ -366,7 +366,7 @@ class SetCover:
 
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
         self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
-        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list
+        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, multimer_umi_lens
 
 
 if __name__ == "__main__":

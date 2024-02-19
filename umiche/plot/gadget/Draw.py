@@ -494,7 +494,12 @@ class Draw:
         if kwargs["yl_mark"]:
             kwargs["ax"].set_ylabel(kwargs["y_label"], fontsize=kwargs["y_label_fs"])
         kwargs["ax"].set_title(kwargs["title"], fontsize=kwargs["title_fs"])
-        kwargs['ax'].legend(loc=kwargs['legend_loc'], ncol=1, fontsize=kwargs['legend_fs'])
+        kwargs['ax'].legend(
+            loc=kwargs['legend_loc'],
+            ncol=1,
+            fontsize=kwargs['legend_fs'],
+            frameon=False,
+        )
 
     def line_scatter(self, **kwargs):
         kwargs['ax'].plot(
@@ -532,7 +537,12 @@ class Draw:
             kwargs['ax'].set_title(kwargs['title'], fontsize=kwargs['title_fs'])
             kwargs['ax'].set_xlabel(kwargs['x_label'], fontsize=kwargs['x_label_fs'])
             kwargs['ax'].set_ylabel(kwargs['y_label'], fontsize=kwargs['y_label_fs'])
-            legend_main = kwargs['ax'].legend(loc='center left', ncol=1, bbox_to_anchor=(1, 0.5))
+            legend_main = kwargs['ax'].legend(
+                loc='center left',
+                ncol=1,
+                bbox_to_anchor=(1, 0.5),
+                frameon=False,
+            )
             kwargs['ax'].add_artist(legend_main)
             import matplotlib.lines as mlines
             handles1 = [
