@@ -63,7 +63,15 @@ class Stat:
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
                 )
-                print(df_sce_met.applymap(lambda x: len([int(x) for x in x.split(';')])))
+                if self.is_trans:
+                    df_sce_met = df_sce_met.applymap(lambda x: sum([int(x) for x in x.split(';')]))
+                    print(df_sce_met)
+                    df_sce_met['mean'] = df_sce_met.mean(axis=1)
+                    df_sce_met['max'] = df_sce_met.max(axis=1)
+                    df_sce_met['min'] = df_sce_met.min(axis=1)
+                    df_sce_met['std'] = df_sce_met.std(axis=1)
+                    df_sce_met['mean-min'] = df_sce_met['std']
+                    df_sce_met['max-mean'] = df_sce_met['std']
                 df_sce_met['scenario'] = scenario_formal
                 df_sce_met['method'] = method_formal
                 df_sce_met['metric'] = [str(x) for x in self.params.varied[scenario]]
