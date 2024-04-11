@@ -336,7 +336,7 @@ if __name__ == "__main__":
     # print(set1)
     # print(set2)
     # print(set1 == set2)
-    #
+
     # set3 = p.cmi_li('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC')
     # set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
     # print(set3)
@@ -346,6 +346,33 @@ if __name__ == "__main__":
     # umi_collapsed = p.majority_vote('CTGCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC') # T1TTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC
     # print(umi_collapsed)
 
-    print(p.split_by_mv('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
-    print(p.split_to_all('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
-    print(p.majority_vote('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+    # print(p.split_by_mv('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+    # print(p.split_to_all('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+    # print(p.majority_vote('GGTTAAGGAAGGTTGGAAGTAATT', recur_len=2))
+
+
+    # @@ UMIche work Figure 2
+    # print(p.split_by_mv('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3))
+    #
+    # print(p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3))
+    # print(p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCCCCCC', recur_len=3))
+    # print(p.split_to_all('AAATCCGGATTTGGGAAATTTGGGCCCCCC', recur_len=3))
+    # print(p.split_to_all('AAATCCGGGTTTGGGAAATTTGGGCCCCCC', recur_len=3))
+    #
+    # print(p.majority_vote('AAATCCGGGTTTGGGAAATTTGGGCCCCCC', recur_len=3))
+    # a1 = p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3)
+    # a2 = p.split_to_all('AAATCCGGATTTGGGAAACTTGGGCACCCC', recur_len=3)
+    # a3 = p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCCCCCC', recur_len=3)
+    # print(a2)
+    # print(a1 - a2)
+    # print(a1 - a3)
+    # print(a2 - a3)
+
+    # set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
+    # set2 = p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
+    print(p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+    print(p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+
+    print(p.split_to_all('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+    print(p.split_by_mv('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+

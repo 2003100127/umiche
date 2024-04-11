@@ -374,8 +374,30 @@ class SetCover:
 if __name__ == "__main__":
     from umiche.path import to
 
-    p = SetCover()
+    p = SetCover(
+        verbose=True,
+    )
 
+    # from umiche.bam.Build import Build as umibuild
+    # umibuild = umibuild
+
+    from umiche.bam.Reader import Reader as alireader
+    alireader = alireader(bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam", verbose=True)
+    df_bam = alireader.todf(tags=['PO'])
+    print(df_bam.columns)
+    print(df_bam.query_name.apply(lambda x: x.split('_')[1]).values)
+
+    (dedup_cnt,
+     multimer_umi_solved_by_sc,
+     multimer_umi_not_solved,
+     shortlisted_multimer_umi_list,
+     monomer_umi_lens,
+     multimer_umi_lens) = p.greedy(
+        multimer_list=df_bam.query_name.apply(lambda x: x.split('_')[1]).values,
+        recur_len=3,
+        split_method='split_to_all',
+    )
+    print(dedup_cnt)
     # print(p.count_li(
     #     inbam=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
     #     tag='PO',

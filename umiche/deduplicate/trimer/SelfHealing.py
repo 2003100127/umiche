@@ -9,7 +9,7 @@ __lab__ = "Cribbslab"
 import time
 import textwrap
 import pandas as pd
-from umiche.deduplicate.method.trimer import Collapse
+from umiche.deduplicate.method.trimer.Collapse import Collapse
 from umiche.fastq.Reader import Reader as rfastq
 from umiche.trim.Reader import Reader as trimreader
 from umiche.util.Hamming import Hamming

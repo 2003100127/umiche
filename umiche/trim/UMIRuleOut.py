@@ -20,12 +20,12 @@ class umiRuleOut:
     def sequential(self, compo_struct, umi_pos_in_struct):
         """
         
-        Note
-        ----
+        Notes
+        -----
         Starting positions of all UMIs.
 
-        Example
-        -------
+        Examples
+        --------
         rule_out_struct_dict returns all structures before each key of rule_out_struct_dict: {
             'umi_1': [struct_1, struct_2, ..., struct_n],
             'umi_2': [struct_1, struct_2, ..., struct_n],

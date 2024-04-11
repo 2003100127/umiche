@@ -7,11 +7,11 @@ __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
 import argparse
-from umiche.trim.Template import template as umitrim
+from umiche.trim.Template import Template as umitrim
 from umiche.util.Console import Console
 
 
-class fixed():
+class fixed:
 
     def __init__(self, mode='external', params=None, verbose=True):
         if mode == 'internal':
