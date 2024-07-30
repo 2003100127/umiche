@@ -1,6 +1,12 @@
-# Welcome to MkDocs
+<figure markdown="span">
+  ![Image title](./img/umiche-logo.png){ width="150" }
+</figure>
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+# Welcome to the **UMIche** site!
+
+:material-format-quote-open-outline:A comprehensive platform for UMI-associated analysis.:material-format-quote-close-outline:
+
+## Commands
 
 ## Commands
 

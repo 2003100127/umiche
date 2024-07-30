@@ -9,6 +9,7 @@ __lab__ = "Cribbslab"
 import sys
 import pandas as pd
 sys.setrecursionlimit(15000000)
+from umiche.util.Console import Console
 
 
 class Directional:
@@ -16,8 +17,12 @@ class Directional:
     def __init__(
             self,
             heterogeneity=False,
+            verbose=True,
     ):
         self.heterogeneity = heterogeneity
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     def umi_tools(
             self,

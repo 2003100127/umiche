@@ -6,8 +6,17 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 __lab__ = "Cribbslab"
 
+from umiche.util.Console import Console
+
 
 class Adjacency:
+
+    def __init__(
+            self,
+            verbose=True,
+    ):
+        self.console = Console()
+        self.console.verbose = verbose
 
     def umi_tools(
             self,

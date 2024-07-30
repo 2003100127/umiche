@@ -15,7 +15,7 @@ class Adjacency:
     def __init__(
             self,
             graph=None,
-            verbose=False,
+            verbose=True,
     ):
         self._graph = graph
         self._graph_mapped = None
@@ -25,7 +25,7 @@ class Adjacency:
 
     @property
     def graph(self, ):
-        # print('the current graph is {}'.format(self._graph))
+        self.console.print('===>The current graph: {}'.format(self._graph))
         return self._graph
 
     @graph.setter
@@ -48,7 +48,7 @@ class Adjacency:
     @property
     def graph_mapped(self, ):
         if self._graph == None:
-            raise 'go set your graph'
+            raise 'Please set and input your graph'
         else:
             return self.map(self._graph)
 
@@ -75,16 +75,16 @@ class Adjacency:
         -------
 
         """
-        print('->the graph is being mapped')
-        print('--->key map: {}'.format(self.key_mapped))
+        self.console.print('===>the graph is being mapped')
+        self.console.print('======>key map: {}'.format(self.key_mapped))
         if isinstance(graph, dict):
-            print('--->the graph is a dict')
+            self.console.print('======>the graph is a dict')
             g_mapped = {}
             for k, vals in self._graph.items():
                 g_mapped[self.key_mapped[k]] = []
                 for val in vals:
                     g_mapped[self.key_mapped[k]].append(self.key_mapped[val])
-            print('--->the mapped graph: {}'.format(g_mapped))
+            self.console.print('======>the mapped graph: {}'.format(g_mapped))
             return g_mapped
 
     def dict(self, ):
@@ -179,5 +179,5 @@ if __name__ == "__main__":
 
     print(p.to_matrix())
 
-    # print(p.to_edge_list(rr=False))
+    print(p.to_edge_list(rr=False))
     # print(p.to_edge_list(rr=True))

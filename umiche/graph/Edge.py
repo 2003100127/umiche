@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     # print(p.rvredanduncy)
 
-    print('asd', p.to_adj_dict())
+    print(p.to_adj_dict())
     print(p.graph_mapped)
 
     # print(p.nodes)

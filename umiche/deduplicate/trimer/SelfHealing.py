@@ -110,7 +110,7 @@ class selfHealing:
 
         self.fwriter.generic(
             df=df_stat,
-            sv_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/dasd.txt'),
+            sv_fpn=to('data/simu/umi/seq_errs/trimer/trimmed/dasd1111.txt'),
         )
         return 'Finished.'
 

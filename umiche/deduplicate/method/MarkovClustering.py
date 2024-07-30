@@ -11,10 +11,11 @@ from typing import Dict
 # import numpy as np
 import pandas as pd
 import markov_clustering as mc
-from umiche.graph.CC import cc as gbfscc
+from umiche.graph.CC import CC as gbfscc
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 from umiche.util.Hamming import Hamming
 from umiche.graph.Adjacency import Adjacency as netadj
+from umiche.util.Console import Console
 
 
 class MarkovClustering:
@@ -24,6 +25,7 @@ class MarkovClustering:
             inflat_val,
             exp_val,
             iter_num,
+            verbose=True,
             **kwargs,
     ):
         self.inflat_val = inflat_val
@@ -38,6 +40,9 @@ class MarkovClustering:
         self.netadj = netadj()
         self.gbfscc = gbfscc()
         self.refkit = refkit()
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     def adj_to_edge_list(self, graph):
         self.netadj.graph = graph

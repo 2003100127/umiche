@@ -31,8 +31,8 @@ class Draw:
         @wraps(deal)
         def config(self, *args, **kwargs):
             params_all = deal(self, *args, **kwargs)
-            print(kwargs)
-            print(params_all)
+            # print(kwargs)
+            # print(params_all)
             kwarg_keys = kwargs.keys()
             if "color" not in kwarg_keys:
                 color = None

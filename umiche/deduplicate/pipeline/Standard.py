@@ -27,11 +27,13 @@ class Standard:
             is_trim=False,
             is_tobam=False,
             is_dedup=False,
+            is_sv=False,
             verbose=False,
             **kwargs,
     ):
         self.scenario = scenario
         self.method = method
+        self.is_sv = is_sv
         self.kwargs = kwargs
         if 'is_collapse_block' in self.kwargs.keys():
             self.is_collapse_block = self.kwargs['is_collapse_block']

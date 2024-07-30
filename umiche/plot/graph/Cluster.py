@@ -131,7 +131,7 @@ class Cluster:
             left=0.01,
             right=0.98,
             # hspace=0.60,
-            # wspace=0.30
+            # wspace=0.30,
         )
         plt.savefig('./cc.pdf')
         # plt.savefig('./mcl.pdf')

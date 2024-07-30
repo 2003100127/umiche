@@ -1,25 +1,33 @@
 site_name: UMIche
 
-repo_url: https://github.com/cribbslab/umiche
-repo_name: cribbslab/umiche
+repo_url: https://github.com/2003100127/umiche
+repo_name: jsun/umiche
 
 
 theme:
+#  logo: img/umiche-logo.png
   name: material
   features:
-    - content.code.select
     - content.code.copy
+    - content.code.select
     - content.tabs.link
     - content.code.annotate
-#    - navigation.tabs
+    - navigation.tabs
     - navigation.instant
     - navigation.expand
+    - navigation.top
+    - navigation.path
+    - navigation.footer
 #    - toc.integrate
+    - content.footnote.tooltips
+
   icon:
     repo: fontawesome/brands/git-alt
 
   palette:
     # Palette toggle for light mode
+#    - accent: pink
+    - primary: indigo
     - scheme: default
       toggle:
         icon: material/brightness-7
@@ -34,6 +42,8 @@ theme:
 markdown_extensions:
   # icons
   - attr_list
+  - md_in_html
+  - footnotes
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -51,12 +61,34 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
 
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+  # Formatting superscripts
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+
 
 extra:
   consent:
     actions:
       - accept
       - manage
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/2003100127
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/u/2003100127
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/jianfeng-sun-2ba9b1132/
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/Jianfeng_Sunny
 
 plugins:
   - tags
+  - search
+
+copyright: Copyright &copy; 2024 Jianfeng Sun

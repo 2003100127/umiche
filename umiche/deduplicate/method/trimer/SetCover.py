@@ -309,18 +309,21 @@ class SetCover:
             umi=multimer_umi,
             recur_len=recur_len,
         ) for multimer_umi in multimer_list}
-
+        # print(umi_dict)
         monomer_umi_lens = []
         multimer_umi_lens = []
         merged_mono_umi_dict = {}
         trimer_umi_to_id_map = {trimer_umi: k for k, trimer_umi in enumerate(umi_dict.keys())}
         trimer_id_to_umi_map = {k: trimer_umi for k, trimer_umi in enumerate(umi_dict.keys())}
+        # print(trimer_umi_to_id_map)
+        # print(trimer_id_to_umi_map)
         # @@ [*umi_dict.keys()]
         # ['GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG',
         # 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
         # ...,
         # 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT',]
         mono_umi_set_list = [*umi_dict.values()]
+        # print(mono_umi_set_list)
         # @@ mono_umi_set_list
         # [{'GTGCCTATCGAG', 'GTGACGATCGAT', ..., 'GTGCCGATCGAT'},
         # {'GATTGCAGAGAT', 'GATTTTAGCGAT', ..., 'GATTGCAGCGAT'},
@@ -330,6 +333,7 @@ class SetCover:
         num_steps = 0
         is_empty_set_overlap = False
         while not is_empty_set_overlap:
+            # It addresses how many trimer UMIs monomer UMIs can account for
             mono_umi_to_trimer_id_dict = {}
             for multimer_umi, mono_umi_set in mono_umi_set_list_remaining.items():
                 for mono_umi in mono_umi_set:
@@ -337,20 +341,28 @@ class SetCover:
                         mono_umi_to_trimer_id_dict[mono_umi].append(trimer_umi_to_id_map[multimer_umi])
                     else:
                         mono_umi_to_trimer_id_dict[mono_umi] = [trimer_umi_to_id_map[multimer_umi]]
-
+            # @@ mono_umi_to_trimer_id_dict
+            # {'GGATTCGGGACT': [5022, 6458], ..., 'TAAAAAGATTAT': [6890], 'TAAAATGACTAT': [6890]}
             monomer_umi_lens.append(len(mono_umi_to_trimer_id_dict))
-            umi_to_cnt_map = {k: len(v) for k, v in mono_umi_to_trimer_id_dict.items()}
-            # print(umi_to_cnt_map)
-            if umi_to_cnt_map:
-                umi_max = max(umi_to_cnt_map, key=umi_to_cnt_map.get)
+            monomer_umi_to_cnt_map = {k: len(v) for k, v in mono_umi_to_trimer_id_dict.items()}
+            # @@ monomer_umi_to_cnt_map
+            # {'GGATTCGGGACT': 2, ..., 'TAAAAAGACTAT': 1, 'TAAAATGATTAT': 1}
+            if monomer_umi_to_cnt_map:
+                monomer_umi_max = max(monomer_umi_to_cnt_map, key=monomer_umi_to_cnt_map.get)
             else:
                 break
-
-            if umi_to_cnt_map[umi_max] > 1:
-                multimer_umi_ids = mono_umi_to_trimer_id_dict[umi_max]
+            print(monomer_umi_max)
+            # TTAGATGATTAT
+            # ...
+            # TTTTAAGCTGTC
+            # TCCTCTAGTGCC
+            if monomer_umi_to_cnt_map[monomer_umi_max] > 1:
+                multimer_umi_ids = mono_umi_to_trimer_id_dict[monomer_umi_max]
                 multimer_umi_lens.append(len(multimer_umi_ids) - 1)
 
-                merged_mono_umi_dict[umi_max] = trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[umi_max][0]]
+                # important!!
+                # @@ this is where we keep one trimer UMI
+                merged_mono_umi_dict[monomer_umi_max] = trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[monomer_umi_max][0]]
 
                 for multimer_umi_id in multimer_umi_ids:
                     mono_umi_set_list_remaining.pop(trimer_id_to_umi_map[multimer_umi_id], None)
@@ -365,7 +377,7 @@ class SetCover:
         self.console.print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
         self.console.print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
         self.console.print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
-
+        print(num_steps,212323)
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
         self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
         return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens
