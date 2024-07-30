@@ -256,7 +256,7 @@ class MarkovClustering:
         -------
 
         """
-        print(df_umi_uniq_val_cnt)
+        # print(df_umi_uniq_val_cnt)
         df_mcl_ccs['mscmv_val'] = df_mcl_ccs['clusters'].apply(
             lambda x: self.maxval_val_(
                 mcl_clusters_per_cc=x,

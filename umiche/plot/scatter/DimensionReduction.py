@@ -3,10 +3,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-import umap
 
 
-class dimensionReduction(object):
+class dimensionReduction:
 
     def __init__(self, ):
         pass
@@ -24,6 +23,7 @@ class dimensionReduction(object):
             embeddings = retech.fit_transform(np.array(X))
 
         elif tech == 'UMAP':
+            import umap
             retech = umap.UMAP(n_components=2)
             embeddings = retech.fit_transform(np.array(X))
 
@@ -43,10 +43,10 @@ class dimensionReduction(object):
         ax.set_title(title, fontsize=14)
         fig.colorbar(sp)
         fig.subplots_adjust(
-            # top=0.92,
-            # bottom=0.13,
-            # left=0.13,
-            # right=0.95,
+            top=0.95,
+            bottom=0.1,
+            left=0.1,
+            right=0.98,
             # hspace=0.20,
             # wspace=0.15
         )

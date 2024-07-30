@@ -15,6 +15,7 @@ from sklearn.cluster import AffinityPropagation as skaprop
 
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 from umiche.graph.Adjacency import Adjacency as netadj
+from umiche.util.Console import Console
 
 
 class Clustering:
@@ -23,6 +24,7 @@ class Clustering:
             self,
             clustering_method='dbscan',
             heterogeneity=None,
+            verbose=True,
             **kwargs
     ):
         self.refkit = refkit()
@@ -60,6 +62,9 @@ class Clustering:
             self.aprop_random_state = self.kwargs['aprop_random_state']
         else:
             self.aprop_random_state = None
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     @property
     def tool(self, ):
@@ -416,15 +421,15 @@ if __name__ == "__main__":
         birch_n_clusters=None,
     )
 
-    # df = p.dfclusters(
-    #     connected_components=ccs,
-    #     graph_adj=graph_adj,
-    #     # df_umi_uniq_val_cnt=node_val_sorted,
-    #     int_to_umi_dict=int_to_umi_dict,
-    # )
-    # print(df)
-    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
-    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+    df = p.dfclusters(
+        connected_components=ccs,
+        graph_adj=graph_adj,
+        # df_umi_uniq_val_cnt=node_val_sorted,
+        int_to_umi_dict=int_to_umi_dict,
+    )
+    print(df)
+    df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
 
     # df = p.dfclusters_adj_mat(
     #     connected_components=ccs,
@@ -434,8 +439,10 @@ if __name__ == "__main__":
     # df_decomposed = p.decompose(list_nd=df['clusters'].values)
     # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
 
-    df = p.dfclusters_cc_all_node_umis(
-        graph_adj=graph_adj,
-        int_to_umi_dict=int_to_umi_dict,
-    )
-    print(df)
+    # df = p.dfclusters_cc_all_node_umis(
+    #     graph_adj=graph_adj,
+    #     int_to_umi_dict=int_to_umi_dict,
+    # )
+    # print(df)
+    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))

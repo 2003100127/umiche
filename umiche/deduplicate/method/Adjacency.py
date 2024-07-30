@@ -42,11 +42,10 @@ class Adjacency:
         tcl = []
         cc_subs = {}
         for i, cc in connected_components.items():
-            # print('cc: ', cc)
+            self.console.print('======>connected_components: {}'.format(cc))
             step, cc_sub = self.umi_tools_(df_umi_uniq_val_cnt=df_umi_uniq_val_cnt, cc=cc, graph_adj=graph_adj)
             tcl.append(step)
             cc_subs['cc_' + str(i)] = cc_sub
-            # print(self.umi_tools(cc_sorted))
         return {
             'count': sum(tcl),
             'clusters': cc_subs,
@@ -90,7 +89,7 @@ class Adjacency:
             for node in graph_adj[e]:
                 if node not in visited:
                     subcomponents[e].append(node)
-                    # print(subcomponents)
+                    self.console.print('=========>subcomponents: {}'.format(subcomponents))
             ### @@ e, subcomponents[e]
             # A ['B', 'C', 'D']
             # E []
@@ -110,7 +109,7 @@ class Adjacency:
             # A ['B', 'C', 'D']
             # E ['D']
             # D ['A', 'E', 'F']
-            # print('the ccurent ele popping out: {} {}'.format(e, visited))
+            self.console.print('======>The ccurent ele popping out: {} {}'.format(e, visited))
             if visited == cc_set:
                 # print(step)
                 break

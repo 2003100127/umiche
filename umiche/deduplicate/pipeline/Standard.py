@@ -171,7 +171,7 @@ class Standard:
         #     sv_fpn=self.sv_dedup_dir + self.method + '_dedupby_' + self.deduped_method + '_splitby_' + self.split_method + '_collblockby_' + self.collapse_block_method + '_dedup.txt',
         #     header=True,
         # )
-        if self.method == 'set_cover':
+        # if self.method == 'set_cover':
             # self.fwriter.generic(
             #     df=df_slv,
             #     sv_fpn=self.sv_dedup_dir + self.method + '_solved_' + self.split_method + '_dedup.txt',
@@ -182,16 +182,16 @@ class Standard:
             #     sv_fpn=self.sv_dedup_dir + self.method + '_not_solved_' + self.split_method + '_dedup.txt',
             #     header=True,
             # )
-            self.fwriter.generic(
-                df=df_mono_len,
-                sv_fpn=self.sv_dedup_dir + self.method + '_mono_len_' + self.split_method + '_dedup.txt',
-                header=True,
-            )
-            self.fwriter.generic(
-                df=df_multi_len,
-                sv_fpn=self.sv_dedup_dir + self.method + '_multi_len_' + self.split_method + '_dedup.txt',
-                header=True,
-            )
+            # self.fwriter.generic(
+            #     df=df_mono_len,
+            #     sv_fpn=self.sv_dedup_dir + self.method + '_mono_len_' + self.split_method + '_dedup.txt',
+            #     header=True,
+            # )
+            # self.fwriter.generic(
+            #     df=df_multi_len,
+            #     sv_fpn=self.sv_dedup_dir + self.method + '_multi_len_' + self.split_method + '_dedup.txt',
+            #     header=True,
+            # )
 
     def tool(self, dedup_ob):
         return {

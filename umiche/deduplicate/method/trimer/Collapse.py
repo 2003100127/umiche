@@ -352,8 +352,8 @@ if __name__ == "__main__":
 
 
     # @@ UMIche work Figure 2
-    # print(p.split_by_mv('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3))
-    #
+    print(p.split_by_mv('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3))
+
     # print(p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCACCCC', recur_len=3))
     # print(p.split_to_all('AAATCCGGATTTCGGAAATTTGGGCCCCCC', recur_len=3))
     # print(p.split_to_all('AAATCCGGATTTGGGAAATTTGGGCCCCCC', recur_len=3))
@@ -370,9 +370,8 @@ if __name__ == "__main__":
 
     # set4 = p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
     # set2 = p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3)
-    print(p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
-    print(p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+    # print(p.split_to_all('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+    # print(p.split_by_mv('CTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
 
-    print(p.split_to_all('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
-    print(p.split_by_mv('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
-
+    # print(p.split_to_all('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))
+    # print(p.split_by_mv('TTTCCGCATTTTCCCTTTAAAGGGTTTGGGCCCCCC', recur_len=3))

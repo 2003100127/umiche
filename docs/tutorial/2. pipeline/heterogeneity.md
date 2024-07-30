@@ -1,4 +1,4 @@
-## 1. UMI trajectory
+# 1. UMI trajectory
 
 The `uc.pipeline.heterogeneity` function allows us to research trajectories of UMIs across PCR amplification cycles.
 
@@ -57,7 +57,7 @@ uc.pipeline.heterogeneity(
 )
 ```
 
-## 2. Spell-out
+# 2. Spell-out
 
 The UMIche's pipeline is designed to work on top of the output from Tresor. Thus, we might need to run the `heterogeneity` pipeline with raw FastQ reads. The UMI sequences are tagged with 3'/5' end of reads. The first thing we need to do is to extract UMI sequences and typically append them to the end of the name of each FastQ read. To do so, we need to set the following parameters and run the `uc.pipeline.heterogeneity` command.
 
@@ -158,7 +158,7 @@ No.14->0.05 for seq_errs dedup cnt: 134
 14  150  134
 ```
 
-## 3. Generated files
+# 3. Generated files
 
 <figure markdown="span">
   ![Image title](../../img/pipeline/heter.jpg){ width="800" }

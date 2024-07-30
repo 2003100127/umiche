@@ -227,7 +227,7 @@ class editdistance:
 if __name__ == "__main__":
 
     p = editdistance()
-    # print(p.wk2())
+    print(p.wk2())
     # print(p.asdas())
 
     # print(p.data())

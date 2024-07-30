@@ -87,7 +87,7 @@ class SetCover:
             if n_merged > 1:
                 merged_umis_idx[n_steps] = mono_umi_to_trimer_id_dict[df_umi.mono_umi[0]]
                 merged_umis[n_steps] = df_umi.mono_umi[0]
-                print(merged_umis_idx)
+                # print(merged_umis_idx)
                 # fix umis in path
                 mono_umi_set_list_remaining_tmp = []
                 for rr_idx, mono_left_umi_set in enumerate(mono_umi_set_list_remaining):
@@ -106,13 +106,13 @@ class SetCover:
                 n_steps += 1
             else:
                 break
-        print(df_umi.loc[df_umi['val_cnt'] == 1])
-        print(df_umi.loc[df_umi['val_cnt'] == 1].shape)
+        # print(df_umi.loc[df_umi['val_cnt'] == 1])
+        # print(df_umi.loc[df_umi['val_cnt'] == 1].shape)
         # print(mono_umi_set_list_remaining)
         # solutiom_unique_umis = set(merged_umis.values())
         # solution_umis = [ii for ii, cc in enumerate(mono_umi_set_list) if len(cc.intersection(solutiom_unique_umis)) > 0]
         shortest_path = len(mono_umi_set_list) - sum([len(ii) - 1 for ii in merged_umis_idx.values()])
-        print('shortest_path: ', shortest_path)
+        # print('shortest_path: ', shortest_path)
         return (shortest_path)
 
     def count_li(
@@ -351,7 +351,7 @@ class SetCover:
                 monomer_umi_max = max(monomer_umi_to_cnt_map, key=monomer_umi_to_cnt_map.get)
             else:
                 break
-            print(monomer_umi_max)
+            # print(monomer_umi_max)
             # TTAGATGATTAT
             # ...
             # TTTTAAGCTGTC
@@ -377,7 +377,7 @@ class SetCover:
         self.console.print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
         self.console.print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
         self.console.print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
-        print(num_steps,212323)
+        # print(num_steps,212323)
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
         self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
         return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens

@@ -158,8 +158,8 @@ class Directional:
                 apv_node_nbr['node_' + str(e)] = apv
                 disapv_node_nbr['node_' + str(e)] = disapv
                 node_set_remaining = node_set_remaining - seen
-                # print('remaining: {}'.format(node_set_remaining))
-                # print('disapproval {}'.format(disapv))
+                self.console.print('remaining: {}'.format(node_set_remaining))
+                self.console.print('disapproval {}'.format(disapv))
                 ### @@ print('disapproval {}'.format(disapv))
                 # disapproval []
                 # disapproval [[183, 103]]
@@ -216,9 +216,10 @@ class Directional:
         g = graph_adj
         def search(node):
             visited.add(node)
-            # print(visited)
+            self.console.print('======>visited UMI nodes: {}'.format(visited))
+            self.console.print(visited)
             for neighbor in g[node]:
-                # print(neighbor)
+                self.console.print('=========>the neighbor: {}'.format(neighbor))
                 if neighbor not in visited:
                     if neighbor in node_set_remaining:
                         if node_val_sorted[node] >= 2 * node_val_sorted[neighbor] - 1:
