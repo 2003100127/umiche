@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     params = {
         'umi_1': {
-            'len': 3,
+            'len': 12,
         },
         'umi_2': {
             'len': 4,
@@ -198,7 +198,8 @@ if __name__ == "__main__":
         'bc_1': {
             'len': 2,
         },
-        'read_struct': 'umi_1+seq_1',
+        'read_struct': 'umi_1',
+        # 'read_struct': 'umi_1+seq_1',
         # 'read_struct': 'bc_1+umi_1+seq_1',
         # 'read_struct': 'primer_1+umi_1+seq_1+seq_2+umi_2+umi_3',
         # 'read_struct': 'primer+umi_start+seq+umi_1+primer',
@@ -216,8 +217,8 @@ if __name__ == "__main__":
             'len': 8,
         },
         'fastq': {
-            'fpn': to('data/pcr_1.fastq.gz'),
-            'trimmed_fpn': to('data/pcr_1_trim.fastq.gz'),
+            'fpn': to('data/simu/mclumi/seq_errs/permute_0/seq_err_5.fastq.gz'),
+            'trimmed_fpn': to('data/simu/mclumi/seq_errs/permute_0/seq_err_5_trimmed.fastq.gz'),
         },
     }
     p = Template(params)

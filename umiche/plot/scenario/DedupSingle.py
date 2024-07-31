@@ -366,6 +366,6 @@ if __name__ == "__main__":
         # method='MCL-val',
         method='MCL-ed',
     ))
-    # print(p.stackedbar())
+    print(p.stackedbar())
     # print(p.errorbar())
     # print(p.errorband())

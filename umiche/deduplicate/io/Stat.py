@@ -12,6 +12,7 @@ import pandas as pd
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.util.Reader import Reader as freader
+from umiche.util.Console import Console
 
 
 class Stat:
@@ -23,6 +24,7 @@ class Stat:
             umi_gt_cnt: int = 50,
             param_fpn : str = None,
             is_trans : bool = True,
+            verbose: bool = True,
     ):
         self.scenarios = scenarios
         self.methods = methods
@@ -31,11 +33,16 @@ class Stat:
         self.params = params(param_fpn=param_fpn)
         self.is_trans = is_trans
 
+        self.console = Console()
+        self.console.verbose = verbose
+
     @property
     def df_dedup(self, ):
         df = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
+                self.console.print("=========>method: {}".format(method_formal))
                 df_sce_met = self.freader.generic(
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
@@ -58,14 +65,15 @@ class Stat:
     def df_runtime(self, ):
         df = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
-                print(method)
-                print(self.params.work_dir + scenario + '/' + method + '.txt')
+                self.console.print("=========>method: {}".format(method_formal))
+                # print(self.params.work_dir + scenario + '/' + method + '.txt')
                 df_sce_met = self.freader.generic(
                     df_fpn=self.params.work_dir + scenario + '/' + method + '.txt',
                     header=0,
                 )
-                print(df_sce_met)
+                # print(df_sce_met)
                 if self.is_trans:
                     df_sce_met = (df_sce_met - self.umi_gt_cnt) / self.umi_gt_cnt
                 df_sce_met['mean'] = df_sce_met.mean(axis=1)
@@ -86,14 +94,16 @@ class Stat:
     def df_dedup_set_cover_len(self, ):
         df = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
+                self.console.print("=========>method: {}".format(method_formal))
                 df_sce_met = self.freader.generic(
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
                 )
                 if self.is_trans:
                     df_sce_met = df_sce_met.applymap(lambda x: sum([int(x) for x in x.split(';')]))
-                    print(df_sce_met)
+                    # print(df_sce_met)
                     df_sce_met['mean'] = df_sce_met.mean(axis=1)
                     df_sce_met['max'] = df_sce_met.max(axis=1)
                     df_sce_met['min'] = df_sce_met.min(axis=1)
@@ -110,7 +120,9 @@ class Stat:
     def df_dedup_perm_melt(self, ):
         df = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
+                self.console.print("=========>method: {}".format(method_formal))
                 df_sce_met = self.freader.generic(
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
                     header=0,
@@ -137,7 +149,9 @@ class Stat:
         df_apv = pd.DataFrame()
         df_disapv = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
+                self.console.print("=========>method: {}".format(method_formal))
                 df_sce_met_apv_perm = self.freader.generic(
                     df_fpn=self.params.work_dir + scenario + '/' + method + '_apv_cnt.txt',
                     header=0,
@@ -180,6 +194,7 @@ class Stat:
         df_inflat = pd.DataFrame()
         df_exp = pd.DataFrame()
         for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
             df_inflat_sub = self.freader.generic(
                 df_fpn=self.params.work_dir + scenario + '/inflat_val.txt',
                 header=None,
@@ -219,7 +234,7 @@ if __name__ == "__main__":
             # 'unique': 'Unique',
             # 'cluster': 'Cluster',
             # 'adjacency': 'Adjacency',
-            # 'directional': 'Directional',
+            'directional': 'Directional',
             # 'dbscan_seq_onehot': 'DBSCAN',
             # 'birch_seq_onehot': 'Birch',
             # 'aprop_seq_onehot': 'Affinity Propagation',
@@ -229,9 +244,10 @@ if __name__ == "__main__":
         },
 
         param_fpn=to('data/params.yml'),
+        verbose=True
     )
 
-    # print(p.df_dedup)
-    # print(p.df_dedup_melt)
-    # print(p.df_trace_cnt)
+    print(p.df_dedup)
+    print(p.df_dedup_melt)
+    print(p.df_trace_cnt)
     print(p.df_inflat_exp)

@@ -2,6 +2,7 @@
 umiche/data/
 umiche/path.py
 umiche/plot/transloc/
+umiche/plot/graph/draw/
 umiche/method/trimer/setcover_ex.py
 
 __pycache__/

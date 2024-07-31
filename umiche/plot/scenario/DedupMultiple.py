@@ -17,6 +17,7 @@ from umiche.deduplicate.io.Stat import Stat as dedupstat
 from umiche.plot.gadget.Transmitter import Transmitter as transmitter
 
 from umiche.util.Reader import Reader as freader
+from umiche.util.Console import Console
 
 
 class DedupMultiple:
@@ -27,6 +28,7 @@ class DedupMultiple:
             methods: Dict,
             umi_gt_cnt: int = 50,
             param_fpn : str = None,
+            verbose : bool = False,
     ):
         self.scenarios = scenarios
         self.methods = methods
@@ -45,6 +47,9 @@ class DedupMultiple:
 
         sns.set(font="Helvetica")
         sns.set_style("ticks")
+
+        self.console = Console()
+        self.console.verbose = verbose
 
     def line(
             self,
@@ -115,7 +120,6 @@ class DedupMultiple:
     @transmitter(type="line_scatter", task=None)
     def line_scatter_gadget(*args, **kwargs):
         return kwargs
-
 
 
 if __name__ == "__main__":
