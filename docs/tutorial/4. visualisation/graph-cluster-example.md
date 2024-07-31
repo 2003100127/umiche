@@ -84,23 +84,23 @@ print("deduplicated clusters decomposed full list(mcl_val):\n{}".format(dedup_re
 
 ### @@@ ******MCL mcl_ed******
 int_to_umi_dict = {
-        'A': 'ACGT',
-        'B': 'TCGT',
-        'C': 'CCGT',
-        'D': 'ACAT',
-        'E': 'ACAG',
-        'F': 'AAAT',
-    }
-    df_mcl_ed = mcl.maxval_ed(
-        df_mcl_ccs=df_mcl,
-        df_umi_uniq_val_cnt=node_val_sorted,
-        thres_fold=1,
-        int_to_umi_dict=int_to_umi_dict,
-    )
-    dedup_res_mcl_ed_dc = mcl.decompose(list_nd=df_mcl_ed['clusters'].values)
-    print("deduplicated clusters decomposed (mcl_ed):\n{}".format(dedup_res_mcl_ed_dc))
-    dedup_res_mcl_ed_dc_full = mcl.get_full_subcc(ccs_dict=dedup_res_mcl_ed_dc, mcl_ccs_dict=dedup_res_mcl_dc)
-    print("deduplicated clusters decomposed full list(mcl_ed):\n{}".format(dedup_res_mcl_ed_dc_full))
+    'A': 'ACGT',
+    'B': 'TCGT',
+    'C': 'CCGT',
+    'D': 'ACAT',
+    'E': 'ACAG',
+    'F': 'AAAT',
+}
+df_mcl_ed = mcl.maxval_ed(
+    df_mcl_ccs=df_mcl,
+    df_umi_uniq_val_cnt=node_val_sorted,
+    thres_fold=1,
+    int_to_umi_dict=int_to_umi_dict,
+)
+dedup_res_mcl_ed_dc = mcl.decompose(list_nd=df_mcl_ed['clusters'].values)
+print("deduplicated clusters decomposed (mcl_ed):\n{}".format(dedup_res_mcl_ed_dc))
+dedup_res_mcl_ed_dc_full = mcl.get_full_subcc(ccs_dict=dedup_res_mcl_ed_dc, mcl_ccs_dict=dedup_res_mcl_dc)
+print("deduplicated clusters decomposed full list(mcl_ed):\n{}".format(dedup_res_mcl_ed_dc_full))
 ```
 
 :material-step-forward: draw UMI nodes with deduplicated information

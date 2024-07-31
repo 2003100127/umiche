@@ -8,8 +8,7 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
-from path import to
-from ext.sequelpy.plot.scatter.DimensionReduction import dimensionReduction as drplot
+from DimensionReduction import dimensionReduction as drplot
 
 
 def read(

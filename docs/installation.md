@@ -2,9 +2,9 @@
 
 ## System Requirement
 
-There is no requirement for UMIche, a cross-platform package.
+UMIche is advised to be installed within a conda environment, which makes it easier to work on multiple platforms, such as :material-microsoft-windows: Windows (partial), :simple-apple: Mac, and :material-linux: Linux. Owing to the exclusivity of Pysam to the Linux and Mac environments, UMIche does not work with BAM-related analysis in the Windows system.
 
-## PyPI
+## :simple-pypi: PyPI
 
 [umiche homepage on PyPI](https://pypi.org/project/umiche/)
 
@@ -19,7 +19,7 @@ conda activate umiche
 pip install umiche --upgrade
 ```
 
-## Conda
+## :simple-anaconda: Conda
 
 [umiche homepage on Anaconda](https://anaconda.org/Jianfeng_Sun/umiche)
 
@@ -35,7 +35,7 @@ conda install jianfeng_sun::umiche
 ```
 
 
-## Docker
+## :fontawesome-brands-docker: Docker
 
 [umiche homepage on Docker](https://hub.docker.com/r/2003100127/umiche)
 
@@ -44,7 +44,7 @@ docker pull 2003100127/umiche
 ```
 
 
-## Github
+## :octicons-mark-github-16: Github
 
 [umiche homepage on Github](https://github.com/2003100127/umiche)
 

@@ -10,6 +10,12 @@ bam = uc.io.read_bam(
     bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam",
     verbose=True,
 )
+```
+
+If you know where each read is related or originates with a certain tag, you can extract only this proportion of reads from the BAM file by `tags=['PO']`.
+
+:material-language-python: `Python`
+``` py linenums="1"
 print(bam.todf(tags=['PO']))
 ```
 
@@ -37,13 +43,13 @@ print(bam.todf(tags=['PO']))
 
 # Read deduplication files
 
-We build a powerful module `uc.io.stat` for processing deduplicated UMI counts stored in file `{method}_dedup.txt`. It can handle files of multiple sequencing conditions and multiple methods.
+We build a powerful module `uc.io.stat` for processing deduplicated UMI counts stored in file `{method}_dedup.txt`. This file can be obtained by running the UMIche pipelines or solely the deduplication methods. It can handle files of multiple sequencing conditions and multiple methods.
 
 :material-language-python: `Python`
 ``` py linenums="1"
 import umiche as uc
 
-df = uc.io.stat(
+stat_data = uc.io.stat(
     scenarios={
         'pcr_nums': 'PCR cycle',
         'pcr_errs': 'PCR error',
@@ -67,7 +73,7 @@ df = uc.io.stat(
     param_fpn=to('data/params.yml'),
     verbose=True,
 )
-print(df)
+print(stat_data)
 ```
 
 :material-console: `console`
@@ -123,7 +129,7 @@ Fold change of deduplication with respective to different inflation and expansio
 
 :material-language-python: `Python`
 ``` py linenums="1"
-print(stat_p.df_inflat_exp)
+print(stat_data.df_inflat_exp)
 ```
 
 :material-console: `console`
@@ -176,7 +182,7 @@ Merged UMI nodes (`apv`)
 
 :material-language-python: `Python`
 ``` py linenums="1"
-print(stat_p.df_trace_cnt)
+print(stat_data.df_trace_cnt)
 ```
 
 :material-console: `console`

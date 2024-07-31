@@ -7,6 +7,18 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+numpy = "^2.0.1"
+pandas = "^2.2.2"
+pyfastx = "^2.1.0"
+markov-clustering = "^0.0.6.dev0"
+pyyaml = "^6.0.1"
+scikit-learn = "^1.5.1"
+biopython = "^1.84"
+scipy = "^1.14.0"
+networkx = "^3.3"
+matplotlib = "^3.9.1"
+seaborn = "^0.13.2"
+pyfiglet = "0.8.post1"
 
 
 [build-system]

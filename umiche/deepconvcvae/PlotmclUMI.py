@@ -8,7 +8,6 @@ __lab__ = "Cribbslab"
 
 import numpy as np
 import pandas as pd
-from path import to
 
 
 def read(
