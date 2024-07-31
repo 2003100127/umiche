@@ -23,13 +23,9 @@
 ![Anaconda](https://img.shields.io/badge/-Anaconda-000?&logo=Anaconda)
 ![PyPI](https://img.shields.io/badge/-PyPI-000?&logo=PyPI)
 
-###### tags: `computational biology`, `sequencing read simulation`
+###### tags: `Unique molecular identifier`, `UMI deduplication`, `Count matrix`, `Genome analysis`,
 
 ## Overview
-
-```angular2html
-
-```
 
 UMIche is a Python-based platform for improving multiplexing and demultiplexing of UMI-tagged sequencing data, which allows researchers to do knowledge discovery.
 
