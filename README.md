@@ -12,6 +12,7 @@
 ![](https://img.shields.io/github/stars/cribbslab/umiche?logo=GitHub&color=blue)
 [![Documentation Status](https://readthedocs.org/projects/umiche/badge/?version=latest)](https://umiche.readthedocs.io/en/latest/?badge=latest)
 [![Downloads](https://pepy.tech/badge/umiche)](https://pepy.tech/project/umiche)
+![example workflow](https://github.com/github/docs/actions/workflows/docs.yml/badge.svg)
 
 <hr>
 
