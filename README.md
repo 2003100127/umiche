@@ -39,7 +39,7 @@ Please check how to use the full functionalities of UMIche in the documentation 
 
 ## 🔑 Installation
 
-## PyPI
+#### PyPI
 
 [umiche homepage on PyPI](https://pypi.org/project/umiche/)
 
@@ -54,7 +54,7 @@ conda activate umiche
 pip install umiche --upgrade
 ```
 
-## Conda
+#### Conda
 
 [umiche homepage on Anaconda](https://anaconda.org/Jianfeng_Sun/umiche)
 
@@ -70,7 +70,7 @@ conda install jianfeng_sun::umiche
 ```
 
 
-## Docker
+#### Docker
 
 [umiche homepage on Docker](https://hub.docker.com/r/2003100127/umiche)
 
@@ -79,7 +79,7 @@ docker pull 2003100127/umiche
 ```
 
 
-## Github
+#### Github
 
 [umiche homepage on Github](https://github.com/2003100127/umiche)
 
