@@ -10,9 +10,9 @@
 [![Anaconda-Server Badge](https://anaconda.org/jianfeng_sun/umiche/badges/version.svg)](https://anaconda.org/jianfeng_sun/umiche)
 ![](https://img.shields.io/docker/automated/2003100127/umiche.svg)
 ![](https://img.shields.io/github/stars/cribbslab/umiche?logo=GitHub&color=blue)
-[![Documentation Status](https://readthedocs.org/projects/umiche/badge/?version=latest)](https://umiche.readthedocs.io/en/latest/?badge=latest)
 [![Downloads](https://pepy.tech/badge/umiche)](https://pepy.tech/project/umiche)
-![example workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![example workflow](https://github.com/2003100127/umiche/actions/workflows/docs.yml/badge.svg)
+![example workflow](https://github.com/2003100127/umiche/actions/workflows/pypi.yml/badge.svg)
 
 <hr>
 
