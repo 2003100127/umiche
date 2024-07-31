@@ -9,6 +9,10 @@ __lab__ = "Cribbslab"
 from umiche.plot.graph.Cluster import Cluster
 from umiche.plot.scenario.DedupMultiple import DedupMultiple
 from umiche.plot.scenario.DedupSingle import DedupSingle
+from umiche.plot.scenario.DedupMultipleTrimer import DedupMultipleTrimer
+from umiche.plot.scenario.DedupMultipleTrimerSetCover import DedupMultipleTrimerSetCover
+from umiche.plot.scenario.TraceSingle import TraceSingle
+from umiche.plot.scenario.TraceMultiple import TraceMultiple
 from umiche.plot.scenario.Line import Line
 
 
@@ -45,6 +49,42 @@ def dedup_single(
     return DedupSingle(
         df=df_dedup,
         df_melt=df_dedup_perm_melt,
+    )
+
+
+def dedup_multiple_trimer(
+        scenarios,
+        methods,
+        param_fpn,
+):
+    return DedupMultipleTrimer(
+        scenarios=scenarios,
+        methods=methods,
+        param_fpn=param_fpn,
+    )
+
+
+def trace_single(
+        df_apv,
+        df_disapv,
+):
+    return TraceSingle(
+        df_apv=df_apv,
+        df_disapv=df_disapv,
+    )
+
+
+def trace_multiple(
+        df_apv,
+        df_disapv,
+        scenarios,
+        methods,
+):
+    return TraceMultiple(
+        df_apv=df_apv,
+        df_disapv=df_disapv,
+        scenarios=scenarios,
+        methods=methods,
     )
 
 
@@ -147,12 +187,70 @@ if __name__ == "__main__":
     #     },
     #     param_fpn=to('data/params.yml'),
     # ).draw())
-    from umiche.io import stat
 
+    # from umiche.io import stat
+    # scenarios = {
+    #     # 'pcr_nums': 'PCR cycle',
+    #     # 'pcr_errs': 'PCR error',
+    #     'seq_errs': 'Sequencing error',
+    #     # 'ampl_rates': 'Amplification rate',
+    #     # 'umi_lens': 'UMI length',
+    #     # 'seq_deps': 'Sequencing depth',
+    # }
+    # methods = {
+    #     # 'unique': 'Unique',
+    #     # 'cluster': 'Cluster',
+    #     # 'adjacency': 'Adjacency',
+    #     'directional': 'Directional',
+    #     # 'dbscan_seq_onehot': 'DBSCAN',
+    #     # 'birch_seq_onehot': 'Birch',
+    #     # 'aprop_seq_onehot': 'Affinity Propagation',
+    #     'mcl': 'MCL',
+    #     'mcl_val': 'MCL-val',
+    #     'mcl_ed': 'MCL-ed',
+    # }
+    # dedupstat = stat(
+    #     scenarios=scenarios,
+    #     methods=methods,
+    #     param_fpn=to('data/params.yml'),
+    # )
+    # df_dedup = dedupstat.df_dedup
+    # df_dedup_perm_melt = dedupstat.df_dedup_perm_melt
+    # t = dedup_single(
+    #     df_dedup=df_dedup,
+    #     df_dedup_perm_melt=df_dedup_perm_melt,
+    # )
+    # # print(t.jointgrid(
+    # #     # method='Directional',
+    # #     # method='MCL',
+    # #     # method='MCL-val',
+    # #     method='MCL-ed',
+    # # ))
+    # # print(t.stackedbar())
+    # # print(t.strip())
+
+    # print(dedup_multiple_trimer(
+    #     scenarios={
+    #         'seq_errs': 'Sequencing error rate',
+    #     },
+    #     methods={
+    #         'directional_dedupby_majority_vote_splitby__collblockby_take_by_order': 'UMI-tools+drMV+cbRAN',
+    #         'directional_dedupby_majority_vote_splitby__collblockby_majority_vote': 'UMI-tools+drMV+cbMV',
+    #         'directional_dedupby_set_cover_splitby_split_by_mv_collblockby_take_by_order': 'UMI-tools+drSC+spMV+cbRAN',
+    #         'directional_dedupby_set_cover_splitby_split_by_mv_collblockby_majority_vote': 'UMI-tools+drSC+spMV+cbMV',
+    #         'directional_dedupby_set_cover_splitby_split_to_all_collblockby_take_by_order': 'UMI-tools+drSC+spALL+cbRAN',
+    #         'directional_dedupby_set_cover_splitby_split_to_all_collblockby_majority_vote': 'UMI-tools+drSC+spALL+cbMV',
+    #     },
+    #     param_fpn=to('data/params_trimer.yml'),
+    # ).line())
+
+
+    ### ++++++++++++++++++++trace++++++++++++++++++++++++++
+    from umiche.deduplicate.io.Stat import Stat as dedupstat
     scenarios = {
-        # 'pcr_nums': 'PCR cycle',
+        'pcr_nums': 'PCR cycle',
         # 'pcr_errs': 'PCR error',
-        'seq_errs': 'Sequencing error',
+        # 'seq_errs': 'Sequencing error',
         # 'ampl_rates': 'Amplification rate',
         # 'umi_lens': 'UMI length',
         # 'seq_deps': 'Sequencing depth',
@@ -165,29 +263,49 @@ if __name__ == "__main__":
         # 'dbscan_seq_onehot': 'DBSCAN',
         # 'birch_seq_onehot': 'Birch',
         # 'aprop_seq_onehot': 'Affinity Propagation',
+        # 'mcl': 'MCL',
+        # 'mcl_val': 'MCL-val',
+        # 'mcl_ed': 'MCL-ed',
+    }
+    dedupstat11 = dedupstat(
+        scenarios=scenarios,
+        methods=methods,
+        param_fpn=to('data/params.yml'),
+    )
+    print(trace_single(
+        df_apv=dedupstat11.df_trace_cnt['apv'],
+        df_disapv=dedupstat11.df_trace_cnt['disapv'],
+    ).line_apv_disapv())
+
+    scenarios = {
+        'pcr_nums': 'PCR cycle',
+        # 'pcr_errs': 'PCR error',
+        # 'seq_errs': 'Sequencing error',
+        # 'ampl_rates': 'Amplification rate',
+        # 'umi_lens': 'UMI length',
+        # 'seq_deps': 'Sequencing depth',
+    }
+    methods = {
+        'unique': 'Unique',
+        'cluster': 'Cluster',
+        'adjacency': 'Adjacency',
+        'directional': 'Directional',
+        'dbscan_seq_onehot': 'DBSCAN',
+        'birch_seq_onehot': 'Birch',
+        'aprop_seq_onehot': 'Affinity Propagation',
         'mcl': 'MCL',
         'mcl_val': 'MCL-val',
         'mcl_ed': 'MCL-ed',
     }
-    dedupstat = stat(
+    dedupstat22 = dedupstat(
         scenarios=scenarios,
         methods=methods,
         param_fpn=to('data/params.yml'),
     )
 
-    df_dedup = dedupstat.df_dedup
-    df_dedup_perm_melt = dedupstat.df_dedup_perm_melt
-
-    t = dedup_single(
-        df_dedup=df_dedup,
-        df_dedup_perm_melt=df_dedup_perm_melt,
-    )
-
-    # print(t.jointgrid(
-    #     # method='Directional',
-    #     # method='MCL',
-    #     # method='MCL-val',
-    #     method='MCL-ed',
-    # ))
-    # print(t.stackedbar())
-    print(t.strip())
+    print(trace_multiple(
+        df_apv=dedupstat22.df_trace_cnt['apv'],
+        df_disapv=dedupstat22.df_trace_cnt['disapv'],
+        scenarios=scenarios,
+        methods=methods,
+    ).line_apv())
