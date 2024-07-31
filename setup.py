@@ -29,7 +29,7 @@ setup(
         "seaborn",
         "scikit-learn",
         # "pysam",
-        "markov-clustering=0.0.6.dev0",
+        "markov-clustering",
         "pyfiglet==0.8.post1",
     ],
     entry_points={
