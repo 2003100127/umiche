@@ -4,6 +4,6 @@ COPY . .
 
 RUN python -m pip install --upgrade pip \
     && pip install . \
-    && mclumi --help .
+#    && umiche --help .
 
 WORKDIR .
