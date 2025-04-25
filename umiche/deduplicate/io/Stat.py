@@ -1,10 +1,10 @@
 __version__ = "v1.0"
-__copyright__ = "Copyright 2024"
-__license__ = "MIT"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
 __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
-__lab__ = "Cribbslab"
+
 
 from typing import Dict
 
@@ -43,8 +43,10 @@ class Stat:
             self.console.print("======>scenario: {}".format(scenario_formal))
             for method, method_formal in self.methods.items():
                 self.console.print("=========>method: {}".format(method_formal))
+                ph = '/' if method_formal != 'Birch' else '/birch/'
                 df_sce_met = self.freader.generic(
-                    df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
+                    # df_fpn=self.params.work_dir + scenario + '/' + method + '_dedup.txt',
+                    df_fpn=self.params.work_dir + scenario + ph + method + '_dedup.txt',
                     header=0,
                 )
                 if self.is_trans:

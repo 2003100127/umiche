@@ -1,10 +1,10 @@
 __version__ = "v1.0"
-__copyright__ = "Copyright 2024"
-__license__ = "MIT"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
 __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
-__lab__ = "Cribbslab"
+
 
 from typing import Dict
 
@@ -136,13 +136,13 @@ if __name__ == "__main__":
         },
 
         methods={
-            'unique': 'Unique',
-            'cluster': 'Cluster',
-            'adjacency': 'Adjacency',
+            # 'unique': 'Unique',
+            # 'cluster': 'Cluster',
+            # 'adjacency': 'Adjacency',
             'directional': 'Directional',
             'dbscan_seq_onehot': 'DBSCAN',
             'birch_seq_onehot': 'Birch',
-            'aprop_seq_onehot': 'Affinity Propagation',
+            # 'aprop_seq_onehot': 'Affinity Propagation',
             'mcl': 'MCL',
             'mcl_val': 'MCL-val',
             'mcl_ed': 'MCL-ed',

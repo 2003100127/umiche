@@ -111,7 +111,7 @@ Please cite our work if you use Tresor in your research.
 ```angular2html
 @article{umiche,
     title = {UMIche: a Python-based platform for improving multiplexing and demultiplexing of UMI-tagged sequencing data},
-    author = {Jianfeng Sun and Adam P. Cribbs},
+    author = {Jianfeng Sun},
     url = {https://github.com/2003100127/umiche},
     year = {2024},
 }

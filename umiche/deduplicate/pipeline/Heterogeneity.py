@@ -1,10 +1,10 @@
 __version__ = "v1.0"
-__copyright__ = "Copyright 2024"
-__license__ = "MIT"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
 __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
-__lab__ = "Cribbslab"
+
 
 import warnings
 
@@ -258,22 +258,22 @@ if __name__ == "__main__":
     p = Heterogeneity(
         # scenario='pcr_nums',
         # scenario='pcr_errs',
-        scenario='seq_errs',
+        # scenario='seq_errs',
         # scenario='ampl_rates',
         # scenario='umi_lens',
-        # scenario='seq_deps',
+        scenario='seq_deps',
         # scenario='umi_nums',
 
         # method='unique',
         # method='cluster',
         # method='adjacency',
-        method='directional',
+        # method='directional',
         # method='mcl',
         # method='mcl_val',
         # method='mcl_ed',
         # method='mcl_cc_all_node_umis',
         # method='dbscan_seq_onehot',
-        # method='birch_seq_onehot',
+        method='birch_seq_onehot',
         # method='aprop_seq_onehot',
         # method='hdbscan_seq_onehot',
         # method='set_cover',
@@ -289,6 +289,8 @@ if __name__ == "__main__":
         is_trim=False,
         is_tobam=False,
         is_dedup=True,
+
+        is_sv=True,
 
         param_fpn=to('data/params.yml'),
     )

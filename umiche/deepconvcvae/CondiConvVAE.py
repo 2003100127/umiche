@@ -1,7 +1,7 @@
 __version__ = "v1.0"
-__copyright__ = "Copyright 2021"
-__license__ = "MIT"
-__lab__ = "Adam Cribbs lab"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
+
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
