@@ -12,7 +12,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from umiche.plot.gadget.Element import Element as pele
 from umiche.util.Reader import Reader as freader
-from umiche.graph.Adjacency import Adjacency as netadj
+from umiche.network.Adjacency import Adjacency as netadj
 
 
 class Cluster:

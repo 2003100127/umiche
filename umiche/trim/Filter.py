@@ -6,9 +6,6 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-from umiche.path import to
-
-
 class Filter:
 
     def method(self, ):
@@ -63,6 +60,8 @@ class Filter:
 
 
 if __name__ == "__main__":
+    from umiche.path import to
+
     DEFINE = {
         'umi': {
             'len': 12,

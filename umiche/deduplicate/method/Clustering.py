@@ -14,7 +14,7 @@ from sklearn.cluster import Birch as skbirch
 from sklearn.cluster import AffinityPropagation as skaprop
 
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
-from umiche.graph.Adjacency import Adjacency as netadj
+from umiche.network.Adjacency import Adjacency as netadj
 from umiche.util.Console import Console
 
 

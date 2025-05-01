@@ -10,7 +10,7 @@ import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
 from umiche.trim.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
-from umiche.graph.bfs.ConnectedComponent import connectedComponent as gbfscc
+from umiche.network.bfs.ConnectedComponent import connectedComponent as gbfscc
 from umiche.deduplicate.pipeline import Config
 from umiche.deduplicate.SingleCell import dedupSC
 from umiche.plot.scenario.TraceSingle import valid as plotv

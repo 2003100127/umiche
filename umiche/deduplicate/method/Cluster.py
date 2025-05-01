@@ -6,7 +6,7 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-from umiche.graph.CC import CC as gbfscc
+from umiche.network.CC import CC as gbfscc
 from umiche.util.Console import Console
 
 

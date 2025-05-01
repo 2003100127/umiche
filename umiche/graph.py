@@ -8,9 +8,9 @@ __email__="jianfeng.sunmt@gmail.com"
 
 from typing import Dict
 
-from umiche.graph.Adjacency import Adjacency
-from umiche.graph.Edge import Edge
-from umiche.graph.CC import CC
+from umiche.network.Adjacency import Adjacency
+from umiche.network.Edge import Edge
+from umiche.network.CC import CC
 
 
 def adjacency(

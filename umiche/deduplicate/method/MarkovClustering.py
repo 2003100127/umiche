@@ -11,10 +11,10 @@ from typing import Dict
 # import numpy as np
 import pandas as pd
 import markov_clustering as mc
-from umiche.graph.CC import CC as gbfscc
+from umiche.network.CC import CC as gbfscc
 from umiche.deduplicate.method.ReformKit import ReformKit as refkit
 from umiche.util.Hamming import Hamming
-from umiche.graph.Adjacency import Adjacency as netadj
+from umiche.network.Adjacency import Adjacency as netadj
 from umiche.util.Console import Console
 
 

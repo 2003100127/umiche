@@ -9,7 +9,7 @@ __email__="jianfeng.sunmt@gmail.com"
 import time
 import numpy as np
 import pandas as pd
-from umiche.graph.Edge import Edge as guuedge
+from umiche.network.Edge import Edge as guuedge
 from umiche.util.Hamming import Hamming
 from umiche.util.Console import Console
 

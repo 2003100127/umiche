@@ -9,7 +9,7 @@ __email__="jianfeng.sunmt@gmail.com"
 import pandas as pd
 from umiche.fastq.Convert import Convert as fastqconverter
 from umiche.trim.Template import Template as trimmer
-from umiche.graph.bfs.ConnectedComponent import ConnectedComponent as gbfscc
+from umiche.network.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.deduplicate.MultiPos import MultiPos as deduppos
