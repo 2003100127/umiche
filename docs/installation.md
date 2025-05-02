@@ -4,7 +4,7 @@
 
 UMIche is advised to be installed within a conda environment, which makes it easier to work on multiple platforms, such as :material-microsoft-windows: Windows (partial), :simple-apple: Mac, and :material-linux: Linux. Owing to the exclusivity of Pysam to the Linux and Mac environments, UMIche does not work with BAM-related analysis in the Windows system.
 
-## :simple-pypi: PyPI
+## :simple-pypi: PyPI (version 0.1.1 suggested!!)
 
 [umiche homepage on PyPI](https://pypi.org/project/umiche/)
 
