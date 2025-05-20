@@ -71,6 +71,9 @@ markdown_extensions:
   - pymdownx.mark
   - pymdownx.tilde
 
+  - pymdownx.arithmatex:
+      generic: true
+
 
 extra:
   consent:
@@ -90,5 +93,9 @@ extra:
 plugins:
   - tags
   - search
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 copyright: Copyright &copy; 2024 Jianfeng Sun
