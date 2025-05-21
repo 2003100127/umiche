@@ -5,11 +5,14 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
+from typing import Union
+import numpy as np
 
 from umiche.plot.graph.Cluster import Cluster
 from umiche.plot.scenario.DedupMultiple import DedupMultiple
 from umiche.plot.scenario.DedupSingle import DedupSingle
 from umiche.plot.scenario.DedupMultipleTrimer import DedupMultipleTrimer
+from umiche.plot.line.TripletErrorCode import TripletErrorCode
 from umiche.plot.scenario.DedupMultipleTrimerSetCover import DedupMultipleTrimerSetCover
 from umiche.plot.scenario.TraceSingle import TraceSingle
 from umiche.plot.scenario.TraceMultiple import TraceMultiple
@@ -98,6 +101,20 @@ def inflat_exp(
         methods=methods,
         param_fpn=param_fpn,
     )
+
+
+def prob_correct(
+        error_rate: Union[float, np.ndarray]=0.00001,
+        num_nt=12,
+):
+    TripletErrorCode(error_rate=error_rate).correct(num_nt=num_nt)
+
+
+def prob_incorrect(
+        error_rate: Union[float, np.ndarray]=0.00001,
+        num_nt = 12,
+):
+    TripletErrorCode(error_rate=error_rate).incorrect(num_nt=num_nt)
 
 
 if __name__ == "__main__":
@@ -272,10 +289,10 @@ if __name__ == "__main__":
         methods=methods,
         param_fpn=to('data/params.yml'),
     )
-    print(trace_single(
-        df_apv=dedupstat11.df_trace_cnt['apv'],
-        df_disapv=dedupstat11.df_trace_cnt['disapv'],
-    ).line_apv_disapv())
+    # trace_single(
+    #     df_apv=dedupstat11.df_trace_cnt['apv'],
+    #     df_disapv=dedupstat11.df_trace_cnt['disapv'],
+    # ).line_apv_disapv()
 
     scenarios = {
         'pcr_nums': 'PCR cycle',
@@ -303,9 +320,13 @@ if __name__ == "__main__":
         param_fpn=to('data/params.yml'),
     )
 
-    print(trace_multiple(
-        df_apv=dedupstat22.df_trace_cnt['apv'],
-        df_disapv=dedupstat22.df_trace_cnt['disapv'],
-        scenarios=scenarios,
-        methods=methods,
-    ).line_apv())
+    # trace_multiple(
+    #     df_apv=dedupstat22.df_trace_cnt['apv'],
+    #     df_disapv=dedupstat22.df_trace_cnt['disapv'],
+    #     scenarios=scenarios,
+    #     methods=methods,
+    # ).line_apv()
+
+    error_rates= np.linspace(0.00001, 0.5, 500)
+    prob_correct(error_rate=error_rates, num_nt=1)
+    prob_incorrect(error_rate=error_rates, num_nt=12)
