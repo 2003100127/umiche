@@ -6,14 +6,24 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-from typing import List, Dict
+from typing import Union
+import numpy as np
 
+from umiche.deduplicate.TMR import TMR
 from umiche.deduplicate.method.trimer.Collapse import Collapse
 
 
 
 def collapse():
     return Collapse()
+
+
+def tmr(
+        error_rate: Union[float, np.ndarray] = 0.00001,
+):
+    return TMR(
+        error_rate=error_rate,
+    )
 
 
 if __name__ == "__main__":
@@ -33,6 +43,21 @@ if __name__ == "__main__":
     # print(splitter.majority_vote('AAATCCGGGTTTGGGAAATTTGGGCCCCCC', recur_len=3))
     # print(splitter.take_by_order('AAATCCGGGTTTGGGAAATTTGGGCCCCCC', recur_len=3))
 
-    print(splitter.vote('AAA', recur_len=3))
-    print(splitter.vote('TAA', recur_len=3))
-    print(splitter.vote('TGA', recur_len=3))
+    # print(splitter.vote('AAA', recur_len=3))
+    # print(splitter.vote('TAA', recur_len=3))
+    # print(splitter.vote('TGA', recur_len=3))
+
+    p = tmr(error_rate=0.00001)
+    # print(p.get_num_nt())
+    # print(p.homotrimer_block_error)
+    # print(p.bitflip_block_error)
+    # print(p.homotrimer_umi_error)
+    # p.set_num_nt(2)
+    # # print(p.get_num_nt())
+    # print(p.homotrimer_umi_error)
+    # print(p.homotrimer_umi_error_free)
+    p.set_num_nt(12)
+    print(p.homotrimer_umi_error)
+    print(p.bitflip_code_error)
+    print(p.monomer_umi_error)
+    # print(p.homotrimer_umi_error_free)
