@@ -16,7 +16,7 @@ We derive an analytical model that accounts for both deterministic majority voti
 We provide a conceptual analogy between repetition code error correction in cryptography and nucleotide-level error correction in sequencing using TMR.
 
 <figure markdown="span">
-  ![Image title](../../../img/plot/tmr.jpg){ width="500" align=left }
+  ![Image title](../../img/plot/tmr.jpg){ width="500" align=left }
 </figure>
 <figcaption><strong>Fig</strong> 1. Overview of TMR applications in cryptography and sequencing.</figcaption>
 
@@ -28,7 +28,7 @@ In digital communication, the canonical characters Alice and Bob are often used 
 A classic (3,1) repetition code scheme is illustrated in a binary system, where Alice sends a bit 0 encoded as 000, and Bob decodes received messages using majority voting. A probability model quantifies the probability of correct or incorrect interpretation based on the number and pattern of bit flips.
 
 <figure markdown="span">
-  ![Image title](../../../img/plot/tmr_cryptography.jpg){ width="500" align=left }
+  ![Image title](../../img/plot/tmr_cryptography.jpg){ width="500" align=left }
 </figure>
 <figcaption><strong>Fig</strong> 2. TMR in cryptography.</figcaption>
 
@@ -45,7 +45,7 @@ $$
 We extend this logic to sequencing, where each base is encoded as a homotrimer (e.g., AAA). Unlike binary systems, DNA sequencing operates in a four-base system with substitution errors (e.g., A → C, G, or T). The majority-vote decoding is retained when possible, and collapsing is performed by random selection when no majority exists (e.g., ACG). A probability model is derived to quantify correct vs. incorrect block interpretation as a function of per-base error rate 𝑝, accounting for the combinatorics of 1, 2, and 3 substitution error scenarios.
 
 <figure markdown="span">
-  ![Image title](../../../img/plot/tmr_sequencing.jpg){ width="700" align=left }
+  ![Image title](../../img/plot/tmr_sequencing.jpg){ width="700" align=left }
 </figure>
 <figcaption><strong>Fig</strong> 3. TMR in sequencing.</figcaption>
 
