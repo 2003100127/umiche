@@ -6,7 +6,6 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-import pysam
 import pandas as pd
 from umiche.util.Console import Console
 
@@ -18,6 +17,8 @@ class Writer:
              df,
             verbose=False,
     ):
+        import pysam
+
         self.df = df
         self.console = Console()
         self.console.verbose = verbose

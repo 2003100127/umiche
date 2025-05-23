@@ -5,11 +5,9 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-
-from typing import List, Dict
-
 from umiche.deduplicate.pipeline.Heterogeneity import Heterogeneity as pipeheter
 from umiche.deduplicate.pipeline.Standard import Standard as pipestd
+from umiche.recovery.pipeline.Anchor import Anchor
 
 
 def standard(
@@ -60,6 +58,16 @@ def heterogeneity(
         is_sv=is_sv,
         verbose=verbose,
     )
+
+
+def anchor(
+        scenario: str,
+        param_fpn: str,
+):
+    return Anchor(
+        scenario=scenario,
+        param_fpn=param_fpn,
+    ).pct_read_captured()
 
 
 if __name__ == "__main__":

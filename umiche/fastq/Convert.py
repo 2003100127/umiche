@@ -7,8 +7,6 @@ __email__="jianfeng.sunmt@gmail.com"
 
 
 import os
-import pysam
-# import bamnostic as bs
 from umiche.fastq.Reader import Reader as fastqread
 from umiche.util.Folder import Folder as crtfolder
 from umiche.util.Console import Console
@@ -22,6 +20,9 @@ class Convert:
             bam_fpn,
             verbose=False,
     ):
+        import pysam
+        # import bamnostic as bs
+
         self.fastq_fpn = fastq_fpn
         self.bam_fpn = bam_fpn
         self.names, self.seqs, placeholders, qualities = fastqread().fromgz(fastq_fpn=fastq_fpn)

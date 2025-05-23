@@ -46,6 +46,10 @@ class Parameter:
         return self.params['work_dir']
 
     @property
+    def anchor(self, ):
+        return self.params['anchor']
+
+    @property
     def fastq_fp(self, ):
         return self.params['fastq_fp']
 

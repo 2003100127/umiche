@@ -5,8 +5,6 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-
-import pysam
 import pandas as pd
 import collections
 from umiche.deduplicate.method.trimer.Collapse import Collapse
@@ -19,6 +17,8 @@ class SetCover:
             self,
             verbose=False,
     ):
+        import pysam
+
         self.collapse = Collapse()
 
         self.console = Console()

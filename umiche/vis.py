@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-from typing import Union
+from typing import Union, List, Dict
 import numpy as np
 
 from umiche.plot.graph.Cluster import Cluster
@@ -13,6 +13,7 @@ from umiche.plot.scenario.DedupMultiple import DedupMultiple
 from umiche.plot.scenario.DedupSingle import DedupSingle
 from umiche.plot.scenario.DedupMultipleTrimer import DedupMultipleTrimer
 from umiche.plot.line.TripletErrorCode import TripletErrorCode
+from umiche.plot.line.Anchor import Anchor
 from umiche.plot.scenario.DedupMultipleTrimerSetCover import DedupMultipleTrimerSetCover
 from umiche.plot.scenario.TraceSingle import TraceSingle
 from umiche.plot.scenario.TraceMultiple import TraceMultiple
@@ -115,6 +116,48 @@ def prob_incorrect(
         num_nt = 12,
 ):
     TripletErrorCode(error_rate=error_rate).incorrect(num_nt=num_nt)
+
+
+def anchor_efficiency(
+        quant_captured: Dict,
+        quant_anchor_captured: Dict,
+        criteria : List,
+        condition : str,
+):
+    Anchor(
+        quant_captured=quant_captured,
+        quant_anchor_captured=quant_anchor_captured,
+        criteria=criteria,
+        condition=condition,
+    ).draw()
+
+
+def anchor_efficiency_broken(
+        quant_captured: Dict,
+        quant_anchor_captured: Dict,
+        criteria : List,
+        condition : str,
+):
+    Anchor(
+        quant_captured=quant_captured,
+        quant_anchor_captured=quant_anchor_captured,
+        criteria=criteria,
+        condition=condition,
+    ).draw_line_broken()
+
+
+def anchor_efficiency_simple(
+        quant_captured: Dict,
+        quant_anchor_captured: Dict,
+        criteria : List,
+        condition : str,
+):
+    Anchor(
+        quant_captured=quant_captured,
+        quant_anchor_captured=quant_anchor_captured,
+        criteria=criteria,
+        condition=condition,
+    ).simple()
 
 
 if __name__ == "__main__":

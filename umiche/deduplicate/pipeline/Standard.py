@@ -5,7 +5,6 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-
 import pandas as pd
 from umiche.fastq.Convert import Convert as fastqconverter
 from umiche.trim.Template import Template as trimmer

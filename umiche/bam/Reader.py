@@ -7,10 +7,8 @@ __email__="jianfeng.sunmt@gmail.com"
 
 
 import time
-import pysam
 import pandas as pd
 from umiche.util.Console import Console
-# import bamnostic as bs
 
 
 class Reader:
@@ -32,6 +30,9 @@ class Reader:
         bam_fpn
         verbose
         """
+        import pysam
+        # import bamnostic as bs
+
         self.console = Console()
         self.console.verbose = verbose
         self.console.print('===>reading the bam file... {}'.format(bam_fpn))
