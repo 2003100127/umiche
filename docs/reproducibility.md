@@ -1,1 +1,1 @@
-Please refer to [mcverse](https://2003100127.github.io/mcverse/umiche) to reproduce the experiments conducted in the paper titled "UMIche: A UMI-centric analysis platform for enhancing molecular quantification accuracy in bulk and single-cell sequencing".
+Please refer to [mcverse](https://2003100127.github.io/mcverse) to reproduce the experiments conducted in the paper titled "UMIche: A UMI-centric analysis platform for enhancing molecular quantification accuracy in bulk and single-cell sequencing".

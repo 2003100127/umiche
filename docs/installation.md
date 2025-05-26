@@ -1,12 +1,19 @@
-# Installation
-
 ## System Requirement
 
 UMIche is advised to be installed within a conda environment, which makes it easier to work on multiple platforms, such as :material-microsoft-windows: Windows (partial), :simple-apple: Mac, and :material-linux: Linux. Owing to the exclusivity of Pysam to the Linux and Mac environments, UMIche does not work with BAM-related analysis in the Windows system.
 
-## :simple-pypi: PyPI (version 0.1.1 suggested!!)
+!!! info "Note"
+
+    Please note that starting from version `0.1.5`, **pysam** is no longer a required dependency when installing umiche. This means you can install umiche on any operating system. If you need to use **pysam**, you should install umiche on a non-Windows system and then install **pysam** separately. Please refer to [the documentation](https://pysam.readthedocs.io/en/latest/installation.html) :fontawesome-solid-arrow-up-right-from-square: for instructions on how to install it.
+
+## :simple-pypi: PyPI (**highly recommended**, see [the latest version](./changelog.md))
 
 [umiche homepage on PyPI](https://pypi.org/project/umiche/)
+
+!!! info "Note"
+
+    Please make sure to use the latest version of umiche, as earlier versions may contain bugs. If you do not include the `--upgrade` flag during installation, you might encounter issues.
+
 
 ```shell
 # create a conda environment
