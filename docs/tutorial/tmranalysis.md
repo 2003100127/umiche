@@ -1,7 +1,7 @@
 
 !!! quote "summary"
 
-    "**Sequencing meets cryptography**: quadratic substitution error suppression through homotrimer redundancy"
+    "**Sequencing meets cryptography**: quadratic substitution error suppression through homotrimer redundancy". Please check a preprint [here](https://www.researchsquare.com/article/rs-6710367/v1) :fontawesome-solid-arrow-up-right-from-square:.
 
 The homotrimer unique molecular identifier (UMI), a simple yet powerful design in which each nucleotide is tripled (e.g., A → AAA), has demonstrated strong empirical performance in reducing sequencing errors[^1]. 
 
