@@ -8,7 +8,7 @@ UMIche is advised to be installed within a conda environment, which makes it eas
 
 ## :simple-pypi: PyPI (**highly recommended**, see [the latest version](./changelog.md))
 
-[umiche homepage on PyPI](https://pypi.org/project/umiche/)
+[umiche homepage on PyPI](https://pypi.org/project/umiche)
 
 !!! info "Note"
 
