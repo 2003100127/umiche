@@ -7,7 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 
 from typing import List, Dict
 
-from umiche.deduplicate.method.ReformKit import ReformKit
+from collections import defaultdict
 from umiche.util.Console import Console
 
 
@@ -43,14 +43,21 @@ class Adjacency:
         """
         tcl = []
         cc_subs = {}
+        assigned = {}
         for i, cc in connected_components.items():
             self.console.print('======>connected_components: {}'.format(cc))
-            step, cc_sub = self.umi_tools_(df_umi_uniq_val_cnt=df_umi_uniq_val_cnt, cc=cc, graph_adj=graph_adj)
+            step, cc_sub, sub_assign = self.umi_tools_(
+                df_umi_uniq_val_cnt=df_umi_uniq_val_cnt,
+                cc=cc,
+                graph_adj=graph_adj,
+            )
             tcl.append(step)
             cc_subs['cc_' + str(i)] = cc_sub
+            assigned.update(sub_assign)
         return {
             'count': sum(tcl),
             'clusters': cc_subs,
+            'assigned': assigned,
         }
 
     def umi_tools_(
@@ -128,7 +135,21 @@ class Adjacency:
             for i in v:
                 if i not in vertex:
                     cc_sub['node_' + str(k)].append(i)
-        return step, cc_sub
+
+        # ## /*** assigned ***/
+        vertex = list(subcomponents.keys())
+        cc_sub = {}
+        assigned_sub = {}
+
+        for rep, neigh in subcomponents.items():
+            key = f'node_{rep}'
+            cc_sub[key] = [rep]
+            for n in neigh:
+                if n not in vertex:
+                    cc_sub[key].append(n)
+                    assigned_sub[n] = rep
+
+        return step, cc_sub, assigned_sub
 
     def decompose(self, cc_sub_dict):
         """
@@ -152,18 +173,14 @@ class Adjacency:
     def umicountr(
             self,
             graph_adj,
+            connected_components,
             df_umi_uniq_val_cnt,
-    ) -> Dict[str, str]:
+    ):
         """"""
-        # rev = dict(zip(d.values(), d.keys()))
-        # t = {}
-        # for i1, v1 in nbrs.items():
-        #     t[rev[i1]] = []
-        #     for j in v1:
-        #         t[rev[i1]].append(rev[j])
-        # print(t)
-        assigned: Dict[str, str] = {}
-        taken = set()
+        self.console.print("===>UMIcountR adjacency method is being used.")
+        # ------------ 1. 生成 assigned 映射（原逻辑） ------------
+        assigned, taken = {}, set()
+        umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
         for u in umis_uniq_ordered:
             if u in taken:
                 continue
@@ -173,75 +190,110 @@ class Adjacency:
                     continue
                 assigned[v] = u
                 taken.add(v)
-        return assigned
+
+        # ------------ 2. 构建 clusters 结构 ------------
+        clusters_out = {}
+        for cc_id, cc_nodes in connected_components.items():
+            cc_sub = defaultdict(list)
+            # 将每个节点归入它的代表（自己或 assigned[r]）
+            for n in cc_nodes:
+                rep = assigned.get(n, n)  # 没被合并则自身为代表
+                cc_sub[f'node_{rep}'].append(n)
+            # 代表需放在列表首位，与 umi_tools_ 输出一致
+            for rep_key, members in cc_sub.items():
+                rep_node = rep_key.replace("node_", "")
+                members.sort(key=lambda x: (x != rep_node, x))  # 保证 rep 在首位
+            clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
+
+        dedup_count = sum(len(sub) for sub in clusters_out.values())
+
+        return {
+            'count': dedup_count,
+            'clusters': clusters_out,
+            'assigned': assigned,
+        }
 
     def umicountr_directional(
             self,
-            dist_func,
-            umis: List[str],
-            ed_thres: int,
-    ) -> Dict[str, str]:
+            graph_adj,
+            connected_components,
+            df_umi_uniq_val_cnt,
+    ):
         """仅当次要节点 count ≤ 0.5× 代表时，才合并到代表。"""
         self.console.print("===>UMIcountR adjacency_directional method is being used.")
-        from collections import Counter
-        umis_cnt_dict = Counter(umis)
-        print(umis_cnt_dict)
-        umis_uniq_ordered = sorted(umis_cnt_dict, key=lambda u: (-umis_cnt_dict[u], u))
-        print(umis_uniq_ordered)
-        nbrs = ReformKit().neighbor_graph(
-            dist_func=dist_func,
-            umis=umis_uniq_ordered,
-            ed_thres=ed_thres,
-        )
-        print(nbrs)
-
-        assigned: Dict[str, str] = {}
-        taken = set()
+        umis_cnt_dict = df_umi_uniq_val_cnt.to_dict()  # UMI → read_count
+        assigned, taken = {}, set()
+        umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
         for u in umis_uniq_ordered:
             if u in taken:
                 continue
-            taken.add(u)
-            cu = umis_cnt_dict[u]
-            for v in nbrs[u]:
+            taken.add(u)  # u 作为代表
+            cup = umis_cnt_dict[u]
+            for v in graph_adj[u]:  # 直接 HD≤1
                 if v in taken:
                     continue
-                if umis_cnt_dict[v] <= 0.5 * cu:
+                if umis_cnt_dict[v] <= 0.5 * cup:  # 方向性条件
                     assigned[v] = u
                     taken.add(v)
-        return assigned
+
+        clusters_out = {}
+        for cc_id, cc_nodes in connected_components.items():
+            cc_sub = defaultdict(list)
+            for n in cc_nodes:
+                rep = assigned.get(n, n)
+                cc_sub[f'node_{rep}'].append(n)
+            for key, members in cc_sub.items():  # 确保代表在首位
+                rep_node = key.replace("node_", "")
+                members.sort(key=lambda x: (x != rep_node, x))
+            clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
+
+        dedup_count = sum(len(sub) for sub in clusters_out.values())
+        return {
+            'count': dedup_count,
+            'clusters': clusters_out,
+            'assigned': assigned,
+        }
 
     def umicountr_singleton(
             self,
-            dist_func,
-            umis: List[str],
-            ed_thres: int,
-    ) -> Dict[str, str]:
+            graph_adj,
+            connected_components,
+            df_umi_uniq_val_cnt,
+    ):
         """仅合并 count==1 的直接邻居到代表。"""
         self.console.print("===>UMIcountR adjacency_singleton method is being used.")
-        from collections import Counter
-        umis_cnt_dict = Counter(umis)
-        print(umis_cnt_dict)
-        umis_uniq_ordered = sorted(umis_cnt_dict, key=lambda u: (-umis_cnt_dict[u], u))
-        # print(umis_uniq_ordered)
-        nbrs = ReformKit().neighbor_graph(
-            dist_func=dist_func,
-            umis=umis_uniq_ordered,
-            ed_thres=ed_thres,
-        )
-        print(nbrs)
-        assigned: Dict[str, str] = {}
-        taken = set()
+        umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
+        umis_cnt_dict = df_umi_uniq_val_cnt.to_dict()
+        assigned, taken = {}, set()
         for u in umis_uniq_ordered:
             if u in taken:
                 continue
             taken.add(u)
-            for v in nbrs[u]:
+            for v in graph_adj[u]:
                 if v in taken:
                     continue
                 if umis_cnt_dict[v] == 1:
                     assigned[v] = u
                     taken.add(v)
-        return assigned
+
+        clusters_out = {}
+        for cc_id, cc_nodes in connected_components.items():
+            cc_sub = defaultdict(list)
+            for n in cc_nodes:
+                rep = assigned.get(n, n)
+                cc_sub[f'node_{rep}'].append(n)
+            for key, members in cc_sub.items():  # 代表放首位
+                rep_node = key.replace("node_", "")
+                members.sort(key=lambda x: (x != rep_node, x))
+            clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
+
+        dedup_count = sum(len(sub) for sub in clusters_out.values())
+
+        return {
+            'count': dedup_count,
+            'clusters': clusters_out,
+            'assigned': assigned,
+        }
 
 
 if __name__ == "__main__":
@@ -283,15 +335,6 @@ if __name__ == "__main__":
         'F': ['D', 'G'],
         'G': ['E', 'F'],
     }
-    # graph_adj = {
-    #     'A': ['B', 'C', 'D'],
-    #     'B': ['A', 'C', 'D'],
-    #     'C': ['A', 'B', 'D'],
-    #     'D': ['A', 'B', 'C', 'E', 'F'],
-    #     'E': ['D', 'G'],
-    #     'F': ['D', 'G'],
-    #     'G': ['E', 'F'],
-    # }
     print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
@@ -315,61 +358,42 @@ if __name__ == "__main__":
     )
     dedup_count = dedup_res['count']
     dedup_clusters = dedup_res['clusters']
+    dedup_assigned = dedup_res['assigned']
     print("deduplicated count:\n{}".format(dedup_count))
     print("deduplicated clusters:\n{}".format(dedup_clusters))
+    print("deduplicated assigned:\n{}".format(dedup_assigned))
 
     dedup_clusters_dc = p.decompose(dedup_clusters)
     print("deduplicated clusters decomposed:\n{}".format(dedup_clusters_dc))
-
 
     # ## /*** umicountr ***/
     int_to_umi_dict = {
         'A': 'AGATCTCGCA',
         'B': 'AGATCCCGCA',
         'C': 'AGATCACGCA',
-        'D': 'AGATCTGGCA', # old 'AGATCGCGCA'
+        'D': 'AGATCTGGCA',
         'E': 'AGATCTGGGA',
         'F': 'AGATCTGGCT',
         'G': 'AGATCTGGGT',
     }
-    umis = []
-    for i in node_val_sorted.index:
-        umis += [int_to_umi_dict[i]] * node_val_sorted.loc[i]
-
-    from umiche.util.Hamming import Hamming
 
     tt = p.umicountr(
-        dist_func=Hamming().umicountr,
-        umis=umis,
-        # d=int_to_umi_dict,
-        ed_thres=1,
+        graph_adj=graph_adj,
+        connected_components=ccs,
+        df_umi_uniq_val_cnt=node_val_sorted,
     )
-    ts = {}
-    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
-    for k, v in tt.items():
-        ts[rev[k]] = rev[v]
-    print(ts)
+    print(tt)
 
     tt = p.umicountr_directional(
-        dist_func=Hamming().umicountr,
-        umis=umis,
-        # d=int_to_umi_dict,
-        ed_thres=1,
+        graph_adj=graph_adj,
+        connected_components=ccs,
+        df_umi_uniq_val_cnt=node_val_sorted,
     )
-    ts = {}
-    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
-    for k, v in tt.items():
-        ts[rev[k]] = rev[v]
-    print(ts)
+    print(tt)
 
     tt = p.umicountr_singleton(
-        dist_func=Hamming().umicountr,
-        umis=umis,
-        # d=int_to_umi_dict,
-        ed_thres=1,
+        graph_adj=graph_adj,
+        connected_components=ccs,
+        df_umi_uniq_val_cnt=node_val_sorted,
     )
-    ts = {}
-    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
-    for k, v in tt.items():
-        ts[rev[k]] = rev[v]
-    print(ts)
+    print(tt)

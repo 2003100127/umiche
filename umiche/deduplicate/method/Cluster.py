@@ -8,8 +8,9 @@ __email__="jianfeng.sunmt@gmail.com"
 from typing import List, Dict
 
 from umiche.network.CC import CC as gbfscc
-from umiche.deduplicate.method.ReformKit import ReformKit
+from collections import defaultdict
 from umiche.util.Console import Console
+from collections import deque
 
 
 class Cluster:
@@ -60,24 +61,36 @@ class Cluster:
 
     def umicountr(
             self,
-            dist_func,
-            umis: List[str],
-            ed_thres: int,
-    ) -> Dict[str, str]:
+            graph_adj,
+            connected_components,
+            df_umi_uniq_val_cnt,
+    ) -> Dict:
         """
-        每个分量内，选最丰度（ties 用字典序）的 UMI 为代表，分量里的其它全部并到代表。
-        这实现了图示中的“传递合并”（即到代表的 HD 可 > editham）。
+
+        Parameters
+        ----------
+        graph_adj
+        connected_components
+        df_umi_uniq_val_cnt
+
+        Returns
+        -------
+           {
+          'count': ,
+          'clusters': {
+              'cc_0': {
+                  'node_A': ['A', 'B', 'C', ...],
+                  ...
+              },
+              'cc_1': {...},
+              ...
+          }
+        }
         """
-        from collections import Counter, deque
-        counts = Counter(umis)
-        umis_uniq_ordered = list(counts.keys())
-        nbrs = ReformKit().neighbor_graph(
-            dist_func=dist_func,
-            umis=umis_uniq_ordered,
-            ed_thres=ed_thres,
-        )
-        assigned: Dict[str, str] = {}
-        seen = set()
+        umis_cnt_dict = df_umi_uniq_val_cnt.to_dict()
+        umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
+
+        assigned, seen = {}, set()
         for u in umis_uniq_ordered:
             if u in seen:
                 continue
@@ -87,16 +100,33 @@ class Cluster:
             while q:
                 x = q.popleft()
                 comp.append(x)
-                for y in nbrs[x]:
+                for y in graph_adj[x]:
                     if y not in seen:
                         seen.add(y)
                         q.append(y)
-            # 分量代表：最高丰度，tie 按字典序
-            rep = sorted(comp, key=lambda s: (-counts[s], s))[0]
+            rep = sorted(comp, key=lambda s: (-umis_cnt_dict[s], s))[0]
             for w in comp:
                 if w != rep:
                     assigned[w] = rep
-        return assigned
+
+        clusters_out = {}
+        for cc_id, cc_nodes in connected_components.items():
+            cc_sub = defaultdict(list)
+            for n in cc_nodes:
+                rep = assigned.get(n, n)
+                cc_sub[f'node_{rep}'].append(n)
+            for key, members in cc_sub.items():
+                rep_node = key.replace("node_", "")
+                members.sort(key=lambda x: (x != rep_node, x))
+            clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
+
+        dedup_count = sum(len(cc_sub) for cc_sub in clusters_out.values())
+
+        return {
+            'count': dedup_count,
+            'clusters': clusters_out,
+            'assigned': assigned,
+        }
 
 
 if __name__ == "__main__":
@@ -113,7 +143,9 @@ if __name__ == "__main__":
      'G': ['E', 'F'],
     }
     edge_list = [('B', 'A'), ('D', 'A'), ('C', 'B'), ('F', 'D'), ('C', 'A'), ('G', 'F'), ('E', 'D'), ('G', 'E')]
-    print(p.cc(graph_adj=graph_adj_mclumi))
+
+    ccs = p.cc(graph_adj=graph_adj_mclumi)
+    print(ccs)
     print(p.ccnx(edge_list=edge_list))
 
     import pandas as pd
@@ -131,22 +163,14 @@ if __name__ == "__main__":
         'A': 'AGATCTCGCA',
         'B': 'AGATCCCGCA',
         'C': 'AGATCACGCA',
-        'D': 'AGATCTGGCA',  # old 'AGATCGCGCA'
+        'D': 'AGATCTGGCA',
         'E': 'AGATCTGGGA',
         'F': 'AGATCTGGCT',
         'G': 'AGATCTGGGT',
     }
-    umis = []
-    for i in node_val_sorted.index:
-        print(i)
-        print(node_val_sorted.loc[i])
-        umis += [int_to_umi_dict[i]] * node_val_sorted.loc[i]
-
-    from umiche.util.Hamming import Hamming
 
     print(p.umicountr(
-        dist_func=Hamming().umicountr,
-        umis=umis,
-        # d=int_to_umi_dict,
-        ed_thres=1,
+        graph_adj=graph_adj_mclumi,
+        connected_components=ccs,
+        df_umi_uniq_val_cnt=node_val_sorted,
     ))
