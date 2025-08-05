@@ -19,6 +19,7 @@ class Writer:
     ):
         import pysam
 
+        self.pysam =pysam
         self.df = df
         self.console = Console()
         self.console.verbose = verbose
@@ -29,8 +30,8 @@ class Writer:
             tmpl_bam_fpn,
             whitelist=[],
     ):
-        tmpl_bam = pysam.AlignmentFile(tmpl_bam_fpn, "rb")
-        write_to_bam = pysam.AlignmentFile(tobam_fpn, "wb", template=tmpl_bam)
+        tmpl_bam = self.pysam.AlignmentFile(tmpl_bam_fpn, "rb")
+        write_to_bam = self.pysam.AlignmentFile(tobam_fpn, "wb", template=tmpl_bam)
         fs = self.df.loc[self.df['id'].isin(whitelist)]['read']
         for i in fs:
             # print(i)
@@ -45,13 +46,13 @@ class Writer:
             # whitelist=[],
     ):
         # 'wb' indicates that it's a binary file opened for writing
-        # print(pysam.AlignmentHeader())
-        # with pysam.AlignmentFile(tobam_fpn, 'wb', header=pysam.AlignmentHeader()) as output_bam:
+        # print(self.pysam.AlignmentHeader())
+        # with self.pysam.AlignmentFile(tobam_fpn, 'wb', header=self.pysam.AlignmentHeader()) as output_bam:
         #     # Create a new alignment object for your query sequence
         #     # Replace placeholders with actual values
         #     # fs = self.df.loc[self.df['id'].isin(whitelist)]['read']
         #     # for i in fs:
-        #         new_alignment = pysam.AlignedSegment()
+        #         new_alignment = self.pysam.AlignedSegment()
         #         new_alignment.query_name = "YourQueryName"
         #         new_alignment.query_sequence = "ATCG"  # Replace with the actual sequence
         #         new_alignment.flag = 0x0  # Replace with appropriate flag
@@ -70,8 +71,8 @@ class Writer:
                   'SQ': [{'LN': 1575, 'SN': 'chr1'},
                          {'LN': 1584, 'SN': 'chr2'}]}
 
-        with pysam.AlignmentFile(tobam_fpn, "wb", header=header) as outf:
-            a = pysam.AlignedSegment()
+        with self.pysam.AlignmentFile(tobam_fpn, "wb", header=header) as outf:
+            a = self.pysam.AlignedSegment()
             a.query_name = "read_28833_29006_6945"
             a.query_sequence = "AGCTTAGCTAGCTACCTATATCTTGGTCTTGGCCG"
             a.flag = 99
@@ -82,18 +83,55 @@ class Writer:
             a.next_reference_id = 0
             a.next_reference_start = 199
             a.template_length = 167
-            a.query_qualities = pysam.qualitystring_to_array("<<<<<<<<<<<<<<<<<<<<<:<9/,&,22;;<<<")
+            a.query_qualities = self.pysam.qualitystring_to_array("<<<<<<<<<<<<<<<<<<<<<:<9/,&,22;;<<<")
             a.tags = (("NM", 1),
                       ("RG", "L1"))
             outf.write(a)
         return 1
 
+    def tobam_spikein(
+            self,
+            tobam_fpn,
+            tmpl_bam_fpn,
+    ):
+        import sys, pysam, csv
+        tags = {}
+        with open(map_tsv, newline='') as f:
+            r = csv.DictReader(f, delimiter='\t')
+            for row in r:
+                qn = row['qname']
+                # 去掉空值
+                tags[qn] = {k: v for k, v in row.items() if k not in ('qname',) and v}
+
+        with pysam.AlignmentFile(tmpl_bam_fpn, "rb") as ib, \
+                pysam.AlignmentFile(tobam_fpn, "wb", template=ib) as ob:
+            for aln in ib:
+                t = tags.get(aln.query_name)
+                if t:
+                    for tag, val in t.items():
+                        aln.set_tag(tag, val, value_type='Z')  # 字符串型 TAG
+                ob.write(aln)
+        pysam.index(tobam_fpn)
+        return
+
 
 if __name__ == "__main__":
     p = Writer(df=pd.DataFrame())
 
-    p.tobam_trust4(
-        tobam_fpn='./trimmed2.bam',
-        # tmpl_bam_fpn=to('data/bone_marrow/merge_corrected_sorted_little.bam'),
-        # whitelist=df.index,
+    # p.tobam_trust4(
+    #     tobam_fpn='./trimmed2.bam',
+    #     # tmpl_bam_fpn=to('data/bone_marrow/merge_corrected_sorted_little.bam'),
+    #     # whitelist=df.index,
+    # )
+
+    from umiche import io
+
+    df = io.read(
+        df_fpn="/mnt/d/Document/Programming/R/umiche/read2tags.tsv",
+        df_sep="\t",
+        header=0,
+        type='tsv',
     )
+    print(df)
+    print(df.qname.unique().shape)
+    # p.tobam()

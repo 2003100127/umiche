@@ -5,6 +5,7 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
+from typing import List, Dict
 
 
 class ReformKit:
@@ -127,3 +128,33 @@ class ReformKit:
         one_hot = np.zeros(len(umi)*4)
         one_hot[ids_to_be_one] = 1
         return one_hot.astype(int)
+
+    def neighbor_graph(
+            self,
+            dist_func,
+            umis: List[str],
+            ed_thres: int,
+    ) -> Dict[str, List[str]]:
+        """
+
+        Parameters
+        ----------
+        umis
+            a list of unique UMIs
+        ed_thres
+
+        Returns
+        -------
+
+        """
+        uniq = list(dict.fromkeys(umis))
+        nbrs = {u: [] for u in uniq}
+        for i, umi_i in enumerate(uniq):
+            for j in range(i + 1, len(uniq)):
+                umi_j = uniq[j]
+                if len(umi_i) != len(umi_j):
+                    continue
+                if dist_func(umi_i, umi_j) <= ed_thres:
+                    nbrs[umi_i].append(umi_j)
+                    nbrs[umi_j].append(umi_i)
+        return nbrs

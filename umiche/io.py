@@ -6,9 +6,39 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-from typing import Dict
+from typing import Any
 
 from umiche.deduplicate.io.Stat import Stat
+from umiche.util.Reader import Reader as freader
+
+
+def read(
+        df_fpn,
+        df_sep : str = '\t',
+        skiprows : Any = None,
+        header : Any = None,
+        index_col : Any = None,
+        is_utf8 : bool = False,
+        sheet_name : str = 'Sheel1',
+        engine : str = 'openpyxl',
+        type : str = 'csv',
+):
+    m = {
+        "csv": freader().generic,
+        "tsv": freader().generic,
+        "txt": freader().generic,
+        "excel": freader().excel,
+    }
+    return m[type](
+        df_fpn=df_fpn,
+        df_sep=df_sep,
+        skiprows=skiprows,
+        header=header,
+        index_col=index_col,
+        is_utf8=is_utf8,
+        sheet_name=sheet_name,
+        engine=engine,
+    )
 
 
 def read_bam(

@@ -5,7 +5,9 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
+from typing import List, Dict
 
+from umiche.deduplicate.method.ReformKit import ReformKit
 from umiche.util.Console import Console
 
 
@@ -147,12 +149,108 @@ class Adjacency:
                 cc_cnt += 1
         return ccs
 
+    def umicountr(
+            self,
+            graph_adj,
+            df_umi_uniq_val_cnt,
+    ) -> Dict[str, str]:
+        """"""
+        # rev = dict(zip(d.values(), d.keys()))
+        # t = {}
+        # for i1, v1 in nbrs.items():
+        #     t[rev[i1]] = []
+        #     for j in v1:
+        #         t[rev[i1]].append(rev[j])
+        # print(t)
+        assigned: Dict[str, str] = {}
+        taken = set()
+        for u in umis_uniq_ordered:
+            if u in taken:
+                continue
+            taken.add(u)
+            for v in graph_adj[u]:
+                if v in taken:
+                    continue
+                assigned[v] = u
+                taken.add(v)
+        return assigned
+
+    def umicountr_directional(
+            self,
+            dist_func,
+            umis: List[str],
+            ed_thres: int,
+    ) -> Dict[str, str]:
+        """仅当次要节点 count ≤ 0.5× 代表时，才合并到代表。"""
+        self.console.print("===>UMIcountR adjacency_directional method is being used.")
+        from collections import Counter
+        umis_cnt_dict = Counter(umis)
+        print(umis_cnt_dict)
+        umis_uniq_ordered = sorted(umis_cnt_dict, key=lambda u: (-umis_cnt_dict[u], u))
+        print(umis_uniq_ordered)
+        nbrs = ReformKit().neighbor_graph(
+            dist_func=dist_func,
+            umis=umis_uniq_ordered,
+            ed_thres=ed_thres,
+        )
+        print(nbrs)
+
+        assigned: Dict[str, str] = {}
+        taken = set()
+        for u in umis_uniq_ordered:
+            if u in taken:
+                continue
+            taken.add(u)
+            cu = umis_cnt_dict[u]
+            for v in nbrs[u]:
+                if v in taken:
+                    continue
+                if umis_cnt_dict[v] <= 0.5 * cu:
+                    assigned[v] = u
+                    taken.add(v)
+        return assigned
+
+    def umicountr_singleton(
+            self,
+            dist_func,
+            umis: List[str],
+            ed_thres: int,
+    ) -> Dict[str, str]:
+        """仅合并 count==1 的直接邻居到代表。"""
+        self.console.print("===>UMIcountR adjacency_singleton method is being used.")
+        from collections import Counter
+        umis_cnt_dict = Counter(umis)
+        print(umis_cnt_dict)
+        umis_uniq_ordered = sorted(umis_cnt_dict, key=lambda u: (-umis_cnt_dict[u], u))
+        # print(umis_uniq_ordered)
+        nbrs = ReformKit().neighbor_graph(
+            dist_func=dist_func,
+            umis=umis_uniq_ordered,
+            ed_thres=ed_thres,
+        )
+        print(nbrs)
+        assigned: Dict[str, str] = {}
+        taken = set()
+        for u in umis_uniq_ordered:
+            if u in taken:
+                continue
+            taken.add(u)
+            for v in nbrs[u]:
+                if v in taken:
+                    continue
+                if umis_cnt_dict[v] == 1:
+                    assigned[v] = u
+                    taken.add(v)
+        return assigned
+
 
 if __name__ == "__main__":
     import pandas as pd
     from umiche.deduplicate.method.Cluster import Cluster as umiclust
 
-    p = Adjacency()
+    p = Adjacency(
+        verbose=True,
+    )
 
     # ### @@ data from UMI-tools
     # graph_adj = {
@@ -185,6 +283,15 @@ if __name__ == "__main__":
         'F': ['D', 'G'],
         'G': ['E', 'F'],
     }
+    # graph_adj = {
+    #     'A': ['B', 'C', 'D'],
+    #     'B': ['A', 'C', 'D'],
+    #     'C': ['A', 'B', 'D'],
+    #     'D': ['A', 'B', 'C', 'E', 'F'],
+    #     'E': ['D', 'G'],
+    #     'F': ['D', 'G'],
+    #     'G': ['E', 'F'],
+    # }
     print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
@@ -213,3 +320,56 @@ if __name__ == "__main__":
 
     dedup_clusters_dc = p.decompose(dedup_clusters)
     print("deduplicated clusters decomposed:\n{}".format(dedup_clusters_dc))
+
+
+    # ## /*** umicountr ***/
+    int_to_umi_dict = {
+        'A': 'AGATCTCGCA',
+        'B': 'AGATCCCGCA',
+        'C': 'AGATCACGCA',
+        'D': 'AGATCTGGCA', # old 'AGATCGCGCA'
+        'E': 'AGATCTGGGA',
+        'F': 'AGATCTGGCT',
+        'G': 'AGATCTGGGT',
+    }
+    umis = []
+    for i in node_val_sorted.index:
+        umis += [int_to_umi_dict[i]] * node_val_sorted.loc[i]
+
+    from umiche.util.Hamming import Hamming
+
+    tt = p.umicountr(
+        dist_func=Hamming().umicountr,
+        umis=umis,
+        # d=int_to_umi_dict,
+        ed_thres=1,
+    )
+    ts = {}
+    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
+    for k, v in tt.items():
+        ts[rev[k]] = rev[v]
+    print(ts)
+
+    tt = p.umicountr_directional(
+        dist_func=Hamming().umicountr,
+        umis=umis,
+        # d=int_to_umi_dict,
+        ed_thres=1,
+    )
+    ts = {}
+    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
+    for k, v in tt.items():
+        ts[rev[k]] = rev[v]
+    print(ts)
+
+    tt = p.umicountr_singleton(
+        dist_func=Hamming().umicountr,
+        umis=umis,
+        # d=int_to_umi_dict,
+        ed_thres=1,
+    )
+    ts = {}
+    rev = dict(zip(int_to_umi_dict.values(), int_to_umi_dict.keys()))
+    for k, v in tt.items():
+        ts[rev[k]] = rev[v]
+    print(ts)

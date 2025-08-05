@@ -6,10 +6,13 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 
-
 class Hamming:
 
-    def general(self, s1, s2):
+    def general(
+            self,
+            s1,
+            s2,
+    ) -> int:
         """
 
         Parameters
@@ -25,3 +28,25 @@ class Hamming:
 
         """
         return sum(i != j for i, j in zip(s1, s2))
+
+    def umicountr(
+            self,
+            s1: str,
+            s2: str,
+    ) -> int:
+        """
+
+        Parameters
+        ----------
+        s1
+            sequence 1
+        s2
+            sequence 2
+
+        Returns
+        -------
+
+        """
+        if len(s1) != len(s2):
+            return max(len(s1), len(s2))
+        return sum(x != y for x, y in zip(s1, s2))

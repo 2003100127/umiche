@@ -12,8 +12,6 @@ from functools import wraps
 
 class Reader:
 
-
-
     def __call__(self, deal):
         generic = self.generic
         excel = self.excel
@@ -38,7 +36,16 @@ class Reader:
                 )
         return read
 
-    def generic(self, df_fpn, df_sep='\t', skiprows=None, header=None, index_col=None, is_utf8=False):
+    def generic(
+            self,
+            df_fpn,
+            df_sep='\t',
+            skiprows=None,
+            header=None,
+            index_col=None,
+            is_utf8=False,
+            **kwargs,
+    ):
         """
 
         Parameters
@@ -71,7 +78,13 @@ class Reader:
                 skiprows=skiprows
             )
 
-    def excel(self, df_fpn, sheet_name='Sheet1', header=None, is_utf8=False):
+    def excel(
+            self,
+            df_fpn,
+            sheet_name='Sheet1',
+            header=None,
+            **kwargs,
+    ):
         """
 
         Parameters
@@ -85,18 +98,9 @@ class Reader:
         -------
 
         """
-        if is_utf8:
-            return pd.read_excel(
-                df_fpn,
-                sheet_name=sheet_name,
-                header=header,
-                encoding='utf-8',
-                engine='openpyxl',
-            )
-        else:
-            return pd.read_excel(
-                df_fpn,
-                sheet_name=sheet_name,
-                header=header,
-                engine='openpyxl',
-            )
+        return pd.read_excel(
+            df_fpn,
+            sheet_name=sheet_name,
+            header=header,
+            engine='openpyxl',
+        )
