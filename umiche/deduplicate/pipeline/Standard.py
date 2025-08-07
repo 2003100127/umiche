@@ -7,7 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 
 import pandas as pd
 from umiche.fastq.Convert import Convert as fastqconverter
-from umiche.trim.Template import Template as trimmer
+from umiche.trimming.Template import Template as trimmer
 from umiche.network.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.simu.Parameter import Parameter as params
 
@@ -18,6 +18,7 @@ from umiche.util.Console import Console
 
 class Standard:
 
+    @Console.vignette_global()
     def __init__(
             self,
             scenario,

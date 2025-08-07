@@ -15,8 +15,8 @@ from simreadflow.util.sequence.fastq.Write import write as wfastq
 from simreadflow.util.random.Number import number as rannum
 from simreadflow.util.file.read.Reader import reader as gfreader
 from simreadflow.util.file.write.Writer import writer as fwriter
-from umiche.trim.Template import template as umitrim
-from umiche.trim.Reader import reader as trimreader
+from umiche.trimming.Template import template as umitrim
+from umiche.trimming.Reader import reader as trimreader
 from umiche.deduplicate.dimer.pipeline import Config
 from umiche.path import to
 

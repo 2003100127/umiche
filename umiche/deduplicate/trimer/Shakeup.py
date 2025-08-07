@@ -11,7 +11,7 @@ import pandas as pd
 from umiche.fastq.Reader import Reader as rfastq
 from umiche.fastq.Writer import Writer as wfastq
 
-from umiche.trim.Reader import Reader as trimreader
+from umiche.trimming.Reader import Reader as trimreader
 from umiche.simu.Parameter import Parameter as params
 
 from umiche.util.Writer import Writer as fwriter
@@ -79,7 +79,7 @@ class Shakeup:
                 print(self.fastq_location)
 
                 if self.is_trim:
-                    from umiche.trim.Template import Template as trimmer
+                    from umiche.trimming.Template import Template as trimmer
                     if self.scenario == 'umi_lens':
                         self.params.trimmed['umi_1']['len'] = scenario_i
                     self.console.print("======>fastq is being trimmed.")

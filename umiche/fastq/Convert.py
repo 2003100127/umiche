@@ -29,6 +29,8 @@ class Convert:
         # print(self.names)
         # print(self.seqs)
 
+        self.pysam = pysam
+
         self.console = Console()
         self.console.verbose = verbose
 
@@ -38,9 +40,9 @@ class Convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
+        with self.pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
-                a = pysam.AlignedSegment()
+                a = self.pysam.AlignedSegment()
                 a.query_name = name
                 a.query_sequence = 'B'
                 a.flag = 0
@@ -62,9 +64,9 @@ class Convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
+        with self.pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
-                a = pysam.AlignedSegment()
+                a = self.pysam.AlignedSegment()
                 a.query_name = name
                 a.query_sequence = 'B'
                 a.flag = 0
@@ -89,10 +91,10 @@ class Convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
+        with self.pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 asterisk_split = name.split('*')
-                a = pysam.AlignedSegment()
+                a = self.pysam.AlignedSegment()
                 a.query_name = name
                 a.query_sequence = 'B'
                 a.flag = 0
@@ -118,10 +120,10 @@ class Convert:
             'SQ': [{'LN': 1575, 'SN': 'chr1'}, {'LN': 1584, 'SN': 'chr2'}]
         }
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(self.bam_fpn))
-        with pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
+        with self.pysam.AlignmentFile(self.bam_fpn, "wb", header=header) as outf:
             for name in self.names:
                 asterisk_split = name.split('*')
-                a = pysam.AlignedSegment()
+                a = self.pysam.AlignedSegment()
                 a.query_name = name
                 a.query_sequence = 'B'
                 a.flag = 0

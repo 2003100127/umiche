@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from simreadflow.util.sequence.fastq.Read import read as rfastq
 from simreadflow.util.random.Number import number as rannum
-from umiche.trim.Template import template as umitrim
-from umiche.trim.Reader import reader as trimreader
+from umiche.trimming.Template import template as umitrim
+from umiche.trimming.Reader import reader as trimreader
 from simreadflow.util.file.read.Reader import reader as gfreader
 from simreadflow.simulate.dispatcher.batch.UMI import umi as generalstarter
 from simreadflow.read.similarity.distance.Hamming import hamming

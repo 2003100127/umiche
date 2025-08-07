@@ -8,18 +8,15 @@ __email__="jianfeng.sunmt@gmail.com"
 
 import warnings
 
-import numpy as np
-
 warnings.filterwarnings("ignore")
 
 import json
 import pandas as pd
 from umiche.simu.Parameter import Parameter as params
-from umiche.trim.Template import Template as trimmer
+from umiche.trimming.Template import Template as trimmer
 from umiche.fastq.Convert import Convert as fastqconverter
 
 from umiche.deduplicate.OnePos import OnePos as dedupop
-from umiche.plot.scenario.TraceSingle import TraceSingle as plothetero
 
 from umiche.deduplicate.heterogeneity.Trace import Trace as umitrace
 from umiche.bam.Relation import Relation as umirel

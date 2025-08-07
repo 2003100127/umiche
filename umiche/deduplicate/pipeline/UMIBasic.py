@@ -8,7 +8,7 @@ __email__="jianfeng.sunmt@gmail.com"
 
 import pandas as pd
 from umiche.fastq.Convert import convert as fas2bam
-from umiche.trim.Template import template as umitrim
+from umiche.trimming.Template import template as umitrim
 from umiche.util.Writer import writer as gwriter
 from umiche.network.bfs.ConnectedComponent import ConnectedComponent as gbfscc
 from umiche.deduplicate.trimer.pipeline import Config
