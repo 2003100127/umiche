@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-from typing import List, Dict
+from typing import Dict
 
 from collections import defaultdict
 from umiche.util.Console import Console
@@ -25,7 +25,7 @@ class Adjacency:
             connected_components,
             df_umi_uniq_val_cnt,
             graph_adj,
-    ):
+    ) -> Dict:
         """
         Examples
         --------
@@ -65,7 +65,7 @@ class Adjacency:
             df_umi_uniq_val_cnt,
             cc,
             graph_adj,
-    ):
+    ) -> Dict:
         """
         umi_tools adjacency
 
@@ -175,10 +175,9 @@ class Adjacency:
             graph_adj,
             connected_components,
             df_umi_uniq_val_cnt,
-    ):
+    ) -> Dict:
         """"""
         self.console.print("===>UMIcountR adjacency method is being used.")
-        # ------------ 1. 生成 assigned 映射（原逻辑） ------------
         assigned, taken = {}, set()
         umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
         for u in umis_uniq_ordered:
@@ -191,18 +190,15 @@ class Adjacency:
                 assigned[v] = u
                 taken.add(v)
 
-        # ------------ 2. 构建 clusters 结构 ------------
         clusters_out = {}
         for cc_id, cc_nodes in connected_components.items():
             cc_sub = defaultdict(list)
-            # 将每个节点归入它的代表（自己或 assigned[r]）
             for n in cc_nodes:
-                rep = assigned.get(n, n)  # 没被合并则自身为代表
+                rep = assigned.get(n, n)
                 cc_sub[f'node_{rep}'].append(n)
-            # 代表需放在列表首位，与 umi_tools_ 输出一致
             for rep_key, members in cc_sub.items():
                 rep_node = rep_key.replace("node_", "")
-                members.sort(key=lambda x: (x != rep_node, x))  # 保证 rep 在首位
+                members.sort(key=lambda x: (x != rep_node, x))  # rep first
             clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
 
         dedup_count = sum(len(sub) for sub in clusters_out.values())
@@ -218,8 +214,20 @@ class Adjacency:
             graph_adj,
             connected_components,
             df_umi_uniq_val_cnt,
-    ):
-        """仅当次要节点 count ≤ 0.5× 代表时，才合并到代表。"""
+    ) -> Dict:
+        """
+        merged when count ≤ 0.5×rep
+
+        Parameters
+        ----------
+        graph_adj
+        connected_components
+        df_umi_uniq_val_cnt
+
+        Returns
+        -------
+
+        """
         self.console.print("===>UMIcountR adjacency_directional method is being used.")
         umis_cnt_dict = df_umi_uniq_val_cnt.to_dict()  # UMI → read_count
         assigned, taken = {}, set()
@@ -227,12 +235,12 @@ class Adjacency:
         for u in umis_uniq_ordered:
             if u in taken:
                 continue
-            taken.add(u)  # u 作为代表
+            taken.add(u)
             cup = umis_cnt_dict[u]
-            for v in graph_adj[u]:  # 直接 HD≤1
+            for v in graph_adj[u]:
                 if v in taken:
                     continue
-                if umis_cnt_dict[v] <= 0.5 * cup:  # 方向性条件
+                if umis_cnt_dict[v] <= 0.5 * cup:
                     assigned[v] = u
                     taken.add(v)
 
@@ -242,7 +250,7 @@ class Adjacency:
             for n in cc_nodes:
                 rep = assigned.get(n, n)
                 cc_sub[f'node_{rep}'].append(n)
-            for key, members in cc_sub.items():  # 确保代表在首位
+            for key, members in cc_sub.items():
                 rep_node = key.replace("node_", "")
                 members.sort(key=lambda x: (x != rep_node, x))
             clusters_out[f'cc_{cc_id}'] = dict(cc_sub)
@@ -259,7 +267,7 @@ class Adjacency:
             graph_adj,
             connected_components,
             df_umi_uniq_val_cnt,
-    ):
+    ) -> Dict:
         """仅合并 count==1 的直接邻居到代表。"""
         self.console.print("===>UMIcountR adjacency_singleton method is being used.")
         umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
@@ -282,7 +290,7 @@ class Adjacency:
             for n in cc_nodes:
                 rep = assigned.get(n, n)
                 cc_sub[f'node_{rep}'].append(n)
-            for key, members in cc_sub.items():  # 代表放首位
+            for key, members in cc_sub.items():
                 rep_node = key.replace("node_", "")
                 members.sort(key=lambda x: (x != rep_node, x))
             clusters_out[f'cc_{cc_id}'] = dict(cc_sub)

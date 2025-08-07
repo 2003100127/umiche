@@ -5,9 +5,12 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+from collections import defaultdict
+from tqdm.auto import tqdm
 from sklearn.cluster import HDBSCAN as skhdbscan
 from sklearn.cluster import DBSCAN as skdbscan
 from sklearn.cluster import Birch as skbirch
@@ -30,38 +33,24 @@ class Clustering:
         self.refkit = refkit()
         self.netadj = netadj()
 
-        self.clustering_method = clustering_method
+        self.clustering_method = clustering_method.lower()
         self.heterogeneity = heterogeneity
 
         self.kwargs = kwargs
-        if 'dbscan_eps' in self.kwargs.keys():
-            self.dbscan_eps = self.kwargs['dbscan_eps']
+
+        if self.clustering_method == 'dbscan':
+            self.dbscan_eps = self.kwargs.get("dbscan_eps", None)
+            self.dbscan_min_spl = self.kwargs.get("dbscan_min_spl", None)
+        elif self.clustering_method == 'birch':
+            self.birch_thres = self.kwargs.get("birch_thres", None)
+            self.birch_n_clusters = self.kwargs.get("birch_n_clusters", None)
+        elif self.clustering_method == 'aprop':
+            self.aprop_preference = self.kwargs.get("aprop_preference", None)
+            self.aprop_random_state = self.kwargs.get("aprop_random_state", None)
+        elif self.clustering_method == 'hdbscan':
+            self.hdbscan_min_spl = self.kwargs.get("hdbscan_min_spl", None)
         else:
-            self.dbscan_eps = None
-        if 'dbscan_min_spl' in self.kwargs.keys():
-            self.dbscan_min_spl = self.kwargs['dbscan_min_spl']
-        else:
-            self.dbscan_min_spl = None
-        if 'birch_thres' in self.kwargs.keys():
-            self.birch_thres = self.kwargs['birch_thres']
-        else:
-            self.birch_thres = None
-        if 'birch_n_clusters' in self.kwargs.keys():
-            self.birch_n_clusters = self.kwargs['birch_n_clusters']
-        else:
-            self.birch_n_clusters = None
-        if 'hdbscan_min_spl' in self.kwargs.keys():
-            self.hdbscan_min_spl = self.kwargs['hdbscan_min_spl']
-        else:
-            self.hdbscan_min_spl = None
-        if 'aprop_preference' in self.kwargs.keys():
-            self.aprop_preference = self.kwargs['aprop_preference']
-        else:
-            self.aprop_preference = None
-        if 'aprop_random_state' in self.kwargs.keys():
-            self.aprop_random_state = self.kwargs['aprop_random_state']
-        else:
-            self.aprop_random_state = None
+            raise ValueError(f"Unsupported clustering method: {self.clustering_method}.")
 
         self.console = Console()
         self.console.verbose = verbose
@@ -69,11 +58,179 @@ class Clustering:
     @property
     def tool(self, ):
         return {
-            'dbscan': skdbscan(eps=self.dbscan_eps, min_samples=self.dbscan_min_spl),
-            'birch': skbirch(threshold=self.birch_thres, n_clusters=None),
-            'hdbscan': skhdbscan(min_samples=self.hdbscan_min_spl),
-            'aprop': skaprop(preference=self.aprop_preference, random_state=self.aprop_random_state),
+            'dbscan': skdbscan(
+                eps=getattr(self, 'dbscan_eps', None),
+                min_samples=getattr(self, 'dbscan_min_spl', None),
+            ),
+            'birch': skbirch(
+                threshold=getattr(self, 'birch_thres', None),
+                n_clusters=getattr(self, 'birch_n_clusters', None),
+            ),
+            'aprop': skaprop(
+                preference=getattr(self, 'aprop_preference', None),
+                random_state=getattr(self, 'aprop_random_state', None)
+            ),
+            'hdbscan': skhdbscan(
+                min_samples=getattr(self, 'hdbscan_min_spl', None)
+            ),
         }
+
+    @Console.vignette()
+    def clustering(
+            self,
+            connected_components: Dict[int, List[str]],
+            graph_adj: Dict[str, List[str]],
+            int_to_umi_dict: Dict[str, str],
+            df_umi_uniq_val_cnt=None,
+    ):
+        """
+        参照 dfclusters() 的逐 CC 流程（不用 pandas）：
+          - 对每个 CC：取节点 -> UMI -> onehot，调用 self.tool[self.clustering_method] 聚类
+          - 整理为子簇列表，选代表，生成 assigned 与 clusters
+          - apv 为该 CC 子图的边列表（与 dfclusters 一致）
+        返回：
+          assigned_all, {
+            'count': 去重簇数,
+            'clusters': { 'cc_0': {'node_<rep>': [rep, ...]}, ... },
+            'apv':      { 'cc_0': [[u,v], ...], ... }
+          }
+        """
+        clustering_ins = self.tool[self.clustering_method]
+
+        clusters_all: Dict[str, Dict[str, List[str]]] = {}
+        apv_all: Dict[str, List[List[str]]] = {}
+        assigned_all: Dict[str, str] = {}
+
+        # 可能是 pandas.Series；统一成 dict 的 getter
+        def _count_of(node: str) -> int:
+            if df_umi_uniq_val_cnt is None:
+                return 0
+            try:
+                # 支持 Series/Dict 两类
+                return int(df_umi_uniq_val_cnt[node])
+            except Exception:
+                return 0
+
+        cc_items = list(connected_components.items())
+        with tqdm(
+                total=len(cc_items),
+                desc=f"[{self.clustering_method}] CCs",
+                unit="cc",
+                position=0,
+                leave=True,
+                dynamic_ncols=True,
+        ) as p_cc:
+            for i, cc_nodes in cc_items:
+                p_cc.set_postfix_str(f"cc={i} nodes={len(cc_nodes)}")
+                cc_key = f"cc_{i}"
+
+                cc_sub, apv_sub, assigned_sub = self.clustering_(
+                    cc=cc_nodes,
+                    graph_adj=graph_adj,
+                    int_to_umi_dict=int_to_umi_dict,
+                    clustering_ins=clustering_ins,
+                    count_getter=_count_of,
+                    _tqdm_position=1,
+                )
+
+                clusters_all[cc_key] = cc_sub
+                apv_all[cc_key] = apv_sub
+                assigned_all.update(assigned_sub)
+
+                p_cc.update(1)
+
+        dedup_count = sum(len(v) for v in clusters_all.values())
+
+        return {
+            "count": dedup_count,
+            "clusters": clusters_all,
+            "apv": apv_all,
+            "assigned": assigned_all,
+        }
+
+    @Console.vignette()
+    def clustering_(
+            self,
+            cc: List[str],
+            graph_adj: Dict[str, List[str]],
+            int_to_umi_dict: Dict[str, str],
+            clustering_ins,
+            count_getter=lambda _: 0,
+            _tqdm_position=1,
+    ) -> Tuple[Dict[str, List[str]], List[List[str]], Dict[str, str]]:
+        """
+        单个 CC 的核心实现（参照 dfclusters，但去掉 pandas）：
+          1) 子图邻接 -> 节点序
+          2) 节点 UMI -> onehot 作为特征
+          3) 用 self.tool[...] 的聚类器 .fit(onehot) 获取 labels_
+          4) labels -> 子簇（label==-1 作为 singleton）
+          5) 每簇选代表（count 最大，tie 按字典序），生成 clusters 与 assigned
+          6) apv = CC 子图边列表
+        """
+        # 1) /*** graph_cc_adj ***/
+        graph_cc_adj = self.refkit.graph_cc_adj(cc, graph_adj)
+        nodes = list(graph_cc_adj.keys())
+
+        # 2) /*** onehot ***/
+        onehot_2d = []
+        with tqdm(
+                total=len(nodes),
+                desc="  ↳ UMI → onehot encodings",
+                unit="node",
+                position=_tqdm_position,
+                leave=False,
+                dynamic_ncols=True,
+        ) as p_enc:
+            for n in nodes:
+                onehot_2d.append(list(self.refkit.onehot(umi=int_to_umi_dict[n])))
+                p_enc.update(1)
+
+        # 3) /*** call clustering method ***/
+        tqdm.write(f"  ↳ [{getattr(self, 'clustering_method', '?')}] fitting on {len(nodes)} nodes.")
+        labels = clustering_ins.fit(onehot_2d).labels_.tolist()
+        tqdm.write(f"  ↳ [{getattr(self, 'clustering_method', '?')}] fit done. final labels={labels}")
+
+        # 4) /*** treat -1 (means noise) as separate cluster, singleton  ***/
+        lab2members: Dict[int, List[str]] = defaultdict(list)
+        for n, lab in zip(nodes, labels):
+            lab2members[lab].append(n)
+        subclusters: List[List[str]] = []
+        for lab, mems in lab2members.items():
+            if lab == -1:
+                for n in mems:
+                    subclusters.append([n])
+            else:
+                subclusters.append(mems)
+
+        # 5) repr node + clusters + assigned
+        cc_sub: Dict[str, List[str]] = {}
+        assigned_sub: Dict[str, str] = {}
+
+        with tqdm(
+                total=len(subclusters),
+                desc="  ↳ assemble clusters",
+                unit="sub",
+                position=_tqdm_position,
+                leave=False,
+                dynamic_ncols=True,
+        ) as p_asm:
+            for clust in subclusters:
+                # repr node：highest count in a cluster，
+                rep = sorted(clust, key=lambda n: (-count_getter(n), n))[0]
+                key = f"node_{rep}"
+                # repr node in the first pos，others in descending order
+                members_sorted = sorted(clust, key=lambda x: (x != rep, x))
+                cc_sub[key] = members_sorted
+                for n in clust:
+                    if n != rep:
+                        assigned_sub[n] = rep
+                p_asm.update(1)
+
+        # 6) apv：子图边列表（与 dfclusters 相同）
+        edge_list = self.adj_to_edge_list(graph=graph_cc_adj)
+        apv_edges = [list(e) for e in edge_list]
+
+        return cc_sub, apv_edges, assigned_sub
 
     def adj_to_edge_list(self, graph):
         self.netadj.graph = graph
@@ -81,11 +238,20 @@ class Clustering:
 
     def tovertex(self, x):
         clustering_cluster_arr = x['clustering_clusters'][0]
+        # print(clustering_cluster_arr)
         cc_vertex_arr = x['cc_vertices']
+        # print(cc_vertex_arr)
         uniq_cls_arr = np.unique(clustering_cluster_arr)
+        # print(uniq_cls_arr)
         clusters = [[] for _ in range(len(uniq_cls_arr))]
+        # print(clusters)
         for i, cls in enumerate(clustering_cluster_arr):
-            clusters[cls].append(cc_vertex_arr[i])
+            # print(cls)
+            if cls != -1:
+                clusters[cls].append(cc_vertex_arr[i])
+            else:
+                clusters.append([cc_vertex_arr[i]])
+        clusters = [sublist for sublist in clusters if sublist]
         return clusters
 
     def dfclusters(
@@ -141,6 +307,7 @@ class Clustering:
         # Name: onehot, dtype: object
 
         clustering_ins = self.tool[self.clustering_method]
+
         df_ccs['clustering_clusters'] = df_ccs['onehot'].apply(lambda onehot_2d_arrs: [
             clustering_ins.fit(onehot_2d_arrs).labels_
         ])
@@ -369,24 +536,24 @@ if __name__ == "__main__":
     # print("Counts sorted:\n{}".format(node_val_sorted))
 
     ### @@ data from mine
-    # graph_adj = {
-    #     'A': ['B', 'C', 'D'],
-    #     'B': ['A', 'C'],
-    #     'C': ['A', 'B'],
-    #     'D': ['A', 'E', 'F'],
-    #     'E': ['D', 'G'],
-    #     'F': ['D', 'G'],
-    #     'G': ['E', 'F'],
-    # }
     graph_adj = {
         'A': ['B', 'C', 'D'],
         'B': ['A', 'C'],
         'C': ['A', 'B'],
-        'D': ['A',],
-        'E': ['G'],
-        'F': ['G'],
+        'D': ['A', 'E', 'F'],
+        'E': ['D', 'G'],
+        'F': ['D', 'G'],
         'G': ['E', 'F'],
     }
+    # graph_adj = {
+    #     'A': ['B', 'C', 'D'],
+    #     'B': ['A', 'C'],
+    #     'C': ['A', 'B'],
+    #     'D': ['A'],
+    #     'E': ['G'],
+    #     'F': ['G'],
+    #     'G': ['E', 'F'],
+    # }
     print("An adjacency list of a graph:\n{}".format(graph_adj))
 
     node_val_sorted = pd.Series({
@@ -400,25 +567,27 @@ if __name__ == "__main__":
     })
     print("Counts sorted:\n{}".format(node_val_sorted))
 
+    ccs = umimonoclust().cc(graph_adj=graph_adj)
+    print("Connected components:\n{}".format(ccs))
+
     int_to_umi_dict = {
         'A': 'AGATCTCGCA',
         'B': 'AGATCCCGCA',
         'C': 'AGATCACGCA',
-        'D': 'AGATCGCGCA',
-        'E': 'AGATCGCGGA',
-        'F': 'AGATCGCGTA',
-        'G': 'TGATCGCGAA',
+        'D': 'AGATCTGGCA',
+        'E': 'AGATCTGGGA',
+        'F': 'AGATCTGGCT',
+        'G': 'AGATCTGGGT',
     }
-
-    ccs = umimonoclust().cc(graph_adj=graph_adj)
-    print("Connected components:\n{}".format(ccs))
+    print("int_to_umi_dict:\n{}".format(ccs))
 
     p = Clustering(
         clustering_method='dbscan',
-        dbscan_eps=1.5,
+        dbscan_eps=1.4,
         dbscan_min_spl=1,
-        birch_thres=1.8,
-        birch_n_clusters=None,
+        # birch_thres=1.8,
+        # birch_n_clusters=None,
+        verbose=False, # True False
     )
 
     df = p.dfclusters(
@@ -431,18 +600,31 @@ if __name__ == "__main__":
     df_decomposed = p.decompose(list_nd=df['clusters'].values)
     print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
 
-    # df = p.dfclusters_adj_mat(
-    #     connected_components=ccs,
-    #     graph_adj=graph_adj,
-    # )
-    # print(df)
-    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
-    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+    res = p.clustering(
+        connected_components=ccs,
+        graph_adj=graph_adj,
+        int_to_umi_dict=int_to_umi_dict,
+        df_umi_uniq_val_cnt=node_val_sorted,
+    )
 
-    # df = p.dfclusters_cc_all_node_umis(
-    #     graph_adj=graph_adj,
-    #     int_to_umi_dict=int_to_umi_dict,
-    # )
-    # print(df)
-    # df_decomposed = p.decompose(list_nd=df['clusters'].values)
-    # print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+    print("assigned:", res["assigned"])
+    print("count:", res["count"])
+    print("clusters:", res['clusters'])
+    print("apv:", res["apv"])
+
+
+    df = p.dfclusters_adj_mat(
+        connected_components=ccs,
+        graph_adj=graph_adj,
+    )
+    print(df)
+    df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    print("deduplicated clusters decomposed:\n{}".format(df_decomposed))
+
+    df = p.dfclusters_cc_all_node_umis(
+        graph_adj=graph_adj,
+        int_to_umi_dict=int_to_umi_dict,
+    )
+    print(df)
+    df_decomposed = p.decompose(list_nd=df['clusters'].values)
+    print("deduplicated clusters decomposed:\n{}".format(df_decomposed))

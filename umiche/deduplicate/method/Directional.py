@@ -7,7 +7,6 @@ __email__="jianfeng.sunmt@gmail.com"
 
 
 import sys
-import pandas as pd
 sys.setrecursionlimit(15000000)
 from umiche.util.Console import Console
 
@@ -54,51 +53,56 @@ class Directional:
         cc_subs = {}
         cc_apvs = {}
         cc_disapvs = {}
+        assigned = {}
         for i, cc in connected_components.items():
-
-            cc_sub, apv_node_nbr, disapv_node_nbr = self.umi_tools_(
+            cc_sub, apv_node_nbr, disapv_node_nbr, assigned_sub = self.umi_tools_(
                 df_umi_uniq_val_cnt=df_umi_uniq_val_cnt,
                 cc=cc,
                 graph_adj=graph_adj,
             )
-            from umiche.deduplicate.method.ReformKit import ReformKit as refkit
+            # from umiche.deduplicate.method.ReformKit import ReformKit as refkit
+            # import pandas as pd
             # print([*cc_sub.values()])
             # if len([*cc_sub.values()]) > 1:
             #     print([*cc_sub.values()])
                 # print(graph_adj)
 
-            if cc == [23, 41, 27, 62, 85, 48, 58, 81, 28, 46, 71, 45, 38, 39, 64, 49]:
-            # if cc == [69, 72, 838, 1221, 97, 210, 249, 315, 324, 374, 457, 658, 727, 760, 771, 933, 1073, 1126, 1198, 1260, 1271, 1307, 1498, 1505, 1541, 1563, 914, 946, 1083, 684, 1288, 1543, 822, 1174, 119, 290, 303, 1315, 204, 218, 289, 302, 404, 545, 586, 633, 674, 709, 720, 802, 884, 943, 980, 1355, 1436, 1488, 1553, 786, 1549, 537, 867, 1649, 1255, 701, 1080, 347, 251]:
-                print(cc)
-                print(cc_sub)
-                print([*cc_sub.values()])
-
-                from umiche.path import to
-                df_umi_uniq_val_cnt.to_csv(to('data/simu/mclumi/seq_errs/umi_uniq_val_cnt.txt'), sep='\t', index=True, header=None)
-                print('break')
-                break
+            # if cc == [23, 41, 27, 62, 85, 48, 58, 81, 28, 46, 71, 45, 38, 39, 64, 49]:
+            # # if cc == [69, 72, 838, 1221, 97, 210, 249, 315, 324, 374, 457, 658, 727, 760, 771, 933, 1073, 1126, 1198, 1260, 1271, 1307, 1498, 1505, 1541, 1563, 914, 946, 1083, 684, 1288, 1543, 822, 1174, 119, 290, 303, 1315, 204, 218, 289, 302, 404, 545, 586, 633, 674, 709, 720, 802, 884, 943, 980, 1355, 1436, 1488, 1553, 786, 1549, 537, 867, 1649, 1255, 701, 1080, 347, 251]:
+            #     print(cc)
+            #     print(cc_sub)
+            #     print([*cc_sub.values()])
+            #
+            #     from umiche.path import to
+            #     df_umi_uniq_val_cnt.to_csv(to('data/simu/mclumi/seq_errs/umi_uniq_val_cnt.txt'), sep='\t', index=True, header=None)
+            #     print('break')
+            #     break
             # print(cc_sub)
             cc_sub_cnt.append(len(cc_sub))
             cc_subs['cc_' + str(i)] = cc_sub
             cc_apvs['cc_' + str(i)] = apv_node_nbr
             cc_disapvs['cc_' + str(i)] = disapv_node_nbr
+            assigned.update(assigned_sub)
         # print(sum(cc_sub_cnt))
         # print(cc_subs)
         # print(cc_apvs)
         # print(cc_disapvs)
+        # print(assigned)
+        dedup_cnt = sum(cc_sub_cnt)
         if self.heterogeneity:
             return (
-                sum(cc_sub_cnt),
+                dedup_cnt,
                 cc_subs,
                 cc_apvs,
                 cc_disapvs,
             )
         else:
             return {
-                "count": sum(cc_sub_cnt),
+                "count": dedup_cnt,
                 "clusters": cc_subs,
                 "apv": cc_apvs,
                 "disapv": cc_disapvs,
+                "assigned": assigned,
             }
 
     def umi_tools_(
@@ -128,7 +132,9 @@ class Directional:
         -------
 
         """
-        cc_node_sorted = df_umi_uniq_val_cnt.loc[df_umi_uniq_val_cnt.index.isin(cc)].sort_values(ascending=False).to_dict()
+        cc_node_sorted = df_umi_uniq_val_cnt.loc[
+            df_umi_uniq_val_cnt.index.isin(cc)
+        ].sort_values(ascending=False).to_dict()
         ### @@ cc_umi_sorted
         # {'A': 456, 'E': 90, 'D': 72, 'B': 2, 'C': 2, 'F': 1}
         nodes = [*cc_node_sorted.keys()]
@@ -142,6 +148,7 @@ class Directional:
         cc_sub = {}
         apv_node_nbr = {}
         disapv_node_nbr = {}
+        assigned_sub = {}
         while nodes:
             e = nodes.pop(0)
             if e in node_set_remaining:
@@ -157,6 +164,12 @@ class Directional:
                 cc_sub['node_' + str(e)] = list(seen)
                 apv_node_nbr['node_' + str(e)] = apv
                 disapv_node_nbr['node_' + str(e)] = disapv
+
+                # ## /*** assigned for sub ***/
+                for n in seen:
+                    if n != e:
+                        assigned_sub[n] = e
+
                 node_set_remaining = node_set_remaining - seen
                 self.console.print('remaining: {}'.format(node_set_remaining))
                 self.console.print('disapproval {}'.format(disapv))
@@ -178,7 +191,7 @@ class Directional:
         # ...
         # {'node_59': [[133, 194]]}
         # {'node_63': []}
-        return cc_sub, apv_node_nbr, disapv_node_nbr
+        return cc_sub, apv_node_nbr, disapv_node_nbr, assigned_sub
 
     def dfs(
             self,
@@ -328,3 +341,5 @@ if __name__ == "__main__":
     print(dedup_res['disapv'])
     # {'cc_0': {'node_A': [['A', 'B'], ['A', 'C']], 'node_D': [['D', 'F']], 'node_E': [['E', 'G']]}}
     # {'cc_0': {'node_A': [['B', 'C'], ['A', 'D']], 'node_D': [['D', 'E'], ['F', 'G']], 'node_E': []}}
+
+    print(dedup_res['assigned'])
