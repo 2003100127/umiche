@@ -7,7 +7,7 @@ __email__ = "jianfeng.sunmt@gmail.com"
 
 
 
-from umiche.trim.Template import Template
+from umiche.trimming.Template import Template
 
 
 def template(
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         },
         'fastq': {
             'fpn': to('data/simu/mclumi/seq_errs/permute_0/seq_err_5.fastq.gz'),
-            'trimmed_fpn': to('data/simu/mclumi/seq_errs/permute_0/seq_err_5_trimmed.fastq.gz'),
+            'trimmed_fpn': to('data/simu/mclumi/seq_errs/permute_0/seq_err_5_trimmed-1.fastq.gz'),
         },
     }
     print(template(params=params))

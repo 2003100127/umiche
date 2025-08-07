@@ -7,7 +7,7 @@ __email__="jianfeng.sunmt@gmail.com"
 
 
 import argparse
-from umiche.trim.Template import Template as umitrim
+from umiche.trimming.Template import Template as umitrim
 from umiche.util.Console import Console
 
 

@@ -9,10 +9,10 @@ __email__="jianfeng.sunmt@gmail.com"
 import pandas as pd
 from umiche.fastq.Reader import Reader as rfastq
 from umiche.fastq.Writer import Writer as wfastq
-from umiche.trim.Filter import Filter
-from umiche.trim.BCRuleOut import bcRuleOut as bcro
-from umiche.trim.UMIRuleOut import umiRuleOut as umiro
-from umiche.trim.SeqRuleOut import seqRuleOut as seqro
+from umiche.trimming.Filter import Filter
+from umiche.trimming.BCRuleOut import bcRuleOut as bcro
+from umiche.trimming.UMIRuleOut import umiRuleOut as umiro
+from umiche.trimming.SeqRuleOut import seqRuleOut as seqro
 from umiche.util.Console import Console
 
 
