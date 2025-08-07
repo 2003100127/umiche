@@ -7,18 +7,19 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-numpy = "^2.0.1"
-pandas = "^2.2.2"
-pyfastx = "^2.1.0"
+numpy = "^2.3.2"
+pandas = "^2.3.1"
+pyfastx = "^2.2.0"
 markov-clustering = "*" # anyversion if using 0.0.6.dev0, it will conflict by searching 0.0.6 and omitting .dev0
-pyyaml = "^6.0.1"
-scikit-learn = "^1.5.1"
-biopython = "^1.84"
-scipy = "^1.14.0"
-networkx = "^3.3"
-matplotlib = "^3.9.1"
+pyyaml = "^6.0.2"
+scikit-learn = "^1.7.1"
+biopython = "^1.85"
+scipy = "^1.16.1"
+networkx = "^3.5"
 seaborn = "^0.13.2"
-pyfiglet = "0.8.post1"
+pyfiglet = "^1.0.3"
+matplotlib = "^3.10.5"
+tqdm = "^4.67.1"
 
 
 [build-system]
