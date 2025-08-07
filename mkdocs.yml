@@ -5,7 +5,7 @@ repo_name: jsun/umiche
 
 
 theme:
-#  logo: img/umiche-logo.png
+  logo: img/umiche-logo.png
   name: material
   features:
     - content.code.copy
@@ -13,12 +13,14 @@ theme:
     - content.tabs.link
     - content.code.annotate
     - navigation.tabs
-    - navigation.instant
-    - navigation.expand
-    - navigation.top
+    - navigation.tabs.sticky
     - navigation.path
+    - navigation.instant
+#    - navigation.expand
+    - toc.integrate
+    - navigation.sections
+    - navigation.top
     - navigation.footer
-#    - toc.integrate
     - content.footnote.tooltips
 
   icon:
@@ -74,6 +76,12 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
 
+  # diagrams
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 extra:
   consent:

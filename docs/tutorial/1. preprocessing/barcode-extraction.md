@@ -1,4 +1,66 @@
-Most of sequencing short-read technologies produce sequencing reads in a fixed form. UMI segment can be counted from the beginning of read 1. For these fix-length reads, we designed a trimming method for extracting UMIs, barcodes, or other read components in bulk.
+Most sequencing short-read technologies arrange different components of sequencing reads in a fixed form. Cell barcodes and molecular barcodes (i.e., UMIs) are demarcated by certain segments of coordinates in **read 1**. For these fix-length reads, we designed a trimming method for extracting UMIs, barcodes, or other read components in bulk.
+
+## Central aim
+
+``` mermaid
+graph LR
+  A[read sequence] --> |barcodes| B[read name];
+  B --- |FastQ file| A;
+```
+
+[//]: # (``` mermaid)
+
+[//]: # (stateDiagram-v2)
+
+[//]: # (    [*] --> FastQ_file)
+
+[//]: # (    FastQ_file --> read_sequence)
+
+[//]: # (    read_sequence --> read_name)
+
+[//]: # ()
+[//]: # (    read_name --> [*])
+
+[//]: # (```)
+
+## Analogy with other tools
+
+### 1) UMI-tools
+
+UMI-tools uses `--bc-pattern` as an attribute to tell its built-in modules `extract` and `whitelist` where to obtain cell barcode and molecular barcode in sequencing reads.
+
+!!! danger "Mission"
+
+    Its mission is to place cell/molecular barcodes from read sequences to read names in the `.fastq` file.
+
+The barcode composition is defined using either:
+
+1.  _Positional notation_ (start/end coordinates) or
+
+2.  _Regular expressions_ (pattern matching) to specify the sequence pattern:
+
+    1.  **N** → UMI positions, 
+
+    2.  **C** → Cell barcode positions, 
+    
+    3.  **X** → Non-barcode/non-UMI bases (retained in read)."
+
+
+
+
+    :material-file-key: `Attribute`
+    ``` shell
+    --bc-pattern
+    ```
+    
+    :material-view-module: `Module`
+    ``` shell
+    extract
+    whitelist
+    ```
+
+## `trim` in UMIche
+
 
 Given a FastQ file, We can specifically extract UMIs with the code below.
 
