@@ -1,179 +1,206 @@
-"""
-The original umitools implementation from the Weng lab parses UMI from read names.
-Modern sequencing/alignment tools now typically store UMI in the MB (Mapped-Barcode) tag
-(or tags like RX/UB/UR). This version exclusively uses the MB tag, abandoning read-name parsing.
+__version__ = "v1.0"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
 
-Raises ValueError if MB is missing, preventing silent fallback to empty strings as UMI.
+from typing import Iterable, Dict, List, Tuple, Set
 
-PCR-duplicate criteria remain unchanged:
-chrom + read5 + template_length + UMI (+ PE mate read).
-
-Deduplication results now use a custom FU:i tag instead of flag 0x400:
-
-FU:i:1 → duplicate
-
-FU:i:0 → unique.
-"""
-
-import collections
 import os
-import sys
-import time
-from multiprocessing import Pool
-from pathlib import Path
-from typing import Dict, List, Tuple, Set
-
-import pysam
-
-__all__ = ["UmiDeduplicator", "deduplicate"]
+import pandas as pd
+import pysam as ps
 
 
-class RsqRunStats(dict):
-    def __init__(self):
-        super().__init__(n_read=0, n_duplicate=0, n_non_duplicate=0)
+class UMItoolsReplica:
+    """
+    Weng：
+      - compute_duplicates_from_df(df) -> Set[qname]
+      - compute_duplicates_from_chunks(chunk_iter) -> Set[qname]（内存友好）
+      - mark_and_merge(in_bam, dup_qnames) -> <prefix>.deumi.sorted.bam
+      - run_from_dataframe(df, in_bam) -> (out_bam, total, nondup, dup)
+      - run_from_chunks(chunk_iter, in_bam) -> (out_bam, total, nondup, dup)  ← 大文件推荐
 
-class UmiDeduplicator:
-    """Mark PCR duplicates using UMI stored in **`MB` tag** (string)."""
+    rule kept the same：
+      - Only check for duplicates on the leftmost mate (not is_reverse)
+      - read1： (pos, UMI, tlen)
+      - read2： str(pos) + UMI + str(tlen)
+      - The original implementation processes each chromosome individually;
+      - here the calculation can be done all at once/in blocks,
+      but the write back is still done by chromosome and merged to keep the product consistent
+    """
 
-    def __init__(
-        self,
-        bam_fpn: str | Path,
-        *,
-        n_proc: int = 8,
-        debug: bool = False,
-        count_locus: bool = False,
-    ) -> None:
-        self.bam_fpn = str(bam_fpn)
-        self.n_proc = max(1, n_proc)
-        self.debug = debug
-        self.count_locus = count_locus
-
-        self.stats = RsqRunStats()
-        self.clusters: Dict[Tuple[str, int, int, str], List[str]] = collections.defaultdict(list)
-        self.assigned: Dict[str, str] = {}
-        self.dedup_count = 0
-        self.output_bam: str | None = None
-
-    # ------------------------------------------------------------------
-    def _log(self, *msg):
-        if self.debug:
-            print(time.strftime("[%H:%M:%S]"), *msg, file=sys.stderr)
-
-    # ------------------------------------------------------------------
+    # @@ /*** ---- calc PCR duplicates using df ---- ***/
     @staticmethod
-    def _get_umi(read: pysam.AlignedSegment) -> str:
-        """Return UMI from `MB` tag; raise if missing."""
-        try:
-            return read.get_tag("MB")
-        except KeyError:
-            raise ValueError("Read is missing MB tag: " + read.query_name)
+    def compute_duplicates_by_chrom_from_df(df: pd.DataFrame) -> Dict[str, Set[str]]:
+        req = {"qname", "MB", "chrom", "pos", "tlen", "is_read1", "is_read2", "is_reverse"}
+        miss = req - set(df.columns)
+        if miss:
+            raise ValueError(f"DataFrame missing required columns: {miss}")
 
-    def _first_pass(self, bam: pysam.AlignmentFile, chrom: str):
-        r1_seen: Set[Tuple[int, str, int]] = set()
-        r2_seen: Set[Tuple[int, str, int]] = set()
-        dup_qnames: Set[str] = set()
-        counts_loc: Dict[str, int] = collections.Counter()
+        # Only keep records that match the reference (same behavior as fetch(reference=...)
+        df = df[df["chrom"].notna()].copy()
 
-        for read in bam.fetch(reference=chrom):
-            umi = self._get_umi(read)
-            read5 = read.reference_start
-            tlen = read.template_length if read.template_length >= 0 else -read.template_length
-            key = (read5, umi, tlen)
-            if not read.is_reverse and read.is_read1:
-                if key in r1_seen:
-                    dup_qnames.add(read.query_name)
+        dup_by_chrom: Dict[str, Set[str]] = {}
+        for chrom, sub in df.groupby("chrom", sort=False):
+            dups: Set[str] = set()
+            # R1: key = (pos, UMI, tlen)
+            r1 = sub[(~sub["is_reverse"]) & (sub["is_read1"])]
+            if not r1.empty:
+                dup_mask = r1.duplicated(["pos", "MB", "tlen"], keep="first")
+                dups.update(r1.loc[dup_mask, "qname"].tolist())
+            # R2: key = str(pos)+UMI+str(tlen)
+            r2 = sub[(~sub["is_reverse"]) & (sub["is_read2"])]
+            if not r2.empty:
+                k = (r2["pos"].astype(str) + r2["MB"] + r2["tlen"].astype(str))
+                dup_mask = k.duplicated(keep="first")
+                dups.update(r2.loc[dup_mask, "qname"].tolist())
+            dup_by_chrom[chrom] = dups
+        return dup_by_chrom
+
+    # @@ /*** ---- calc PCR duplicates using chunks ---- ***/
+    @staticmethod
+    def compute_duplicates_by_chrom_from_chunks(chunks: Iterable[pd.DataFrame]) -> Dict[str, Set[str]]:
+        seen_r1: Dict[str, Set[Tuple[int, str, int]]] = {}  # chrom -> set of (pos, UMI, tlen)
+        seen_r2: Dict[str, Set[str]] = {}  # chrom -> set of f"{pos}{UMI}{tlen}"
+        dup_by_chrom: Dict[str, Set[str]] = {}
+
+        for df in chunks:
+            req = {"qname", "MB", "chrom", "pos", "tlen", "is_read1", "is_read2", "is_reverse"}
+            miss = req - set(df.columns)
+            if miss:
+                raise ValueError(f"Chunk missing required columns: {miss}")
+
+            # Only keep the matched records
+            df = df[df["chrom"].notna()]
+            if df.empty:
+                continue
+
+            # R1
+            r1 = df[(~df["is_reverse"]) & (df["is_read1"])]
+            for qn, chrom, pos, umi, tlen in zip(
+                    r1["qname"], r1["chrom"].astype(str), r1["pos"], r1["MB"], r1["tlen"]
+            ):
+                S1 = seen_r1.setdefault(chrom, set())
+                D = dup_by_chrom.setdefault(chrom, set())
+                key = (int(pos), str(umi), int(tlen))
+                if key in S1:
+                    D.add(qn)
                 else:
-                    r1_seen.add(key)
-            elif not read.is_reverse and read.is_read2:
-                if key in r2_seen:
-                    dup_qnames.add(read.query_name)
+                    S1.add(key)
+
+            # R2
+            r2 = df[(~df["is_reverse"]) & (df["is_read2"])]
+            for qn, chrom, pos, umi, tlen in zip(
+                    r2["qname"], r2["chrom"].astype(str), r2["pos"], r2["MB"], r2["tlen"]
+            ):
+                S2 = seen_r2.setdefault(chrom, set())
+                D = dup_by_chrom.setdefault(chrom, set())
+                key = f"{int(pos)}{str(umi)}{int(tlen)}"
+                if key in S2:
+                    D.add(qn)
                 else:
-                    r2_seen.add(key)
+                    S2.add(key)
 
-            self.clusters[(chrom, read5, tlen, umi)].append(read.query_name)
-            if self.count_locus:
-                counts_loc[f"{read5},{tlen}"] += 1
+        # Make sure all occurrences of chrom are collected
+        return {chrom: dup_by_chrom.get(chrom, set()) for chrom in set(list(seen_r1.keys()) + list(seen_r2.keys()) + list(dup_by_chrom.keys()))}
 
-        return dup_qnames, counts_loc
+    # --------- Mark and merge: write back using the original BAM (keep format/header information) ----------
+    @staticmethod
+    def _merge_parts(infile: str, refs: List[str]) -> str:
+        prefix = infile[:-4] if infile.endswith(".bam") else infile
+        out_bam = f"{prefix}.deumi.sorted.bam"
 
-    def _process_chrom(self, chrom: str):
-        self._log(f"chromosome {chrom} … start")
-        bam = pysam.AlignmentFile(self.bam_fpn, "rb")
-        dup_qnames, counts_loc = self._first_pass(bam, chrom)
+        tmpl = ps.AlignmentFile(infile, "rb")
+        out = ps.AlignmentFile(out_bam, "wb", template=tmpl)
+        tmpl.close()
+
+        for chrom in sorted(refs):
+            part = f"{infile}.{chrom}.bam"
+            ps.index(part)
+            bam = ps.AlignmentFile(part, "rb")
+            for r in bam.fetch(until_eof=True):
+                out.write(r)
+            bam.close()
+            for p in (part, part + ".bai"):
+                try: os.remove(p)
+                except FileNotFoundError: pass
+
+        out.close()
+        ps.index(out_bam)
+        return out_bam
+
+    @staticmethod
+    def _count_total_and_nondub(bam_path: str) -> Tuple[int, int]:
+        total = nondub = 0
+        bam = ps.AlignmentFile(bam_path, "rb")
+        for r in bam.fetch(until_eof=True):
+            total += 1
+            if (r.flag & 0x400) == 0:
+                nondub += 1
+        bam.close()
+        return total, nondub
+
+    @staticmethod
+    def mark_and_merge(in_bam: str, dup_by_chrom: Dict[str, Set[str]]) -> Tuple[str, int, int, int]:
+        bam = ps.AlignmentFile(in_bam, "rb")
+        if not bam.has_index():
+            ps.index(in_bam)
+        refs = list(bam.references)
         bam.close()
 
-        bam = pysam.AlignmentFile(self.bam_fpn, "rb")
-        tmp_bam_fpn = f"{self.bam_fpn}.{chrom}.bam"
-        out = pysam.AlignmentFile(tmp_bam_fpn, "wb", template=bam)
-        dup_count = 0
-        for read in bam.fetch(reference=chrom):
-            is_dup = read.query_name in dup_qnames
-            read.set_tag("FU", 1 if is_dup else 0, value_type="i", replace=True)
-            if is_dup:
-                dup_count += 1
-            out.write(read)
-        out.close(); bam.close()
+        # Chromosome-by-chromosome: only mark the duplicate qnames of this chromosome
+        for chrom in refs:
+            dup_q = dup_by_chrom.get(chrom, set())
+            inb = ps.AlignmentFile(in_bam, "rb")
+            out = ps.AlignmentFile(f"{in_bam}.{chrom}.bam", "wb", template=inb)
+            for read in inb.fetch(reference=chrom):
+                if read.query_name in dup_q:
+                    read.flag = read.flag | 0x400
+                out.write(read)
+            inb.close()
+            out.close()
 
-        if self.count_locus:
-            with open(f"{self.bam_fpn}.{chrom}.loc_count", "w") as fh:
-                for loc, cnt in counts_loc.items():
-                    fh.write(f"{chrom}\t{loc}\t{cnt}\n")
+        out_bam = UMItoolsReplica._merge_parts(in_bam, refs)
+        total, nondup = UMItoolsReplica._count_total_and_nondub(out_bam)
+        return out_bam, total, nondup, total - nondup
 
-        self._log(f"chromosome {chrom} … done")
-        return tmp_bam_fpn, dup_count
+    # ---- End-to-end entry (changed to flow by chromosome results) ----
+    def run_from_dataframe(self, df_bam: pd.DataFrame, in_bam_path: str):
+        dup_by_chrom = self.compute_duplicates_by_chrom_from_df(df_bam)
+        return self.mark_and_merge(in_bam_path, dup_by_chrom)
 
-    def run(self):
-        t0 = time.time()
-        if not Path(f"{self.bam_fpn}.bai").exists():
-            pysam.index(self.bam_fpn)
-
-        chromosomes = pysam.AlignmentFile(self.bam_fpn, "rb").references
-        with Pool(self.n_proc) as pool:
-            results = pool.map(self._process_chrom, chromosomes)
-
-        merged_fpn = f"{Path(self.bam_fpn).with_suffix('')}.fu_tagged.bam"
-        template_bam = pysam.AlignmentFile(self.bam_fpn, "rb")
-        merged = pysam.AlignmentFile(merged_fpn, "wb", template=template_bam)
-        template_bam.close()
-
-        for tmp_bam_fpn, dup_count in results:
-            self.dedup_count += dup_count
-            tmp_bam = pysam.AlignmentFile(tmp_bam_fpn, "rb")
-            for read in tmp_bam.fetch(until_eof=True):
-                merged.write(read)
-            tmp_bam.close()
-            os.remove(tmp_bam_fpn)
-            if Path(f"{tmp_bam_fpn}.bai").exists():
-                os.remove(f"{tmp_bam_fpn}.bai")
-
-        merged.close(); pysam.index(merged_fpn)
-        self.output_bam = merged_fpn
-        self.stats["n_duplicate"] = self.dedup_count
-        self.stats["n_read"] = sum(len(v) for v in self.clusters.values())
-        self.stats["n_non_duplicate"] = self.stats["n_read"] - self.dedup_count
-        self._log(f"finished in {time.time() - t0:.1f}s – duplicates: {self.dedup_count}")
-        return self
-
-def deduplicate(bam_fpn: str | Path, **kwargs):
-    """Run deduplication; return `(clusters, dup_count, assigned)`.
-
-    Output BAM is `<input>.fu_tagged.bam` with `FU` duplicate tags.
-    """
-    d = UmiDeduplicator(bam_fpn, **kwargs).run()
-    return d.clusters, d.dedup_count, d.assigned
+    def run_from_chunks(self, chunk_iter: Iterable[pd.DataFrame], in_bam_path: str):
+        dup_by_chrom = self.compute_duplicates_by_chrom_from_chunks(chunk_iter)
+        return self.mark_and_merge(in_bam_path, dup_by_chrom)
 
 
 if __name__ == "__main__":
-    from umiche.path import to
-    # samtools view /mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.bam | head -n 5
+    from umiche.bam.Reader import ReaderChunk
 
-    clusters, dedup_num, assigned = deduplicate(
-        bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.sorted.bam',
-        n_proc=12,
-        debug=True,
-    )
+    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam"
 
-    print("PCR duplicates:", dedup_num)
-    print("c:", clusters)
-    print(len(assigned))
-    print("", {k: assigned[k] for k in list(assigned)[:5]})
+    # 1) 大文件推荐: 分块DataFrame → 去重 → 写回
+    # chunk_iter = ReadChunk.iter_chunks(
+    #     bam_fpn,
+    #     chunk_size=2_000_000,
+    #     tag_whitelist=None,            # 例：["CB","MB","XF"]
+    #     project_cols=None,             # 默认 ReadChunk.DEFAULT_PROJECT_COLS
+    #     categorize=["chrom"]           # 可选
+    # )
+    # deduper = UMItoolsReplica()
+    # OUT_BAM, TOTAL, NONDUP, DUP = deduper.run_from_chunks(chunk_iter, IN_BAM)
+    # print(f"[DONE] wrote: {OUT_BAM}")
+    # print(f"[DONE] Total={TOTAL}, NonDup={NONDUP}, PCR_Duplicates={DUP}")
+
+    # 2) 小/中等数据：一次性DataFrame作输入
+    df_bam = ReaderChunk(
+        bam_fpn=bam_fpn,
+        bam_fields=None,
+        tag_whitelist=['MB'],
+        categorize=["chrom"],
+    ).todf(chunk_size=2_000_000)
+    print(df_bam)
+    OUT_BAM, TOTAL, NONDUP, DUP = UMItoolsReplica().run_from_dataframe(df_bam, bam_fpn)
+    print(f"[DONE] wrote: {OUT_BAM}")
+    print(f"[DONE] Total={TOTAL}, NonDup={NONDUP}, PCR_Duplicates={DUP}")
