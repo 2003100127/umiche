@@ -1,6 +1,13 @@
+__version__ = "v1.0"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
 
-
-import functools, os, pathlib, tempfile, pysam, shutil
+import functools
+import pathlib
+import shutil
 
 
 class Gadgetry:
@@ -49,7 +56,8 @@ class Gadgetry:
                     raise FileNotFoundError(f"Function {func.__name__} returned "
                                             f"{bam_path}, but the file does not exist.")
 
-                # ---------- 1. sort ----------
+                # /*** ---------- sort ---------- ***/
+                import pysam
                 if do_sort:
                     tmp_out = bam_path.with_suffix(".unsorted.bam") if replace else bam_path
                     if replace:
@@ -68,7 +76,7 @@ class Gadgetry:
                     if replace and not keep_tmp:
                         tmp_out.unlink()
 
-                # ---------- 2. index ----------
+                # /*** ---------- index ---------- ***/
                 final_path = bam_path if replace or not do_sort else bam_path.with_suffix(".sorted.bam")
                 if do_index:
                     index_args = ["-@", str(threads)]
