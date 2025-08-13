@@ -48,5 +48,6 @@ class Hamming:
 
         """
         if len(s1) != len(s2):
+            # raise ValueError("Hamming distance requires equal length strings.")
             return max(len(s1), len(s2))
         return sum(x != y for x, y in zip(s1, s2))
