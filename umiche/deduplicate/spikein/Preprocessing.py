@@ -41,9 +41,7 @@ class UMIcountPy:
     # @@ /*** -------------------- ***/
     @staticmethod
     def extract_spike_dat(
-        bam_path: str,
-        spikename: str = "g_diySpike4",
-        spikecontig: str = "diySpike",
+        df: pd.DataFrame,
         spikeUMI_start: Optional[int] = None,
         spikeUMI_end: Optional[int] = None,
         fixed_start_pos: Optional[int] = None,
@@ -56,78 +54,7 @@ class UMIcountPy:
         and compute HD1/HD2-corrected spUMIs (grouped within BC) — columns match R output:
         [contig, pos, CIGAR, seq, BC, QU, UX, UB, TSSseq, spikeUMI, seqAfterUMI, spikeUMI_hd1, spikeUMI_hd2].
 
-        Mirrors UMIcountR::extract_spike_dat logic & signature.
         """
-        # Read BAM
-        sam = pysam.AlignmentFile(bam_path, "rb")
-
-        # Iterate reads on spikecontig; filter GE tag == spikename
-        rows = []
-        for r in sam.fetch(spikecontig):
-            try:
-                ge = r.get_tag("GE")
-            except KeyError:
-                continue
-            if ge != spikename:
-                continue
-
-            # optional fixed start position (R uses 1-based pos; pysam is 0-based)
-            pos_1based = r.reference_start + 1
-            if fixed_start_pos is not None and pos_1based != fixed_start_pos:
-                continue
-
-            seq = r.query_sequence or ""
-            # tags
-            def _get(tag):
-                try:
-                    return r.get_tag(tag)
-                except KeyError:
-                    return ""
-
-            BC = _get("BC")
-            QU = _get("QU")
-            UX = _get("UX")
-            UB = _get("UB")
-
-            # UMIcountR filters internal reads for Smart-seq3: UX != ""
-            if UX == "":
-                continue
-
-            rows.append(
-                dict(
-                    contig=r.reference_name,
-                    pos=pos_1based,
-                    CIGAR=r.cigarstring or "",
-                    seq=seq,
-                    BC=BC,
-                    QU=QU,
-                    UX=UX,
-                    UB=UB,
-                )
-            )
-
-        if not rows:
-            return pd.DataFrame(columns=[
-                "contig",
-                "pos",
-                "CIGAR",
-                "seq",
-                "BC",
-                "QU",
-                "UX",
-                "UB",
-                "TSSseq",
-                "spikeUMI",
-                "seqAfterUMI",
-                "spikeUMI_hd1",
-                "spikeUMI_hd2"
-            ])
-
-        df = pd.DataFrame(rows)
-        print(1111)
-        print(df)
-        print(df.columns)
-
         # Extract spUMI
         TSSseq = []
         spikeUMI = []
@@ -304,16 +231,30 @@ class UMIcountPy:
 if __name__ == "__main__":
     bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/Smartseq3.TTACCTGCCAGATTCG.bam"
 
+    from umiche.bam.Reader import ReaderChunk
+    df = ReaderChunk(
+        bam_fpn=bam_fpn,
+        bam_fields=['contig', 'pos', 'CIGAR', 'seq'],
+        tag_whitelist=['BC', 'QU', 'UX', 'UB', 'GE'],
+        verbose=True,
+    ).todf(chunk_size=1_000_000)
+    print(df)
+    spikecontig = "diySpike"
+    spikename = "g_diySpike4"
+    df = df[df["UX"] != ""]
+    df = df[df["GE"] == spikename]
+    df = df.reset_index(drop=True)
+    df = df.drop("GE", axis=1)
+    print(df)
+
     # 1) extract spike data from BAM
     df_sp = UMIcountPy.extract_spike_dat(
-        bam_path=bam_fpn,
+        df=df,
         match_seq_before_UMI="GAGCCTGGGGGAACAGGTAGG",
         match_seq_after_UMI="CTCGGAGGAGAAA",
-        spikename="g_diySpike4",
-        spikecontig="diySpike",
     )
-    print(df_sp)
-    print(df_sp.columns)
+    # print(df_sp)
+    # print(df_sp.columns)
     # contig, pos, CIGAR, seq, BC, QU, UX, UB, TSSseq, spikeUMI, seqAfterUMI, spikeUMI_hd1, spikeUMI_hd2。:contentReference[oaicite:5]{index=5}
 
     # 2) overrepr spUMI filter plot
@@ -322,7 +263,6 @@ if __name__ == "__main__":
     # fig.savefig("/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/cumulative.png", dpi=300, bbox_inches='tight')
     # fig.show()
 
-    print(df_sp.groupby("BC")["UX"])
 
     # 3) directional-adjacency for Smart-seq3 UMI
     df_sp["UB_directional"] = (
@@ -334,7 +274,7 @@ if __name__ == "__main__":
             index=UX.index
         ))
     )
-    print(df_sp)
+    # print(df_sp)
     # # check if dedup
     # bc = df_sp["BC"].iloc[0]
     # before = df_sp.loc[df_sp["BC"] == bc, "UX"].nunique()
