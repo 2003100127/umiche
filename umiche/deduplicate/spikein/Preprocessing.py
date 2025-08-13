@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 import math
 
-import pysam
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,10 +32,6 @@ class UMIcountPy:
     """
 
     # @@ /*** -------------------- ***/
-    # UMI collapse / correction
-    # @@ /*** -------------------- ***/
-
-    # @@ /*** -------------------- ***/
     # Extract spike reads & spUMIs
     # @@ /*** -------------------- ***/
     @staticmethod
@@ -44,7 +39,6 @@ class UMIcountPy:
         df: pd.DataFrame,
         spikeUMI_start: Optional[int] = None,
         spikeUMI_end: Optional[int] = None,
-        fixed_start_pos: Optional[int] = None,
         match_seq_before_UMI: Optional[str] = None,
         match_seq_after_UMI: Optional[str] = None,
         spikeUMI_length: Optional[int] = None,
@@ -253,8 +247,8 @@ if __name__ == "__main__":
         match_seq_before_UMI="GAGCCTGGGGGAACAGGTAGG",
         match_seq_after_UMI="CTCGGAGGAGAAA",
     )
-    # print(df_sp)
-    # print(df_sp.columns)
+    print(df_sp)
+    print(df_sp.columns)
     # contig, pos, CIGAR, seq, BC, QU, UX, UB, TSSseq, spikeUMI, seqAfterUMI, spikeUMI_hd1, spikeUMI_hd2。:contentReference[oaicite:5]{index=5}
 
     # 2) overrepr spUMI filter plot
@@ -263,23 +257,33 @@ if __name__ == "__main__":
     # fig.savefig("/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/cumulative.png", dpi=300, bbox_inches='tight')
     # fig.show()
 
-
     # 3) directional-adjacency for Smart-seq3 UMI
     df_sp["UB_directional"] = (
         df_sp.groupby("BC")["UX"]
         .transform(lambda UX: pd.Series(
             ReformKit().return_corrected_umi(
-                UX.tolist(), ed_thres=1, collapse_mode="adjacency_directional"
+                umis=UX.tolist(),
+                ed_thres=1,
+                collapse_mode="adjacency_directional",
             ),
             index=UX.index
         ))
     )
-    # print(df_sp)
+    print(df_sp)
     # # check if dedup
-    # bc = df_sp["BC"].iloc[0]
-    # before = df_sp.loc[df_sp["BC"] == bc, "UX"].nunique()
-    # after = df_sp.loc[df_sp["BC"] == bc, "UB_directional"].nunique()
-    # print("Unique(UX) vs Unique(UB_directional) in BC =", bc, "->", before, after)
+    bc = df_sp["BC"].iloc[0]
+    print(df_sp["BC"].unique().shape)
+    print(df_sp["UX"].unique().shape)
+    print(df["UX"].unique().shape)
+    before = df_sp.loc[df_sp["BC"] == bc, "UX"].nunique()
+    after = df_sp.loc[df_sp["BC"] == bc, "UB_directional"].nunique()
+    print("Unique(UX) vs Unique(UB_directional) in BC =", bc, "->", before, after)
+
+    gp_df = df_sp.groupby(by=['spikeUMI'])
+    keys = gp_df.groups.keys()
+    for key in keys:
+        df_sub = gp_df.get_group(key)
+        print(df_sub['UB_directional'].unique().shape[0])
 
     # 4) subsample
     # sub = UMIcountPy.subsample_recompute(df_sp, mu_nSpikeUMI=100)

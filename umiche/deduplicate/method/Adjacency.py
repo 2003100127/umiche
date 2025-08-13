@@ -15,7 +15,7 @@ class Adjacency:
 
     def __init__(
             self,
-            verbose=True,
+            verbose=False,
     ):
         self.console = Console()
         self.console.verbose = verbose
