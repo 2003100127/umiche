@@ -6,10 +6,11 @@ __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
 from typing import Dict
+
 import re
 
-from umiche.util.Console import Console
 from umiche.bam.Gadgetry import Gadgetry
+from umiche.util.Console import Console
 
 
 class Tagging:
@@ -79,17 +80,17 @@ if __name__ == "__main__":
     # samtools view /mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.bam | head -n 5
     # python Trumicount.py --input-bam /mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.bam --cell-tag CB --umi-tag MB --gene-tag XF --threshold 2 --output-counts sample.counts.tsv --output-assigned sample.assigned.tsv
     p = Tagging(
-        # bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c.bam',
-        # sv_bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.bam',
+        bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c.bam',
+        sv_bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.bam',
 
-        bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.bam',
-        sv_bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam',
+        # bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.bam',
+        # sv_bam_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam',
 
         verbose=True,
     )
     print(p.add_from_header(
         tag_info={
-            # 'CB': {'idx': -2, 'val_type': 'Z'},
+            'CB': {'idx': -2, 'val_type': 'Z'},
             'MB': {'idx': -1, 'val_type': 'Z'},
         }
     ))
