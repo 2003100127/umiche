@@ -5,8 +5,12 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
+from typing import Iterable, Optional
 
 import pandas as pd
+from collections import Counter
+from umiche.bam.Gadgetry import Gadgetry
+
 from umiche.util.Console import Console
 
 
@@ -32,7 +36,8 @@ class Writer:
     ):
         tmpl_bam = self.pysam.AlignmentFile(tmpl_bam_fpn, "rb")
         write_to_bam = self.pysam.AlignmentFile(tobam_fpn, "wb", template=tmpl_bam)
-        fs = self.df.loc[self.df['id'].isin(whitelist)]['read']
+        # fs = self.df.loc[self.df['id'].isin(whitelist)]['read']
+        fs = self.df.loc[self.df.index.isin(whitelist)]['read']
         for i in fs:
             # print(i)
             write_to_bam.write(i)
@@ -114,6 +119,76 @@ class Writer:
         pysam.index(tobam_fpn)
         return
 
+    @Gadgetry().index_sort(do_sort=True, do_index=True)
+    @Console.vignette()
+    def filter_bam_with_df(
+            self,
+            bam_fpn: str,
+            df: pd.DataFrame,
+            sv_bam_fpn: str,
+            read_col: str = "read",
+            unique: bool = True,
+            threads: int = 8,
+    ) -> str:
+        """
+
+        Subsetting a BAM by read names/QNAME using a DataFrame.
+
+        Examples
+        --------
+        1) df['PD']==0 means non-PCR duplicate -> only keep PD==0
+           filter_bam_with_df("in.bam", df, "out.bam", keep_mask_col="PD", keep_value=0 or False)
+
+        2) df contains only the qname column to be retained (deduplicated).
+           filter_bam_with_df("in.bam", df_unique_qnames, "out.bam")
+
+
+        Parameters
+        ----------
+        in_bam
+        df
+        out_bam
+        readname_col
+            read name column
+        keep_mask_col
+            Only provide English translation, do not infer additional reasoning:
+            # If provided, use the Boolean values in this column to determine
+            retention; otherwise, all rows of the df are considered as the
+            "retention list"
+        keep_value
+            when keep_mask_col is True, keep
+        add_pg
+
+        Returns
+        -------
+
+        """
+        if read_col not in df.columns:
+            raise KeyError(f"no '{read_col}' column")
+
+        use_df = df
+        if unique:
+            if "read_id" not in use_df.columns:
+                use_df = use_df.copy()
+                use_df["read_id"] = use_df[read_col].map(id)
+            use_df = use_df.drop_duplicates(subset=["read_id"], keep="first")
+
+        segs = use_df[read_col].values
+
+        # streaming rewrite BAM
+        with self.pysam.AlignmentFile(bam_fpn, "rb") as src, \
+                self.pysam.AlignmentFile(
+                    sv_bam_fpn,
+                    mode="wb",
+                    header=src.header,
+                    threads=threads,
+                ) as outf:
+            write = outf.write
+            for aln in segs:
+                write(aln)
+
+        return sv_bam_fpn
+
 
 if __name__ == "__main__":
     p = Writer(df=pd.DataFrame())
@@ -124,14 +199,34 @@ if __name__ == "__main__":
     #     # whitelist=df.index,
     # )
 
-    from umiche import io
-
-    df = io.read(
-        df_fpn="/mnt/d/Document/Programming/R/umiche/read2tags.tsv",
-        df_sep="\t",
-        header=0,
-        type='tsv',
-    )
-    print(df)
-    print(df.qname.unique().shape)
+    # from umiche import io
+    # df = io.read(
+    #     df_fpn="/mnt/d/Document/Programming/R/umiche/read2tags.tsv",
+    #     df_sep="\t",
+    #     header=0,
+    #     type='tsv',
+    # )
+    # print(df)
+    # print(df.qname.unique().shape)
     # p.tobam()
+
+    from umiche.bam.Reader import ReaderChunk
+    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.bam"
+    df_bam = ReaderChunk(
+        bam_fpn=bam_fpn,
+        bam_fields=None,
+        tag_whitelist=['MB', 'CB', 'XF'],
+        categorize=["chrom"],
+        verbose=True,
+    ).todf(chunk_size=2_000_000)
+    print(df_bam)
+
+    df_bam = df_bam.loc[df_bam['XF'].str.startswith('ENSMUSG')].reset_index(drop=True)
+    print(df_bam)
+
+    p.filter_bam_with_df(
+        bam_fpn=bam_fpn,
+        df=df_bam,
+        read_col= "read",
+        sv_bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.filtered.bam",
+    )
