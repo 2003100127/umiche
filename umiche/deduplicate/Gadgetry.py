@@ -90,6 +90,7 @@ class Gadgetry:
             self,
             df_row,
             by_col,
+            met='list',
     ):
         """
         It returns ids of UMIs (i.e., representatives in their groupped UMIs) that has the
@@ -121,25 +122,34 @@ class Gadgetry:
         #         ..
         # 1948     1
         # Name: count, Length: 1949, dtype: int64
-        umi_maxval_ids = []
-        for k_c, nodes in df_row[by_col].items():
-            self.console.print('key: {} nodes: {}'.format(k_c, nodes))
-            ### @@ k_c, nodes
-            # 0 [0, 77, 81, ..., 1016]
-            ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)]
-            # 2       55
-            # 780     51
-            # 416     47
-            #         ..
-            # 1948     1
-            # Name: count, Length: 1949, dtype: int64
-            ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
-            # 2
-            ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].max()
-            # 55
-            umi_max = umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
-            umi_maxval_ids.append(umi_max)
-        return umi_maxval_ids
+
+        if met == 'map':
+            umi_maxval_idmap = {}
+            for k_c, nodes in df_row[by_col].items():
+                self.console.print('key: {} nodes: {}'.format(k_c, nodes))
+                umi_max = umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
+                umi_maxval_idmap[k_c] = umi_max
+            return umi_maxval_idmap
+        else:
+            umi_maxval_ids = []
+            for k_c, nodes in df_row[by_col].items():
+                self.console.print('key: {} nodes: {}'.format(k_c, nodes))
+                ### @@ k_c, nodes
+                # 0 [0, 77, 81, ..., 1016]
+                ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)]
+                # 2       55
+                # 780     51
+                # 416     47
+                #         ..
+                # 1948     1
+                # Name: count, Length: 1949, dtype: int64
+                ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
+                # 2
+                ### @@ umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].max()
+                # 55
+                umi_max = umi_val_cnts.loc[umi_val_cnts.index.isin(nodes)].idxmax()
+                umi_maxval_ids.append(umi_max)
+            return umi_maxval_ids
 
     def length(
             self,
