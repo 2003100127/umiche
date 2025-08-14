@@ -171,8 +171,8 @@ class Directional:
                         assigned_sub[n] = e
 
                 node_set_remaining = node_set_remaining - seen
-                self.console.print('remaining: {}'.format(node_set_remaining))
-                self.console.print('disapproval {}'.format(disapv))
+                # self.console.print('remaining: {}'.format(node_set_remaining))
+                # self.console.print('disapproval {}'.format(disapv))
                 ### @@ print('disapproval {}'.format(disapv))
                 # disapproval []
                 # disapproval [[183, 103]]
@@ -229,10 +229,10 @@ class Directional:
         g = graph_adj
         def search(node):
             visited.add(node)
-            self.console.print('======>visited UMI nodes: {}'.format(visited))
-            self.console.print(visited)
+            # self.console.print('======>visited UMI nodes: {}'.format(visited))
+            # self.console.print(visited)
             for neighbor in g[node]:
-                self.console.print('=========>the neighbor: {}'.format(neighbor))
+                # self.console.print('=========>the neighbor: {}'.format(neighbor))
                 if neighbor not in visited:
                     if neighbor in node_set_remaining:
                         if node_val_sorted[node] >= 2 * node_val_sorted[neighbor] - 1:

@@ -39,16 +39,16 @@ class Clustering:
         self.kwargs = kwargs
 
         if self.clustering_method == 'dbscan':
-            self.dbscan_eps = self.kwargs.get("dbscan_eps", None)
-            self.dbscan_min_spl = self.kwargs.get("dbscan_min_spl", None)
+            self.dbscan_eps = self.kwargs.get("dbscan_eps", 1.5)
+            self.dbscan_min_spl = self.kwargs.get("dbscan_min_spl", 3)
         elif self.clustering_method == 'birch':
-            self.birch_thres = self.kwargs.get("birch_thres", None)
+            self.birch_thres = self.kwargs.get("birch_thres", 0.5)
             self.birch_n_clusters = self.kwargs.get("birch_n_clusters", None)
         elif self.clustering_method == 'aprop':
             self.aprop_preference = self.kwargs.get("aprop_preference", None)
-            self.aprop_random_state = self.kwargs.get("aprop_random_state", None)
+            self.aprop_random_state = self.kwargs.get("aprop_random_state", 0)
         elif self.clustering_method == 'hdbscan':
-            self.hdbscan_min_spl = self.kwargs.get("hdbscan_min_spl", None)
+            self.hdbscan_min_spl = self.kwargs.get("hdbscan_min_spl", 3)
         else:
             raise ValueError(f"Unsupported clustering method: {self.clustering_method}.")
 
@@ -59,19 +59,26 @@ class Clustering:
     def tool(self, ):
         return {
             'dbscan': skdbscan(
-                eps=getattr(self, 'dbscan_eps', None),
-                min_samples=getattr(self, 'dbscan_min_spl', None),
+                # eps=self.dbscan_eps,
+                # min_samples=self.dbscan_min_spl,
+                eps=getattr(self, 'dbscan_eps', 1.5),
+                min_samples=getattr(self, 'dbscan_min_spl', 3),
             ),
             'birch': skbirch(
-                threshold=getattr(self, 'birch_thres', None),
+                # threshold=self.birch_thres,
+                # n_clusters=self.birch_n_clusters,
+                threshold=getattr(self, 'birch_thres', 0.5),
                 n_clusters=getattr(self, 'birch_n_clusters', None),
             ),
             'aprop': skaprop(
+                # preference=self.aprop_preference,
+                # random_state=self.aprop_random_state,
                 preference=getattr(self, 'aprop_preference', None),
-                random_state=getattr(self, 'aprop_random_state', None)
+                random_state=getattr(self, 'aprop_random_state', 0),
             ),
             'hdbscan': skhdbscan(
-                min_samples=getattr(self, 'hdbscan_min_spl', None)
+                # min_samples=self.hdbscan_min_spl,
+                min_samples=getattr(self, 'hdbscan_min_spl', 3),
             ),
         }
 
