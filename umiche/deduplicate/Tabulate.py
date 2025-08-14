@@ -209,7 +209,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['uniq_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def cluster(
@@ -289,7 +292,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['cc_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def adjacency(
@@ -386,7 +392,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df, self.df_bam
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def directional(
@@ -502,7 +511,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['direc_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def umicountr(
@@ -510,6 +522,7 @@ class Tabulate:
             clustering_method,
             **kwargs,
     ):
+        print('clustering method: {}'.format(clustering_method))
         dedup_umi_stime = time.time()
         umiadj_ob = umiadj()
         if clustering_method == 'adj':
@@ -589,7 +602,7 @@ class Tabulate:
         if not self.heterogeneity:
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'adjacency_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + clustering_method + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -603,21 +616,23 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'adjacency_dedup_sum.txt',
+                sv_fpn=self.work_dir + clustering_method + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'),
-                                                   axis=1)
+            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
+                tobam_fpn=self.work_dir + clustering_method + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def mcl(
@@ -724,7 +739,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def mcl_cc_all_node_umis(
@@ -806,7 +824,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def mcl_val(
@@ -921,7 +942,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_val_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def mcl_ed(
@@ -1040,7 +1064,10 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
 
     @Console.vignette()
     def clustering_umi_seq_onehot(
@@ -1048,6 +1075,7 @@ class Tabulate:
             clustering_method,
             **kwargs
     ):
+        print('clustering method: {}'.format(clustering_method))
         dedup_umi_stime = time.time()
         self.umiclustering = umiclustering(
             clustering_method=clustering_method,
@@ -1066,6 +1094,7 @@ class Tabulate:
         )}
         apv_dict = {'apv': [df_clustering_res['apv']]}
         self.df['clusters'] = self.df.apply(lambda x: res_dict['clusters'], axis=1)
+        print(self.df['clusters'])
         self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
         # print(self.df['apv'])
         self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
@@ -1074,6 +1103,7 @@ class Tabulate:
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
 
+        print(self.df['repr_nodes'])
 
         self.df_bam = self.pcrartefact.denote(
             df_bam=self.df_bam,
@@ -1085,12 +1115,12 @@ class Tabulate:
             inplace=False
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
-        # print(self.df_bam)
+        print(self.df_bam)
         # gp_df = self.df_bam.groupby(by=['spikeUMI'])
         # keys = gp_df.groups.keys()
         # for key in keys:
         #     df_sub = gp_df.get_group(key)
-        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+        #     print(key, df_sub['UMI_mapped'].unique().shape[0])
 
 
         self.console.print('======>calculate average edit distances between umis...')
@@ -1133,4 +1163,7 @@ class Tabulate:
                 whitelist=self.umigadgetry.decompose(list_nd=self.df[clustering_method + '_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
