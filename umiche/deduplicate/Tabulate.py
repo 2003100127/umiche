@@ -20,6 +20,8 @@ from umiche.deduplicate.method.Clustering import Clustering as umiclustering
 from umiche.deduplicate.method.trimer.SetCover import SetCover as umisc
 from umiche.deduplicate.method.trimer.MajorityVote import MajorityVote as umimv
 
+from umiche.deduplicate.method.PCRArtefact import PCRArtefact as pcrartefact
+
 from umiche.util.Writer import Writer as fwriter
 from umiche.util.Console import Console
 
@@ -44,6 +46,7 @@ class Tabulate:
         self.aliwriter = aliwriter(df=self.df_bam)
 
         self.umigadgetry = umigadgetry()
+        self.pcrartefact = pcrartefact(verbose=verbose)
 
         self.fwriter = fwriter()
 
@@ -130,24 +133,52 @@ class Tabulate:
         self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
-    def unique(self, ):
+    @Console.vignette()
+    def unique(
+            self,
+            **kwargs,
+    ):
         dedup_umi_stime = time.time()
-        self.df['uniq_sgl_mark'] = self.df['uniq_repr_nodes'].apply(lambda x: 'yes' if len(x) == 1 else 'no')
+        self.df['repr_nodes'] = self.df['uniq_repr_nodes']
+        self.df['clusters'] = self.df['uniq_repr_nodes'].apply(lambda x: {i: e for i, e in enumerate(x)})
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+
+        self.df['uniq_sgl_mark'] = self.df['repr_nodes'].apply(lambda x: 'yes' if len(x) == 1 else 'no')
         self.df = self.df.loc[self.df['uniq_sgl_mark'] == 'no']
         self.console.print('======># of positions with non-single umis: {}'.format(self.df.shape[0]))
         self.console.print('======>finish finding deduplicated UMIs in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of UMIs deduplicated {}'.format(self.df['num_uniq_umis'].loc['yes']))
+
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False,
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
         ### @@ self.df['ave_ed']
         # 1    5.0
         # Name: ave_eds, dtype: float64
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='uniq_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='uniq_repr_nodes'), axis=1)
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='uniq_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),
             axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
@@ -171,7 +202,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='uniq_repr_nodes'), axis=1)
+            self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'unique_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
@@ -180,25 +211,51 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
-    def cluster(self, ):
+    @Console.vignette()
+    def cluster(
+            self,
+            **kwargs,
+    ):
         dedup_umi_stime = time.time()
-        self.df['cc_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='cc'), axis=1)
-        ### @@ self.df['cc_repr_nodes']
+        self.df['clusters'] = self.df['cc']
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='cc'), axis=1)
+        ### @@ self.df['repr_nodes']
         # 1    [2]
-        # Name: cc_repr_nodes, dtype: object
-        self.df['dedup_cnt'] = self.df['cc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        # Name: repr_nodes, dtype: object
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         ### @@ self.df['dedup_cnt']
         # 1    1
         # Name: dedup_cnt, dtype: int64
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='cc_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='cc_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'),
             axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='cc_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),
             axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
@@ -225,7 +282,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['cc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='cc_repr_nodes'), axis=1)
+            self.df['cc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'cluster_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
@@ -234,10 +291,15 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
-    def adjacency(self, ):
+    @Console.vignette()
+    def adjacency(
+            self,
+            **kwargs,
+    ):
+        # print('adj kwargs:', kwargs)
         dedup_umi_stime = time.time()
-        umiadj_ob = umiadj()
-        self.df['adj'] = self.df.apply(
+        umiadj_ob = umiadj(verbose=False)
+        self.df['clusters'] = self.df.apply(
             lambda x: umiadj_ob.decompose(
                 cc_sub_dict=umiadj_ob.umi_tools(
                     connected_components=x['cc'],
@@ -247,23 +309,46 @@ class Tabulate:
             ),
             axis=1,
         )
-        self.df['adj_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='adj'), axis=1)
-        self.df['dedup_cnt'] = self.df['adj_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        # print(self.df['clusters'])
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        # print(self.df['dedup_cnt'])
+        # print(self.df)
+        # print(self.df.columns)
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+            # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='adj_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_uniq_umis(
                 x,
-                by_col='adj_repr_nodes',
+                by_col='repr_nodes',
             ),
             axis=1,
         )
         self.df['num_diff_dedup_reads'] = self.df.apply(
             lambda x: self.umigadgetry.num_removed_reads(
                 x,
-                by_col='adj_repr_nodes',
+                by_col='repr_nodes',
             ),
             axis=1,
         )
@@ -278,6 +363,8 @@ class Tabulate:
                 index=True,
                 header=True,
             )
+            # print(self.df)
+            # print(self.df.columns)
             self.fwriter.generic(
                 df=self.df[[
                     'dedup_cnt',
@@ -292,16 +379,20 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='adj_repr_nodes'), axis=1)
+            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
             )
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        return self.df
+        return self.df, self.df_bam
 
-    def directional(self, ):
+    @Console.vignette()
+    def directional(
+            self,
+            **kwargs,
+    ):
         dedup_umi_stime = time.time()
         umidirec_ob = umidirec(self.heterogeneity)
         # self.df[['count', 'clusters', 'apv', 'disapv']] = self.df.apply(
@@ -331,7 +422,7 @@ class Tabulate:
                 axis=1,
             )
         else:
-            self.df['direc'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umidirec_ob.decompose(
                     cc_sub_dict=umidirec_ob.umi_tools(
                         connected_components=x['cc'],
@@ -341,21 +432,41 @@ class Tabulate:
                 ),
                 axis=1,
             )
-        # print(self.df['direc'])
-        self.df['direc_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='direc'), axis=1)
-        # print(self.df['direc_repr_nodes'])
-        self.df['dedup_cnt'] = self.df['direc_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        print(self.df['clusters'])
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        # print(self.df['repr_nodes'])
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        print(self.df['dedup_cnt'])
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='direc_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         # print(self.df['ave_eds'])
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='direc_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'),
             axis=1,
         )
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='direc_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),
             axis=1,
         )
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
@@ -384,7 +495,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='direc_repr_nodes'), axis=1)
+            self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'directional_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
@@ -393,6 +504,122 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
+    def umicountr(
+            self,
+            clustering_method,
+            **kwargs,
+    ):
+        dedup_umi_stime = time.time()
+        umiadj_ob = umiadj()
+        if clustering_method == 'adj':
+            dedup_func = umiadj_ob.umicountr
+        elif clustering_method == 'adj_direc':
+            dedup_func = umiadj_ob.umicountr_directional
+        elif clustering_method == 'adj_singleton':
+            dedup_func = umiadj_ob.umicountr_singleton
+        else:
+            dedup_func = umiadj_ob.umicountr
+
+        self.df['clusters'] = self.df.apply(
+            lambda x: umiadj_ob.decompose(
+                cc_sub_dict=dedup_func(
+                    connected_components=x['cc'],
+                    df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+                    graph_adj=x['vignette']['graph_adj'],
+                )['clusters'],
+            ),
+            axis=1,
+        )
+        print(self.df['clusters'])
+        # self.df['assigned'] = self.df.apply(
+        #     lambda x: umiadj_ob.umicountr(
+        #             connected_components=x['cc'],
+        #             df_umi_uniq_val_cnt=x['vignette']['df_umi_uniq_val_cnt'],
+        #             graph_adj=x['vignette']['graph_adj'],
+        #         )['assigned'],
+        #     axis=1,
+        # )
+        # print(self.df['assigned'])
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        print(self.df['dedup_cnt'])
+        self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
+        # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
+        self.console.print('======>calculate average edit distances between umis...')
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_uniq_umis(
+                x,
+                by_col='repr_nodes',
+            ),
+            axis=1,
+        )
+        self.df['num_diff_dedup_reads'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_reads(
+                x,
+                by_col='repr_nodes',
+            ),
+            axis=1,
+        )
+        self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
+        self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
+        self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
+        if not self.heterogeneity:
+            self.fwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + 'adjacency_ave_ed_bin.txt',
+                index=True,
+                header=True,
+            )
+            # print(self.df)
+            # print(self.df.columns)
+            self.fwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_ed',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + 'adjacency_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'),
+                                                   axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        return self.df
+
+    @Console.vignette()
     def mcl(
             self,
             **kwargs
@@ -424,7 +651,7 @@ class Tabulate:
             self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
             # print(self.df['mcl'])
         else:
-            self.df['mcl'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
                     list_nd=umimcl_ob.dfclusters(
                         connected_components=x['cc'],
@@ -433,18 +660,38 @@ class Tabulate:
                 ),
                 axis=1,
             )
-            # print(self.df['mcl'])
-        ### @@ self.df['mcl']
+            # print(self.df['clusters'])
+        ### @@ self.df['clusters']
         # 1    {0: [0, 76, 162, 188, 237, 256], 1: [65, 55, 1...
         # Name: mcl, dtype: object
-        self.df['mcl_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl'), axis=1)
-        self.df['dedup_cnt'] = self.df['mcl_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_repr_nodes'), axis=1)
-        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_repr_nodes'),axis=1)
-        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_repr_nodes'),axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'),axis=1)
+        self.df['num_diff_dedup_reads'] = self.df.apply(lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -470,7 +717,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_repr_nodes'), axis=1)
+            self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'mcl_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
@@ -479,6 +726,7 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
     def mcl_cc_all_node_umis(
             self,
             **kwargs,
@@ -560,6 +808,7 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
     def mcl_val(
             self,
             **kwargs,
@@ -585,15 +834,15 @@ class Tabulate:
                     axis=1,
                 )
             )
-            self.df['mcl_val'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
                     list_nd=x['clusters'].values,
                 ),
                 axis=1,
             )
-            # print(self.df['mcl_val'])
+            # print(self.df['clusters'])
         else:
-            self.df['mcl_val'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
                     list_nd=umimcl_ob.maxval_val(
                         df_mcl_ccs=umimcl_ob.dfclusters(
@@ -606,17 +855,39 @@ class Tabulate:
                 ),
                 axis=1,
             )
-            # print(self.df['mcl_val'])
-        self.df['mcl_val_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_val'), axis=1)
-        self.df['dedup_cnt'] = self.df['mcl_val_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+            # print(self.df['clusters'])
+
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_val_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_val_repr_nodes'), axis=1)
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_val_repr_nodes'), axis=1)
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'), axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
@@ -642,7 +913,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_val_repr_nodes'),
+            self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'),
                                                        axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'mcl_val_dedup.bam',
@@ -652,6 +923,7 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
     def mcl_ed(
             self,
             **kwargs,
@@ -679,16 +951,16 @@ class Tabulate:
                     axis=1,
                 )
             )
-            self.df['mcl_ed'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
                     list_nd=x['clusters'].values,
                     # list_nd=x['clusters'].values[0].tolist(),
                 ),
                 axis=1,
             )
-            # print(self.df['mcl_ed'])
+            # print(self.df['clusters'])
         else:
-            self.df['mcl_ed'] = self.df.apply(
+            self.df['clusters'] = self.df.apply(
                 lambda x: umimcl_ob.decompose(
                     list_nd=umimcl_ob.maxval_ed(
                         df_mcl_ccs=umimcl_ob.dfclusters(
@@ -702,17 +974,39 @@ class Tabulate:
                 ),
                 axis=1,
             )
-        self.df['mcl_ed_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='mcl_ed'), axis=1)
-        self.df['dedup_cnt'] = self.df['mcl_ed_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         # print(self.df['dedup_cnt'])
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='mcl_ed_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col='mcl_ed_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),
             axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
@@ -739,7 +1033,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='mcl_ed_repr_nodes'), axis=1)
+            self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
@@ -748,6 +1042,7 @@ class Tabulate:
             self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
     def clustering_umi_seq_onehot(
             self,
             clustering_method,
@@ -766,24 +1061,45 @@ class Tabulate:
             ),
             axis=1,
         ).values[0]
-        mcl_dict = {clustering_method: self.umiclustering.decompose(
+        res_dict = {'clusters': self.umiclustering.decompose(
             list_nd=df_clustering_res['clusters'].values
         )}
         apv_dict = {'apv': [df_clustering_res['apv']]}
-        self.df[clustering_method] = self.df.apply(lambda x: mcl_dict[clustering_method], axis=1)
+        self.df['clusters'] = self.df.apply(lambda x: res_dict['clusters'], axis=1)
         self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
         # print(self.df['apv'])
-        self.df[clustering_method + '_repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col=clustering_method), axis=1)
-        self.df['dedup_cnt'] = self.df[clustering_method + '_repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
+
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        # print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+
         self.console.print('======>calculate average edit distances between umis...')
-        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col=clustering_method + '_repr_nodes'), axis=1)
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
         self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col=clustering_method + '_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_uniq_umis(x, by_col='repr_nodes'),
             axis=1)
         self.df['num_diff_dedup_reads'] = self.df.apply(
-            lambda x: self.umigadgetry.num_removed_reads(x, by_col=clustering_method + '_repr_nodes'),
+            lambda x: self.umigadgetry.num_removed_reads(x, by_col='repr_nodes'),
             axis=1)
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
@@ -810,7 +1126,7 @@ class Tabulate:
             )
             self.console.print('======>start writing deduplicated reads to BAM...')
             dedup_reads_write_stime = time.time()
-            self.df[clustering_method + '_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col=clustering_method + '_repr_nodes'), axis=1)
+            self.df[clustering_method + '_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
                 tobam_fpn=self.work_dir + clustering_method + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
