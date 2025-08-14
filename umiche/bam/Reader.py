@@ -384,18 +384,20 @@ class ReaderChunk:
     ) -> Iterable[Dict[str, Any]]:
         bam_field_set = set(bam_fields)
         tag_running_title = 'iter rows'
-        for r in self.console._tqdm(
+        for id, r in enumerate(self.console._tqdm(
                 bam.fetch(until_eof=True),
                 desc=f"[{tag_running_title}]",
                 unit="read",
                 position=0,
                 leave=True,
                 dynamic_ncols=False,
-        ):
+        )):
             row: Dict[str, Any] = {}
+            row["id"] = id
             if "qname" in bam_field_set:       row["qname"] = r.query_name
             # if "UMI" in bam_field_set:         row["UMI"] = _umi_from_qname(r.query_name)
             if "chrom" in bam_field_set:       row["chrom"] = r.reference_name
+            if "contig" in bam_field_set:       row["contig"] = r.reference_name
             if "pos" in bam_field_set:         row["pos"] = r.reference_start
             if "tlen" in bam_field_set:        row["tlen"] = r.template_length
             if "is_read1" in bam_field_set:    row["is_read1"] = r.is_read1
@@ -404,6 +406,8 @@ class ReaderChunk:
             if "flag" in bam_field_set:        row["flag"] = r.flag
             if "mapq" in bam_field_set:        row["mapq"] = r.mapping_quality
             if "cigar" in bam_field_set:       row["cigar"] = r.cigarstring
+            if "CIGAR" in bam_field_set:       row["CIGAR"] = r.cigarstring
+            if "seq" in bam_field_set:       row["seq"] = r.query_sequence
             if "mate_chrom" in bam_field_set:  row["mate_chrom"] = r.next_reference_name
             if "read" in bam_field_set:    row["read"] = r
             if "read_id" in bam_field_set:    row["read_id"] = id(r)
@@ -490,6 +494,7 @@ class ReaderChunk:
             if c in df: df[c] = df[c].astype("category")
 
     # /*** -------- One-time full-table processing (reuse for small/medium-scale tasks) -------- ***/
+    @Console.vignette()
     def todf(
             self,
             chunk_size=1_000_000,
@@ -538,11 +543,11 @@ if __name__ == "__main__":
         bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam",
     )
 
-    df = umiche.todf(tags=['MB'])
+    # df = umiche.todf(tags=['MB'])
     # df = umiche.todf(tags=['PO'])
     # df = umiche.todf_trust4(tags=[], filter_by='sequence')
-    print(df)
-    print(df.columns)
+    # print(df)
+    # print(df.columns)
     # print(df.loc[0].values)
 
     # df = umiche.todf_trust4(tags=['CB', 'UB'], filter_by='sequence')
@@ -573,22 +578,26 @@ if __name__ == "__main__":
 
     # @@ /*** -------- based on ReadChunck -------- ***/
     p = ReaderChunk(
-        bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam",
-        bam_fields=None,
-        tag_whitelist=['MB'],
-        categorize=["chrom"],
+        # bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam",
+        # bam_fields=None,
+        # tag_whitelist=['MB'],
+        # categorize=["chrom"],
+
+        bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/Smartseq3.TTACCTGCCAGATTCG.bam",
+        bam_fields=['contig', 'pos', 'CIGAR', 'seq'],
+        tag_whitelist=['BC', 'QU', 'UX', 'UB'],
         verbose=True,
     )
-    # df = p.todf()
-    # print(df)
-    # print(df.columns)
+    df = p.todf()
+    print(df)
+    print(df.columns)
 
-    for i, df_chunk in enumerate(p.to_dataframe_chunks(
-            bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam",
-            chunk_size=2_000_000,
-            tag_whitelist=None,  # 例：["CB","MB","XF"]
-            categorize=["chrom"]  # chrom converts into a category
-    )):
-        print(f"chunk {i}: shape={df_chunk.shape}")
-        # df_chunk
+    print(df[df["UX"] != ""])
 
+    # for i, df_chunk in enumerate(p.to_dataframe_chunks(
+    #         bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam",
+    #         chunk_size=2_000_000,
+    #         tag_whitelist=None,  # 例：["CB","MB","XF"]
+    #         categorize=["chrom"]  # chrom converts into a category
+    # )):
+    #     print(f"chunk {i}: shape={df_chunk.shape}")
