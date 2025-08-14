@@ -20,6 +20,7 @@ class Build:
             self,
             df,
             ed_thres,
+            umi_tag='umi',
             verbose=False,
     ):
         """
@@ -39,7 +40,7 @@ class Build:
         self.char_to_int = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
 
         umi_keymap_stime = time.time()
-        self.df_umi_uniq = df.drop_duplicates(subset=['umi'], keep='first')
+        self.df_umi_uniq = df.drop_duplicates(subset=[umi_tag], keep='first')
         ### @@ self.df_umi_uniq
         #           id                     query_name  ...        umi  source
         # 0          0   SRR2057595.2985267_ACCGGTTTA  ...  ACCGGTTTA       1
@@ -48,14 +49,15 @@ class Build:
         # ...      ...                            ...  ...        ...     ...
         # 20609  20609   SRR2057595.5197759_TAGGTTCCT  ...  TAGGTTCCT       1
         # [1949 rows x 13 columns]
-        self.umi_to_bamid_dict = pd.Series(self.df_umi_uniq.index, index=self.df_umi_uniq.umi.values).to_dict()
+        # self.umi_to_bamid_dict = pd.Series(self.df_umi_uniq.id, index=self.df_umi_uniq[umi_tag].values).to_dict()
+        self.umi_to_bamid_dict = pd.Series(self.df_umi_uniq.index, index=self.df_umi_uniq[umi_tag].values).to_dict()
         ### @@ self.umi_to_bamid_dict
         # {'ACCGGTTTA': 0, 'CCAGGTTCT': 1, 'AGCGGTTAC': 2, ..., 'TAGGTTCCT': 20609}
-        self.uniq_umis = self.df_umi_uniq['umi'].values
+        self.uniq_umis = self.df_umi_uniq[umi_tag].values
         # print(self.uniq_umis)
         ### @@ self.uniq_umis
         # ['ACCGGTTTA' 'CCAGGTTCT' 'AGCGGTTAC', ..., 'TAGGTTCCT']
-        # self.uniq_umis1 = self.df['umi'].unique()
+        # self.uniq_umis1 = self.df[umi_tag].unique()
         self.uniq_umi_num = self.uniq_umis.shape[0]
         self.console.print('=========># of unique UMIs: {}'.format(self.uniq_umi_num))
         self.umi_to_int_dict = {k: id for id, k in enumerate(self.uniq_umis)}
@@ -64,7 +66,7 @@ class Build:
         self.int_to_umi_dict = {id: k for k, id in self.umi_to_int_dict.items()}
         ### @@ self.int_to_umi_dict
         # {0: 'ACCGGTTTA', 1: 'CCAGGTTCT', 2: 'AGCGGTTAC', ..., 1948: 'TAGGTTCCT'}
-        self.df_umi_uniq_val_cnt = self.df['umi'].value_counts(ascending=False)
+        self.df_umi_uniq_val_cnt = self.df[umi_tag].value_counts(ascending=False)
         ### @@ self.df_umi_uniq_val_cnt
         # umi
         # AGCGGTTAC    55
@@ -74,7 +76,7 @@ class Build:
         # TAGGTTCCT     1
         df_umi_uniq_val_cnt_ids = self.df_umi_uniq_val_cnt.index
         ### @@ df_umi_uniq_val_cnt_ids
-        # Index(['AGCGGTTAC', 'TACGGTTAT', 'AATGGTTTC',  ... 'TAGGTTCCT'], dtype='object', name='umi', length=1949)
+        # Index(['AGCGGTTAC', 'TACGGTTAT', 'AATGGTTTC',  ... 'TAGGTTCCT'], dtype='object', name=umi_tag, length=1949)
         self.df_umi_uniq_val_cnt.index = [self.umi_to_int_dict[i] for i in df_umi_uniq_val_cnt_ids]
         ### @@ self.df_umi_uniq_val_cnt
         # 2       55
@@ -96,7 +98,7 @@ class Build:
             # ...
             # 20609
             ### @@ slow scheme
-            # self.umi_bam_ids1[k] = df.loc[df['umi'].isin([v])]['id'].values[0]
+            # self.umi_bam_ids1[k] = df.loc[df[umi_tag].isin([v])]['id'].values[0]
         ed_list_stime = time.time()
         self.ed_list = self.ed_list_()
         ### @@ self.ed_list
@@ -182,6 +184,11 @@ class Build:
         #     fff = False
             # break
         self.console.print('===>graph adjacency list construction time: {:.3f}s'.format(time.time() - graph_adj_stime))
+        # print(self.edge_list)
+        # print(self.graph_adj)
+        # print(self.int_to_umi_dict)
+        # print(self.df_umi_uniq_val_cnt)
+        # print(self.uniq_umi_id_to_bam_id_dict)
         self.data_summary = {
             'graph_adj': self.graph_adj,
             'int_to_umi_dict': self.int_to_umi_dict,
