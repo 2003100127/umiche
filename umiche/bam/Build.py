@@ -5,16 +5,13 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-
 import time
 import numpy as np
 import pandas as pd
-from umiche.network.Edge import Edge as guuedge
-from umiche.util.Hamming import Hamming
 from umiche.util.Console import Console
 
 
-class Build:
+class Graph:
 
     def __init__(
             self,
@@ -32,6 +29,8 @@ class Build:
         """
         self.df = df
         # print(df)
+        from umiche.network.Edge import Edge as guuedge
+        from umiche.util.Hamming import Hamming
         self.hamming = Hamming()
         self.guuedge = guuedge(verbose=False)
         self.console = Console()
@@ -253,3 +252,188 @@ class Build:
                 ])
         # print(len(eds))
         return eds
+
+
+
+class Basic:
+
+    def __init__(
+            self,
+            df,
+            umi_tag='umi',
+            verbose=False,
+    ):
+        """
+
+        Parameters
+        ----------
+        df
+        ed_thres
+        """
+        self.df = df
+        # print(df)
+        self.console = Console()
+        self.console.verbose = verbose
+
+        self.char_to_int = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
+
+        umi_keymap_stime = time.time()
+        self.df_umi_uniq = self.df.drop_duplicates(subset=[umi_tag], keep='first')
+        ### @@ self.df_umi_uniq
+        #           id                     query_name  ...        umi  source
+        # 0          0   SRR2057595.2985267_ACCGGTTTA  ...  ACCGGTTTA       1
+        # 1          1  SRR2057595.13520751_CCAGGTTCT  ...  CCAGGTTCT       1
+        # 2          2   SRR2057595.8901432_AGCGGTTAC  ...  AGCGGTTAC       1
+        # ...      ...                            ...  ...        ...     ...
+        # 20609  20609   SRR2057595.5197759_TAGGTTCCT  ...  TAGGTTCCT       1
+        # [1949 rows x 13 columns]
+        # self.umi_to_bamid_dict = pd.Series(self.df_umi_uniq.id, index=self.df_umi_uniq[umi_tag].values).to_dict()
+        self.umi_to_bamid_dict = pd.Series(self.df_umi_uniq.index, index=self.df_umi_uniq[umi_tag].values).to_dict()
+        ### @@ self.umi_to_bamid_dict
+        # {'ACCGGTTTA': 0, 'CCAGGTTCT': 1, 'AGCGGTTAC': 2, ..., 'TAGGTTCCT': 20609}
+        self.uniq_umis = self.df_umi_uniq[umi_tag].values
+        # print(self.uniq_umis)
+        ### @@ self.uniq_umis
+        # ['ACCGGTTTA' 'CCAGGTTCT' 'AGCGGTTAC', ..., 'TAGGTTCCT']
+        self.uniq_umi_num = self.uniq_umis.shape[0]
+        self.console.print('=========># of unique UMIs: {}'.format(self.uniq_umi_num))
+        self.umi_to_int_dict = {k: id for id, k in enumerate(self.uniq_umis)}
+        ### @@ self.umi_to_int_dict
+        # {'ACCGGTTTA': 0, 'CCAGGTTCT': 1, 'AGCGGTTAC': 2, ..., 'TAGGTTCCT': 1948}
+        self.int_to_umi_dict = {id: k for k, id in self.umi_to_int_dict.items()}
+        ### @@ self.int_to_umi_dict
+        # {0: 'ACCGGTTTA', 1: 'CCAGGTTCT', 2: 'AGCGGTTAC', ..., 1948: 'TAGGTTCCT'}
+        self.df_umi_uniq_val_cnt = self.df[umi_tag].value_counts(ascending=False)
+        ### @@ self.df_umi_uniq_val_cnt
+        # umi
+        # AGCGGTTAC    55
+        # TACGGTTAT    51
+        # AATGGTTTC    47
+        #              ..
+        # TAGGTTCCT     1
+        df_umi_uniq_val_cnt_ids = self.df_umi_uniq_val_cnt.index
+        ### @@ df_umi_uniq_val_cnt_ids
+        # Index(['AGCGGTTAC', 'TACGGTTAT', 'AATGGTTTC',  ... 'TAGGTTCCT'], dtype='object', name=umi_tag, length=1949)
+        self.df_umi_uniq_val_cnt.index = [self.umi_to_int_dict[i] for i in df_umi_uniq_val_cnt_ids]
+        ### @@ self.df_umi_uniq_val_cnt
+        # 2       55
+        # 780     51
+        # 416     47
+        #         ..
+        # 1948     1
+        # Name: count, Length: 1949, dtype: int64
+        self.console.print('=========>umi keymap time: {:.3f}s'.format(time.time() - umi_keymap_stime))
+
+        self.uniq_umi_id_to_bam_id_dict = {}
+        # self.umi_bam_ids1 = {}
+        for k, v in self.int_to_umi_dict.items():
+            self.uniq_umi_id_to_bam_id_dict[k] = self.umi_to_bamid_dict[v]
+            ### @@ self.umi_to_bamid_dict[v]
+            # 0
+            # 1
+            # 2
+            # ...
+            # 20609
+        self.data_summary = {
+            'int_to_umi_dict': self.int_to_umi_dict,
+            'df_umi_uniq_val_cnt': self.df_umi_uniq_val_cnt,
+            'uniq_umi_id_to_bam_id_dict': self.uniq_umi_id_to_bam_id_dict,
+        }
+
+
+
+class Relation:
+
+    def __init__(
+            self,
+            df,
+            verbose=False,
+    ):
+        self.console = Console()
+        self.console.verbose = verbose
+
+        self.df = df
+        self.df['umi#'] = self.df['query_name'].apply(lambda x: x.split('_')[0].split('-')[0])
+        # print(self.df)
+        ### @@ self.df
+        #           id            query_name  flag  ...         umi  source  umi#
+        # 0          0   23-pcr-8_GCATCAGTAG     0  ...  GCATCAGTAG       1    23
+        # 1          1    6-pcr-8_CTGACTGCGC     0  ...  CTGACTGCGC       1     6
+        # 2          2   13-pcr-7_CACACGATAC     0  ...  CACACGATAC       1    13
+        # ...      ...                   ...   ...  ...         ...     ...   ...
+        # 23813  23813   47-pcr-9_GCGAAGAGGA     0  ...  GCGAAGAGGA       1    47
+        self.df['umi_pcr#'] = self.df['query_name'].apply(lambda x: self.pcrnum(x))
+        # print(self.df)
+        ### @@ self.df
+        #           id            query_name  flag  ...  source  umi#  umi_pcr#
+        # 0          0   23-pcr-8_GCATCAGTAG     0  ...       1    23         8
+        # 1          1    6-pcr-8_CTGACTGCGC     0  ...       1     6         8
+        # 2          2   13-pcr-7_CACACGATAC     0  ...       1    13         7
+        # ...      ...                   ...   ...  ...     ...   ...       ...
+        # 23813  23813   47-pcr-9_GCGAAGAGGA     0  ...       1    47         9
+        ### @@@ note version 2 for resimpy
+        # self.df['umi_src'] = self.df['query_name'].apply(lambda x: x.split('_')[0].split('-')[1])
+        ### @@@ note version 2 for phylotres as well as resimpy
+        self.df['umi_src'] = self.df['query_name'].apply(lambda x: x.split('_')[-2].split('-')[1])
+        # print(self.df)
+        ### @@ self.df
+        #           id            query_name  flag  ...  umi#  umi_pcr#  umi_src
+        # 0          0   23-pcr-8_GCATCAGTAG     0  ...    23         8      pcr
+        # 1          1    6-pcr-8_CTGACTGCGC     0  ...     6         8      pcr
+        # 2          2   13-pcr-7_CACACGATAC     0  ...    13         7      pcr
+        # ...      ...                   ...   ...  ...   ...       ...      ...
+        # 23813  23813   47-pcr-9_GCGAAGAGGA     0  ...    47         9      pcr
+        umi_keymap_stime = time.time()
+        self.df_umi_uniq = df.drop_duplicates(subset=['umi'], keep='first')
+        ### @@ self.df_umi_uniq
+        #           id            query_name  flag  ...  umi#  umi_pcr#  umi_src
+        # 0          0   23-pcr-8_GCATCAGTAG     0  ...    23         8      pcr
+        # 1          1    6-pcr-8_CTGACTGCGC     0  ...     6         8      pcr
+        # 2          2   13-pcr-7_CACACGATAC     0  ...    13         7      pcr
+        # ...      ...                   ...   ...  ...   ...       ...      ...
+        # 23691  23691   23-pcr-8_GCATCAGGAG     0  ...    23         8      pcr
+        # [257 rows x 17 columns]
+        self.uniq_umis = self.df_umi_uniq['umi'].values
+        self.uniq_umi_num = self.uniq_umis.shape[0]
+        self.console.print('==================>unique UMI number: {}'.format(self.uniq_umi_num))
+
+        self.umi_to_int_dict = {k: id for id, k in enumerate(self.uniq_umis)}
+        ### @@ self.umi_to_int_dict
+        # {'GCATCAGTAG': 0, 'CTGACTGCGC': 1, 'CACACGATAC': 2, 'TTAGATGATT': 3, ..., 'GAAGTATATT': 255, 'GCATCAGGAG': 256}
+        self.int_to_umi_dict = {id: k for k, id in self.umi_to_int_dict.items()}
+        self.df_umi_uniq_val_cnt = self.df['umi'].value_counts(ascending=False)
+        ### @@ self.df_umi_uniq_val_cnt
+        # umi
+        # AGTACGCGAG    636
+        # GGAGATCCGG    625
+        # AGTAGAACCC    619
+        #              ...
+        # GCATCAGGAG      1
+        # Name: count, Length: 257, dtype: int64
+        df_umi_uniq_val_cnt_ids = self.df_umi_uniq_val_cnt.index
+        self.df_umi_uniq_val_cnt.index = [self.umi_to_int_dict[i] for i in df_umi_uniq_val_cnt_ids]
+        self.console.print('==================>umi keymap time: {:.3f}s'.format(time.time() - umi_keymap_stime))
+
+        umi_trace_dict_stime = time.time()
+        self.umi_id_to_origin_id_dict = {}
+        umi_str_to_origin_dict = pd.Series(self.df_umi_uniq['umi#'].values, index=self.df_umi_uniq['umi'].values).to_dict()
+        ### @@ umi_str_to_origin_dict
+        # {'GCATCAGTAG': '23', 'CTGACTGCGC': '6', 'CACACGATAC': '13', 'TTAGATGATT': '10', ..., 'GAAGTATATT': '27', 'GCATCAGGAG': '23'}
+        for uniq_umi in self.uniq_umis:
+            self.umi_id_to_origin_id_dict[self.umi_to_int_dict[uniq_umi]] = int(umi_str_to_origin_dict[uniq_umi])
+        ### @@ self.umi_id_to_origin_id_dict
+        # {0: 23, 1: 6, 2: 13, 3: 10, ..., 255: 27, 256: 23}
+
+        self.console.print('==================>umi trace dict time: {:.3f}s'.format(time.time() - umi_trace_dict_stime))
+
+    def pcrnum(self, x):
+        # print(x.split('_'))
+        ### @@@ note version 1 for resimpy
+        # c = x.split('_')[0].split('-')
+        ### @@@ note version 2 for phylotres as well as resimpy
+        c = x.split('_')[-2].split('-')
+        # print(c)
+        if c[1] == 'init':
+            return -1
+        else:
+            return c[2]
