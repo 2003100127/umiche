@@ -5,7 +5,9 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__="jianfeng.sunmt@gmail.com"
 
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional
+
+import pandas as pd
 
 
 class ReformKit:
@@ -121,7 +123,11 @@ class ReformKit:
         from umiche.util.Single import Single as dnasgl
         nt_to_int_dict = dnasgl().todict(nucleotides=dnasgl().get(universal=True), reverse=False)
         # int_to_nt_dict = dnasgl().todict(nucleotides=dnasgl().get(universal=True), reverse=True)
-        umi_ltr2digi = [nt_to_int_dict[i] for i in list(umi)]
+        # print(nt_to_int_dict)
+        # umi_ltr2digi = [nt_to_int_dict[i] for i in list(umi)]
+        keys = nt_to_int_dict.keys()
+        umi_ltr2digi = [nt_to_int_dict[i] if i in keys else 2 for i in list(umi)]
+        # print(umi_ltr2digi)
         ids_first_pos = [i*4 for i in range(len(umi))]
         ids_to_be_one = [i+j for i, j in zip(umi_ltr2digi, ids_first_pos)]
         # print(ids_to_be_one)
@@ -158,3 +164,13 @@ class ReformKit:
                     nbrs[umi_i].append(umi_j)
                     nbrs[umi_j].append(umi_i)
         return nbrs
+
+
+if __name__ == "__main__":
+    p = ReformKit()
+
+    # p.return_corrected_umi(
+    #     UX.tolist(),
+    #     ed_thres=1,
+    #     collapse_mode="adjacency_directional",
+    # )
