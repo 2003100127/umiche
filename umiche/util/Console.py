@@ -42,25 +42,137 @@ class Console:
         if self._verbose:
             print(content)
 
-    def _stage(self, msg: str):
-        """safe output (与 tqdm 兼容)"""
-        from tqdm.auto import tqdm
-        tqdm.write(msg)
+    def df_column_summary(
+            self,
+            df,
+            title: str = "DataFrame Columns",
+    ):
+        """
+        Display DataFrame column names in a colorful table with index numbers.
 
-    def _fmt_kv(self, **kw):
-        return " | ".join(f"{k}={v}" for k, v in kw.items() if v is not None)
+        Parameters
+        ----------
+        df
+            (pd.DataFrame): The DataFrame whose columns to display.
+        title
+            (str): Title of the table.
 
-    # === 新增：对外暴露简洁版 k=v 拼接 ===
-    def kv(self, **kw):
-        return self._fmt_kv(**kw)
+        Returns
+        -------
 
-    def step(self, msg: str):
-        if not self.verbose:
-            return
-        rid = Console._current_run_id.get()
-        prefix = f"[{rid}] " if rid else ""
-        # 用 _stage 保证与 tqdm 进度条兼容；若你更喜欢带时间戳，可改为 self.print
-        self._stage(prefix + msg)
+        """
+        from rich.console import Console as RichConsole
+        from rich.table import Table
+        import pandas as pd
+        import numpy as np
+        import json
+
+        # ---- helpers (do not change the external naming, only add robust tools within the function) ----
+        def _preview_value(x, maxlen=30):
+            """Provide refined previews for complex objects to avoid flooding the console with lengthy content."""
+            if x is None or (isinstance(x, float) and pd.isna(x)):
+                s = "<NaN>"
+            elif isinstance(x, dict):
+                try:
+                    keys = list(x.keys())
+                except Exception:
+                    keys = []
+                s = f"<dict len={len(x)} keys={keys[:3]}>"
+            elif isinstance(x, (list, tuple, set)):
+                try:
+                    sample = list(x)[:3]
+                    tname = type(x).__name__
+                    s = f"<{tname} len={len(x)} sample={sample}>"
+                except Exception:
+                    s = f"<{type(x).__name__}>"
+            elif isinstance(x, np.ndarray):
+                s = f"<ndarray shape={x.shape} dtype={x.dtype}>"
+            else:
+                s = str(x)
+            return s if len(s) <= maxlen else s[:maxlen - 3] + "..."
+
+        def _to_hashable_for_unique(x):
+            """Convert unhashable objects to stable hashable representations for safe nunique computation."""
+            if x is None or (isinstance(x, float) and pd.isna(x)):
+                return x
+            if isinstance(x, np.ndarray):
+                return tuple(x.tolist())
+            if isinstance(x, (list, tuple)):
+                return tuple(_to_hashable_for_unique(i) for i in x)
+            if isinstance(x, set):
+                return tuple(sorted(_to_hashable_for_unique(i) for i in x))
+            if isinstance(x, dict):
+                try:
+                    return json.dumps(x, sort_keys=True, ensure_ascii=False, default=str)
+                except Exception:
+                    x2 = {str(_to_hashable_for_unique(k)): _to_hashable_for_unique(v) for k, v in x.items()}
+                    return json.dumps(x2, sort_keys=True, ensure_ascii=False, default=str)
+            try:
+                hash(x)
+                return x
+            except Exception:
+                return str(x)
+
+        def _safe_nunique(series: pd.Series) -> int:
+            """Safely compute the number of unique values for columns containing dict/list/ndarray etc."""
+            try:
+                return int(series.nunique(dropna=True))
+            except TypeError:
+                return int(series.map(_to_hashable_for_unique).nunique(dropna=True))
+
+        rich_cons = RichConsole()
+        table = Table(title=title + ': ' + str(df.shape[0]) + ' rows, ' + str(df.shape[1]) + ' columns', show_header=True, header_style="bold magenta")
+        table.add_column("Index", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Column Name", style="green")
+        table.add_column("First Value", style="yellow")
+        table.add_column("Dtype", style="blue")
+        table.add_column("Has NaN", style="red")
+        table.add_column("Unique Count", style="magenta", justify="right", no_wrap=True)
+        table.add_column("% NaN", style="red", justify="right")
+        # table.add_column("Top3 Uniq Values", style="white")
+
+        for i, col in enumerate(df.columns, start=1):
+            # First value
+            if not df.empty:
+                first_val_raw = df[col].iloc[0]
+                # Preview complex objects; preserve the original semantics of "display <NaN> if the value is NaN"
+                first_val = _preview_value(first_val_raw, maxlen=30)
+            else:
+                first_val = "<empty>"
+
+            # Additional truncation (consistent with the original logic to ensure it doesn't end up too long)
+            if len(first_val) > 30:
+                first_val = first_val[:27] + "..."
+
+            # Data type
+            dtype = str(df[col].dtype)
+
+            # NaN check
+            nan_count = int(df[col].isna().sum())
+            has_nan = "Yes" if nan_count > 0 else "No"
+            nan_pct = f"{(nan_count / len(df) * 100):.1f}%" if len(df) > 0 else "0.0%"
+
+            # Unique value count
+            unique_count = str(_safe_nunique(df[col]))
+
+            # Top3 Uniq Values
+            # examples = df[col].dropna().unique()[:3]
+            # examples_str = ", ".join(map(str, examples)) if len(examples) > 0 else "<No Data>"
+            # if len(examples_str) > 40:
+            #     examples_str = examples_str[:37] + "..."
+
+            table.add_row(
+                str(i),
+                col,
+                first_val,
+                dtype,
+                has_nan,
+                unique_count,
+                nan_pct,
+                # examples_str,
+            )
+
+        rich_cons.print(table)
 
     def _tqdm(
             self,
