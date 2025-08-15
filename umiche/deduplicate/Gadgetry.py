@@ -115,6 +115,7 @@ class Gadgetry:
 
         """
         umi_val_cnts = df_row['vignette']['df_umi_uniq_val_cnt']
+        # print(umi_val_cnts)
         ### @@ umi_val_cnts
         # 2       55
         # 780     51
