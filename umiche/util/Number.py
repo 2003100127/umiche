@@ -15,21 +15,33 @@ class Number:
         self.args = args
         self.kwargs = kwargs
 
+    def binomial(self, n, p, use_seed=True, seed=1):
+        if use_seed:
+            state = np.random.RandomState(seed)
+            return state.binomial(
+                n,
+                p,
+            )
+        else:
+            return np.random.binomial(
+                n,
+                p,
+            )
+
+    def nbinomial(self, n, p, use_seed=True, seed=1):
+        if use_seed:
+            state = np.random.RandomState(seed)
+            return state.negative_binomial(
+                n,
+                p,
+            )
+        else:
+            return np.random.negative_binomial(
+                n,
+                p,
+            )
+
     def uniform(self, low, high, num, use_seed=True, seed=1):
-        """
-
-        Parameters
-        ----------
-        low
-        high
-        num
-        use_seed
-        seed
-
-        Returns
-        -------
-
-        """
         if use_seed:
             state = np.random.RandomState(seed)
             return state.randint(
@@ -43,3 +55,10 @@ class Number:
                 high=high,
                 size=num
             )
+
+    def choice(self, high, num, use_seed=True, seed=1, replace=False):
+        if use_seed:
+            state = np.random.RandomState(seed)
+            return state.choice(high, int(num), replace=replace)
+        else:
+            return np.random.choice(high, int(num), replace=replace)
