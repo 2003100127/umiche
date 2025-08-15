@@ -17,8 +17,6 @@ class SetCover:
             self,
             verbose=False,
     ):
-        import pysam
-
         self.collapse = Collapse()
 
         self.console = Console()
@@ -285,11 +283,13 @@ class SetCover:
         print('dedup_cnt: ', dedup_cnt)
         return dedup_cnt, shortlisted_multimer_umi_list
 
+    @Console.vignette()
     def greedy(
             self,
             multimer_list,
             recur_len,
             split_method='split_to_all',
+            # df_umi_uniq_val_cnt=None,
     ):
         """
 
@@ -310,18 +310,32 @@ class SetCover:
             recur_len=recur_len,
         ) for multimer_umi in multimer_list}
         # print(umi_dict)
+        # @@ umi_dict
+        # {..., 'TTTATTAAAGGAAAATTAGGGAAACTTTTTAAATTT': {'TAAAAAGACTAT', 'TTAGAAGATTAT', 'TAAGATGACTAT',
+        # 'TTAGAAGACTAT', 'TTAGATGACTAT', 'TTAAATGACTAT', 'TTAAAAGACTAT', 'TAAAATGATTAT', 'TAAGAAGATTAT',
+        # 'TAAGATGATTAT', 'TAAAAAGATTAT', 'TTAGATGATTAT', 'TAAGAAGACTAT', 'TTAAAAGATTAT', 'TAAAATGACTAT',
+        # 'TTAAATGATTAT'}, 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT': {'AGACATGTTTCT', 'AGACATGTCTCT',
+        # 'AGACATGTGTTT', 'AGACATGTTTTT', 'AGACATGTGTCT', 'AGACATGTCTTT'}}
+        # @@ [*umi_dict.keys()]
+        # ['GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG',
+        # 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
+        # ...,
+        # 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT',]
         monomer_umi_lens = []
         multimer_umi_lens = []
         merged_mono_umi_dict = {}
         trimer_umi_to_id_map = {trimer_umi: k for k, trimer_umi in enumerate(umi_dict.keys())}
         trimer_id_to_umi_map = {k: trimer_umi for k, trimer_umi in enumerate(umi_dict.keys())}
         # print(trimer_umi_to_id_map)
+        # @@ trimer_umi_to_id_map
+        # {'GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG': 0, 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT': 1,
+        # 'TTTGGGAACAAAGGGTTTAGGTTTCGGAAAAAATTT': 2, ...,
+        # 'TTTATTAAAGGAAAATTAGGGAAACTTTTTAAATTT': 6890, 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT': 6891}
         # print(trimer_id_to_umi_map)
-        # @@ [*umi_dict.keys()]
-        # ['GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG',
-        # 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
-        # ...,
-        # 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT',]
+        # @@ trimer_id_to_umi_map
+        # {0: 'GGGTTTGTGACCCCCTGTAAATTTCCCCGGAAAGTG', 1: 'GGGAAATTTTTTGTTCTCAAAGGGCAAGGGAAATTT',
+        # 2: 'TTTGGGAACAAAGGGTTTAGGTTTCGGAAAAAATTT', ..., 6890: 'TTTATTAAAGGAAAATTAGGGAAACTTTTTAAATTT',
+        # 6891: 'AAAGGGAAACCCAAATTTGGGTTTTCGTTTCCTTTT'}
         mono_umi_set_list = [*umi_dict.values()]
         # print(mono_umi_set_list)
         # @@ mono_umi_set_list
@@ -330,10 +344,15 @@ class SetCover:
         # ...,
         # {'AGACATGTGTTT', 'AGACATGTCTTT', ..., 'AGACATGTTTCT'}]
         mono_umi_set_list_remaining = umi_dict
-        num_steps = 0
+        num_solved_steps = 0
+        clusters = {}
+        num_solved_trimer_umis = 0
         is_empty_set_overlap = False
+        from tqdm import tqdm
+        pbar1 = tqdm(desc="[Solving homotrimers]", total=None)
         while not is_empty_set_overlap:
-            # It addresses how many trimer UMIs monomer UMIs can account for
+            # print('num_solved_steps: ', num_solved_steps)
+            # It addresses how many trimer UMIs monomer UMIs can be accounted for
             mono_umi_to_trimer_id_dict = {}
             for multimer_umi, mono_umi_set in mono_umi_set_list_remaining.items():
                 for mono_umi in mono_umi_set:
@@ -360,28 +379,99 @@ class SetCover:
                 multimer_umi_ids = mono_umi_to_trimer_id_dict[monomer_umi_max]
                 multimer_umi_lens.append(len(multimer_umi_ids) - 1)
 
-                # important!!
+                # important!!!
                 # @@ this is where we keep one trimer UMI
+                # print(mono_umi_to_trimer_id_dict[monomer_umi_max])
+                num_solved_trimer_umis += len(mono_umi_to_trimer_id_dict[monomer_umi_max])
+                # print(trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[monomer_umi_max][0]])
+                # @@ trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[monomer_umi_max][0]]
+                # num_solved_steps:  0
+                # TTTACTAAATGGAAATTTGGGAACTTTTTTAAATTT
+                # num_solved_steps:  1
+                # AAAGGGTTTGAACCCGGGCCACGGAAAGGGCACTTT
+                # num_solved_steps:  2
+                # GGGGTGTAAGGGAAATTTCCCCCCGGTGGGCCCTTT
                 merged_mono_umi_dict[monomer_umi_max] = trimer_id_to_umi_map[mono_umi_to_trimer_id_dict[monomer_umi_max][0]]
-
+                # print(merged_mono_umi_dict)
+                # @@ merged_mono_umi_dict
+                # num_solved_steps:  0
+                # {'TTAGATGATTAT': 'TTTACTAAATGGAAATTTGGGAACTTTTTTAAATTT'}
+                # num_solved_steps:  1
+                # {'TTAGATGATTAT': 'TTTACTAAATGGAAATTTGGGAACTTTTTTAAATTT',
+                # 'AGTACGCGAGCT': 'AAAGGGTTTGAACCCGGGCCACGGAAAGGGCACTTT'}
+                # num_solved_steps:  2
+                # {'TTAGATGATTAT': 'TTTACTAAATGGAAATTTGGGAACTTTTTTAAATTT',
+                # 'AGTACGCGAGCT': 'AAAGGGTTTGAACCCGGGCCACGGAAAGGGCACTTT',
+                # 'GGAGATCCGGCT': 'GGGGTGTAAGGGAAATTTCCCCCCGGTGGGCCCTTT'}
+                clusters[num_solved_steps] = mono_umi_to_trimer_id_dict[monomer_umi_max]
                 for multimer_umi_id in multimer_umi_ids:
                     mono_umi_set_list_remaining.pop(trimer_id_to_umi_map[multimer_umi_id], None)
-                num_steps += 1
+                num_solved_steps += 1
                 is_empty_set_overlap = False
             else:
                 is_empty_set_overlap = True
 
+            pbar1.set_postfix(num_solved_steps=num_solved_steps)
+            pbar1.update(1)
+        pbar1.close()
+        self.console.print('=========># of trimer UMIs solved by set cover: {}'.format(num_solved_trimer_umis))
+        self.console.print('=========># of unique trimer UMIs: {}'.format(num_solved_trimer_umis))
+
+        # print(clusters)
+        # @@ clusters
+        # {0: [32, 35, 136, ..., 6880, 6890],
+        # 1: [15, 29, 53, ..., 6836, 6864],
+        # 2: [19, 69, 75, ..., 6823, 6872],
+        # ...
+        # 69: [5232, 6087], 70: [5967, 6797]}
         multimer_umi_solved_by_sc = [*merged_mono_umi_dict.values()]
         multimer_umi_not_solved = [*mono_umi_set_list_remaining.keys()]
+        # print(merged_mono_umi_dict)
+        # print(mono_umi_set_list_remaining)
+
+        pbar2 = tqdm(desc="[Unsolved homotrimers]", total=None)
+        num_unsolved_steps = 0
+        for multimer_umi in multimer_umi_not_solved:
+            # print('num_unsolved_steps: ', num_unsolved_steps)
+            clusters[num_unsolved_steps + num_solved_steps] = [trimer_umi_to_id_map[multimer_umi]]
+            num_unsolved_steps += 1
+            pbar2.set_postfix(num_solved_steps=num_unsolved_steps)
+            pbar2.update(1)
+        pbar2.close()
+
+            # print(multimer_umi, trimer_umi_to_id_map[multimer_umi])
+        # print(clusters)
+        # @@ clusters
+        # {0: [32, 35, 136, ..., 6880, 6890],
+        # 1: [15, 29, 53, ..., 6836, 6864],
+        # 2: [19, 69, 75, ..., 6823, 6872],
+        # ...
+        # 69: [5232, 6087], 70: [5967, 6797]}
+        # ...
+        # 181: [6833], 182: [6869]
+
         shortlisted_multimer_umi_list = multimer_umi_solved_by_sc + multimer_umi_not_solved
         self.console.print('=========># of shortlisted multimer UMIs solved by set cover: {}'.format(len(multimer_umi_solved_by_sc)))
         self.console.print('=========># of shortlisted multimer UMIs not solved by set cover: {}'.format(len(multimer_umi_not_solved)))
         self.console.print('=========># of shortlisted multimer UMIs: {}'.format(len(shortlisted_multimer_umi_list)))
-        # print(num_steps,212323)
         dedup_cnt = len(mono_umi_set_list) - sum(multimer_umi_lens)
+        # or the count below. They both are equal
+        # dedup_cnt = num_solved_steps + num_unsolved_steps
         self.console.print('=========>dedup cnt: {}'.format(dedup_cnt))
-        return dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens
+        return {
+            'count': dedup_cnt,
+            'clusters': clusters,
+            # '': multimer_umi_solved_by_sc,
+            # '': multimer_umi_not_solved,
+            # '': shortlisted_multimer_umi_list,
+            # '': monomer_umi_lens,
+            # '': multimer_umi_lens,
+        }
 
+    def maxumi(
+            self,
+    ):
+        return
 
 if __name__ == "__main__":
     from umiche.path import to
@@ -396,8 +486,11 @@ if __name__ == "__main__":
     from umiche.bam.Reader import Reader as alireader
     alireader = alireader(bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam", verbose=True)
     df_bam = alireader.todf(tags=['PO'])
+    print(df_bam)
     print(df_bam.columns)
-    print(df_bam.query_name.apply(lambda x: x.split('_')[1]).values)
+    print(df_bam.query_name.apply(lambda x: x.split('_')[1]).values.shape)
+    print(df_bam.query_name.apply(lambda x: x.split('_')[1]).value_counts(ascending=False))
+    print(df_bam.query_name.apply(lambda x: x.split('_')[1]).unique().shape)
 
     (dedup_cnt,
      multimer_umi_solved_by_sc,
@@ -406,10 +499,19 @@ if __name__ == "__main__":
      monomer_umi_lens,
      multimer_umi_lens) = p.greedy(
         multimer_list=df_bam.query_name.apply(lambda x: x.split('_')[1]).values,
+        df_umi_uniq_val_cnt=df_bam.query_name.apply(lambda x: x.split('_')[1]).value_counts(ascending=False),
         recur_len=3,
         split_method='split_to_all',
     )
-    print(dedup_cnt)
+    # print(dedup_cnt)
+    # print(multimer_umi_solved_by_sc)
+    # print(len(multimer_umi_solved_by_sc))
+    # print(multimer_umi_not_solved)
+    # print(len(multimer_umi_not_solved))
+    # print(shortlisted_multimer_umi_list)
+    # print(len(shortlisted_multimer_umi_list))
+    # print(monomer_umi_lens)
+    # print(multimer_umi_lens)
     # print(p.count_li(
     #     inbam=to('data/simu/umi/trimer/seq_errs/permute_0/trimmed/seq_err_17.bam'),
     #     tag='PO',
