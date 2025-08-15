@@ -5,7 +5,7 @@ __developer__ = "Jianfeng Sun"
 __maintainer__ = "Jianfeng Sun"
 __email__ = "jianfeng.sunmt@gmail.com"
 
-
+import os
 import time
 
 from umiche.bam.Writer import Writer as aliwriter
@@ -42,6 +42,8 @@ class Tabulate:
         self.bam_fpn = bam_fpn
         self.work_dir = work_dir
         self.heterogeneity = heterogeneity
+
+        self.bam_fn = os.path.splitext(os.path.basename(self.bam_fpn))[0]
 
         self.aliwriter = aliwriter(df=self.df_bam)
 
@@ -157,9 +159,13 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/set_cover/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'setcover_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/set_cover/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -168,12 +174,12 @@ class Tabulate:
             self.fwriter.generic(
                 df=self.df[[
                     'dedup_cnt',
-                    'ave_ed',
+                    'ave_eds',
                     'num_uniq_umis',
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'setcover_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/set_cover/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -181,7 +187,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['sv_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'setcover_dedup.bam',
+                tobam_fpn=self.work_dir + '/set_cover/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['sv_bam_ids'].values),
             )
@@ -191,36 +197,7 @@ class Tabulate:
             'df_bam': self.df_bam,
         }
 
-        # dedup_cnt, multimer_umi_solved_by_sc, multimer_umi_not_solved, shortlisted_multimer_umi_list, monomer_umi_lens, multimer_umi_lens = umisc().greedy(
-        #     multimer_list=series_uniq_umi.values,
-        #     recur_len=kwargs['umi_unit_pattern'],
-        #     split_method=kwargs['split_method'],
-        # )
-        # self.df.loc[0, 'num_not_solved'] = len(multimer_umi_not_solved)
-        # self.df.loc[0, 'monomer_umi_len'] = ';'.join([str(i) for i in monomer_umi_lens])
-        # self.df.loc[0, 'multimer_umi_len'] = ';'.join([str(i) for i in multimer_umi_lens])
-        #
-        # sc_bam_ids = []
-        # for i in shortlisted_multimer_umi_list:
-        #     sc_bam_ids.append(series_uniq_umi.loc[series_uniq_umi.isin([i])].index[0])
-        #
-        # self.console.print('======>start writing deduplicated reads to BAM...')
-        # dedup_reads_write_stime = time.time()
-        # # print(self.work_dir)
-        #
-        # import os
-        # from umiche.util.Folder import Folder as crtfolder
-        # crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_interm_bam_fpn']))
-        #
-        # self.aliwriter.tobam(
-        #     tobam_fpn=kwargs['sv_interm_bam_fpn'],
-        #     tmpl_bam_fpn=self.bam_fpn,
-        #     whitelist=sc_bam_ids,
-        # )
-        # self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
-        # return self.df
-
-    def majority_vote(
+    def majority_vote_deprecated(
             self,
             **kwargs,
     ):
@@ -244,7 +221,6 @@ class Tabulate:
         dedup_reads_write_stime = time.time()
         # print(self.work_dir)
 
-        import os
         from umiche.util.Folder import Folder as crtfolder
         crtfolder().osmkdir(DIRECTORY=os.path.dirname(kwargs['sv_interm_bam_fpn']))
 
@@ -256,6 +232,98 @@ class Tabulate:
         self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    def majority_vote(
+            self,
+            **kwargs,
+    ):
+        self.df['clusters'] = self.df.apply(
+            lambda x: umimv(verbose=self.verbose).track(
+                multimer_list=x['vignette']['umi'],
+                recur_len=kwargs['umi_unit_pattern'],
+            )['clusters'],
+            axis=1,
+        )
+        print(self.df['clusters'])
+        self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
+        print(self.df['repr_node_map'])
+        self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
+        print(self.df['repr_nodes'])
+        self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
+        print(self.df['dedup_cnt'])
+
+        self.df_bam = self.pcrartefact.denote(
+            df_bam=self.df_bam,
+            df_condition=self.df,
+            condition_set=kwargs['granul_lvl_list'],
+            umi_col=kwargs['umi_col'],
+            new_col='UMI_mapped',
+            pd_col='PD',
+            inplace=False
+        )
+        # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
+        print(self.df_bam)
+        gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        keys = gp_df.groups.keys()
+        for key in keys:
+            df_sub = gp_df.get_group(key)
+            print(key, df_sub['UMI_mapped'].unique().shape[0])
+
+        self.console.print('======>calculate average edit distances between umis...')
+        self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
+        self.df['num_diff_dedup_uniq_umis'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_uniq_umis(
+                x,
+                by_col='repr_nodes',
+            ),
+            axis=1,
+        )
+        self.df['num_diff_dedup_reads'] = self.df.apply(
+            lambda x: self.umigadgetry.num_removed_reads(
+                x,
+                by_col='repr_nodes',
+            ),
+            axis=1,
+        )
+        self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
+        self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
+        self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
+        self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
+        if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/majority_vote/')
+
+            self.fwriter.generic(
+                df=self.ave_ed_bins,
+                sv_fpn=self.work_dir + '/majority_vote/' + self.bam_fn + '_ave_ed_bin.txt',
+                index=True,
+                header=True,
+            )
+            self.fwriter.generic(
+                df=self.df[[
+                    'dedup_cnt',
+                    'ave_eds',
+                    'num_uniq_umis',
+                    'num_diff_dedup_uniq_umis',
+                    'num_diff_dedup_reads',
+                ]],
+                sv_fpn=self.work_dir + '/majority_vote/' + self.bam_fn + '_dedup_sum.txt',
+                index=True,
+                header=True,
+            )
+            self.console.print('======>start writing deduplicated reads to BAM...')
+            dedup_reads_write_stime = time.time()
+            self.df['sv_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
+            self.aliwriter.tobam(
+                tobam_fpn=self.work_dir + '/majority_vote/' + self.bam_fn + '_dedup.bam',
+                tmpl_bam_fpn=self.bam_fpn,
+                whitelist=self.umigadgetry.decompose(list_nd=self.df['sv_bam_ids'].values),
+            )
+            self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
+        return {
+            'df': self.df,
+            'df_bam': self.df_bam,
+        }
+
     @Console.vignette()
     def unique(
             self,
@@ -264,6 +332,7 @@ class Tabulate:
         dedup_umi_stime = time.time()
         self.df['repr_nodes'] = self.df['uniq_repr_nodes']
         self.df['clusters'] = self.df['uniq_repr_nodes'].apply(lambda x: {i: e for i, e in enumerate(x)})
+        print(self.df['clusters'])
         self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
 
         self.df['uniq_sgl_mark'] = self.df['repr_nodes'].apply(lambda x: 'yes' if len(x) == 1 else 'no')
@@ -306,9 +375,12 @@ class Tabulate:
         self.console.print('======># of deduplicated unique umis {}'.format(self.df['num_diff_dedup_uniq_umis'].sum()))
         self.console.print('======># of deduplicated reads {}'.format(self.df['num_diff_dedup_reads'].sum()))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/unique/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'unique_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/unique/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -319,7 +391,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'unique_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/unique/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -327,7 +399,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['uniq_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'unique_dedup.bam',
+                tobam_fpn=self.work_dir + '/unique/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['uniq_bam_ids'].values),
             )
@@ -388,9 +460,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/cluster/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'cluster_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/cluster/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -402,7 +477,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'cluster_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/cluster/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -410,7 +485,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['cc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'cluster_dedup.bam',
+                tobam_fpn=self.work_dir + '/cluster/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['cc_bam_ids'].values),
             )
@@ -457,11 +532,11 @@ class Tabulate:
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
         # print(self.df_bam)
-        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
-        # keys = gp_df.groups.keys()
-        # for key in keys:
-        #     df_sub = gp_df.get_group(key)
-            # print(key, df_sub['UMI_mapped'].unique().shape[0])
+        gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        keys = gp_df.groups.keys()
+        for key in keys:
+            df_sub = gp_df.get_group(key)
+            print(key, df_sub['UMI_mapped'].unique().shape[0])
 
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
@@ -486,9 +561,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/adjacency/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'adjacency_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/adjacency/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -502,7 +580,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'adjacency_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/adjacency/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -510,7 +588,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'adjacency_dedup.bam',
+                tobam_fpn=self.work_dir + '/adjacency/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
             )
@@ -607,9 +685,12 @@ class Tabulate:
         # print(self.ave_ed_bins)
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/directional/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'directional_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/directional/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -621,7 +702,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'directional_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/directional/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -629,7 +710,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['direc_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'directional_dedup.bam',
+                tobam_fpn=self.work_dir + '/directional/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['direc_bam_ids'].values),
             )
@@ -723,9 +804,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/' + str(clustering_method) + '/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + clustering_method + '_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -739,7 +823,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + clustering_method + '_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -747,7 +831,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['adj_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + clustering_method + '_dedup.bam',
+                tobam_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['adj_bam_ids'].values),
             )
@@ -835,9 +919,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/mcl/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'mcl_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/mcl/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -849,7 +936,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'mcl_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/mcl/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -857,7 +944,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['mcl_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'mcl_dedup.bam',
+                tobam_fpn=self.work_dir + '/mcl/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_bam_ids'].values),
             )
@@ -1037,9 +1124,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/mcl_val/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'mcl_val_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/mcl_val/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -1051,7 +1141,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'mcl_val_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/mcl_val/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -1060,7 +1150,7 @@ class Tabulate:
             self.df['mcl_val_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'),
                                                        axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'mcl_val_dedup.bam',
+                tobam_fpn=self.work_dir + '/mcl_val/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_val_bam_ids'].values),
             )
@@ -1160,9 +1250,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/mcl_ed/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + 'mcl_ed_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/mcl_ed/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -1174,7 +1267,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + 'mcl_ed_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/mcl_ed/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -1182,7 +1275,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df['mcl_ed_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + 'mcl_ed_dedup.bam',
+                tobam_fpn=self.work_dir + '/mcl_ed/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df['mcl_ed_bam_ids'].values),
             )
@@ -1259,9 +1352,12 @@ class Tabulate:
         self.ave_ed_bins = self.df['ave_eds'].value_counts().sort_index().to_frame().reset_index()
         self.console.check("======>bins for average edit distance\n{}".format(self.ave_ed_bins))
         if not self.heterogeneity:
+            from umiche.util.Folder import Folder as crtfolder
+            crtfolder().osmkdir(DIRECTORY=self.work_dir + '/' + str(clustering_method) + '/')
+
             self.fwriter.generic(
                 df=self.ave_ed_bins,
-                sv_fpn=self.work_dir + clustering_method + '_ave_ed_bin.txt',
+                sv_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_ave_ed_bin.txt',
                 index=True,
                 header=True,
             )
@@ -1273,7 +1369,7 @@ class Tabulate:
                     'num_diff_dedup_uniq_umis',
                     'num_diff_dedup_reads',
                 ]],
-                sv_fpn=self.work_dir + clustering_method + '_dedup_sum.txt',
+                sv_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
@@ -1281,7 +1377,7 @@ class Tabulate:
             dedup_reads_write_stime = time.time()
             self.df[clustering_method + '_bam_ids'] = self.df.apply(lambda x: self.umigadgetry.bamids(x, by_col='repr_nodes'), axis=1)
             self.aliwriter.tobam(
-                tobam_fpn=self.work_dir + clustering_method + '_dedup.bam',
+                tobam_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_dedup.bam',
                 tmpl_bam_fpn=self.bam_fpn,
                 whitelist=self.umigadgetry.decompose(list_nd=self.df[clustering_method + '_bam_ids'].values),
             )
