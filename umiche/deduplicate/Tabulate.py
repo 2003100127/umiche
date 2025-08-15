@@ -113,13 +113,13 @@ class Tabulate:
             )['clusters'],
             axis=1,
         )
-        print(self.df['clusters'])
+        # print(self.df['clusters'])
         self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
-        print(self.df['repr_node_map'])
+        # print(self.df['repr_node_map'])
         self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
-        print(self.df['repr_nodes'])
+        # print(self.df['repr_nodes'])
         self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
-        print(self.df['dedup_cnt'])
+        # print(self.df['dedup_cnt'])
 
         self.df_bam = self.pcrartefact.denote(
             df_bam=self.df_bam,
@@ -131,12 +131,12 @@ class Tabulate:
             inplace=False
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
-        print(self.df_bam)
-        gp_df = self.df_bam.groupby(by=['spikeUMI'])
-        keys = gp_df.groups.keys()
-        for key in keys:
-            df_sub = gp_df.get_group(key)
-            print(key, df_sub['UMI_mapped'].unique().shape[0])
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        #     print(key, df_sub['UMI_mapped'].unique().shape[0])
 
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
@@ -232,6 +232,7 @@ class Tabulate:
         self.console.print('======>finish writing in {:.2f}s'.format(time.time() - dedup_reads_write_stime))
         return self.df
 
+    @Console.vignette()
     def majority_vote(
             self,
             **kwargs,
@@ -331,7 +332,7 @@ class Tabulate:
     ):
         dedup_umi_stime = time.time()
         self.df['repr_nodes'] = self.df['uniq_repr_nodes']
-        self.df['clusters'] = self.df['uniq_repr_nodes'].apply(lambda x: {i: e for i, e in enumerate(x)})
+        self.df['clusters'] = self.df['uniq_repr_nodes'].apply(lambda x: {i: [e] for i, e in enumerate(x)})
         print(self.df['clusters'])
         self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
 
@@ -1297,29 +1298,24 @@ class Tabulate:
             clustering_method=clustering_method,
             **kwargs,
         )
-        df_clustering_res = self.df.apply(
-            lambda x: self.umiclustering.dfclusters(
-                connected_components=x['cc'],
-                graph_adj=x['vignette']['graph_adj'],
-                int_to_umi_dict=x['vignette']['int_to_umi_dict'],
+        self.df['clusters'] = self.df.apply(
+            lambda x: self.umiclustering.decompose(
+                list_nd=self.umiclustering.dfclusters(
+                    connected_components=x['cc'],
+                    graph_adj=x['vignette']['graph_adj'],
+                    int_to_umi_dict=x['vignette']['int_to_umi_dict'],
+                )['clusters'].values,
             ),
             axis=1,
-        ).values[0]
-        res_dict = {'clusters': self.umiclustering.decompose(
-            list_nd=df_clustering_res['clusters'].values
-        )}
-        apv_dict = {'apv': [df_clustering_res['apv']]}
-        self.df['clusters'] = self.df.apply(lambda x: res_dict['clusters'], axis=1)
+        )
         print(self.df['clusters'])
-        self.df['apv'] = self.df.apply(lambda x: apv_dict['apv'], axis=1)
-        # print(self.df['apv'])
         self.df['repr_node_map'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters', met='map'), axis=1)
         self.df['repr_nodes'] = self.df.apply(lambda x: self.umigadgetry.umimax(x, by_col='clusters'), axis=1)
         self.df['dedup_cnt'] = self.df['repr_nodes'].apply(lambda x: self.umigadgetry.length(x))
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
 
-        print(self.df['repr_nodes'])
+        # print(self.df['repr_nodes'])
 
         self.df_bam = self.pcrartefact.denote(
             df_bam=self.df_bam,
@@ -1331,13 +1327,12 @@ class Tabulate:
             inplace=False
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
-        print(self.df_bam)
+        # print(self.df_bam)
         # gp_df = self.df_bam.groupby(by=['spikeUMI'])
         # keys = gp_df.groups.keys()
         # for key in keys:
         #     df_sub = gp_df.get_group(key)
         #     print(key, df_sub['UMI_mapped'].unique().shape[0])
-
 
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_eds'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
