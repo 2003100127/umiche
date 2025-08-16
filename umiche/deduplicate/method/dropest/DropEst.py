@@ -1,11 +1,16 @@
-from __future__ import annotations
+__version__ = "v1.0"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+
+from typing import List, Optional, Tuple
+
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-
-# ---------------------------- Utility functions ---------------------------- #
 
 def _hamming_distance(a: str, b: str) -> int:
     """Compute the Hamming distance between two equal-length strings."""
@@ -40,9 +45,24 @@ def _quantize(values: np.ndarray, quant_borders: np.ndarray) -> np.ndarray:
     return np.digitize(values, quant_borders, right=False)
 
 
+def _average_pairwise_hamming(umis: List[str]) -> float:
+    """Average pairwise Hamming distance among a list of UMIs.
+    Returns -1.0 when fewer than 2 UMIs are present (undefined).
+    """
+    n = len(umis)
+    if n < 2:
+        return -1.0
+    tot = 0
+    cnt = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            tot += _hamming_distance(umis[i], umis[j])
+            cnt += 1
+    return float(tot) / float(cnt) if cnt else -1.0
+
+
 @dataclass
 class NBParams:
-    # Naive Bayes model
     # Likelihood tables for discrete features per class
     # Each is a 2D array: shape (n_classes=2, n_bins)
     quality_lh: np.ndarray  # P(Q=q | class)
@@ -56,7 +76,9 @@ class NBParams:
 
 
 class DiscreteNaiveBayes:
-    """A tiny discrete Naive Bayes over binned features with Laplace smoothing.
+
+    """Naive Bayes model
+    A tiny discrete Naive Bayes over binned features with Laplace smoothing.
 
     Classes: 0 = negative (keep separate UMIs), 1 = positive (merge base->target)
     """
@@ -197,10 +219,12 @@ class DropEstUMICorrector:
         ----------
         df : pandas.DataFrame
             Input per-read table.
-        return_type : {'counts', 'matrix', 'umis'}
+        return_type : {'counts', 'matrix', 'umis', 'summary'}
             - 'counts': per-(cell,gene,umi) corrected counts (default)
             - 'matrix': a cell x gene count matrix
             - 'umis':   per-(cell,gene) UMI totals after correction (Series)
+            - 'summary': MultiIndex (cell,gene) DataFrame with columns
+                ['dedup_cnt','ave_eds','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']
         """
         df = self._normalize_columns(df)
 
@@ -217,6 +241,40 @@ class DropEstUMICorrector:
             raise ValueError(f"Unknown method: {self.method}")
 
         # Prepare outputs
+        if return_type == 'summary':
+            # Pre-correction unique UMI count per (cell,gene)
+            pre_uniqs = (
+                agg.groupby([self.cell_col, self.gene_col])[self.umi_col]
+                   .nunique()
+                   .rename('num_uniq_umis')
+            )
+            # Post-correction unique UMI count (dedup count)
+            post_uniqs = (
+                corrected.groupby([self.cell_col, self.gene_col])[self.umi_col]
+                         .nunique()
+                         .rename('dedup_cnt')
+            )
+            # Average pairwise Hamming distance among retained UMIs
+            aveds = (
+                corrected.groupby([self.cell_col, self.gene_col])[self.umi_col]
+                         .apply(lambda s: _average_pairwise_hamming(list(pd.unique(s))))
+                         .rename('ave_eds')
+            )
+            summary = pd.concat([post_uniqs, aveds, pre_uniqs], axis=1).fillna(0)
+            # Differences
+            summary['num_diff_dedup_uniq_umis'] = (summary['num_uniq_umis'] - summary['dedup_cnt']).astype(int)
+            # In this aggregated-UMI pipeline, "reads" here refers to removed UMI representatives
+            summary['num_diff_dedup_reads'] = summary['num_diff_dedup_uniq_umis'].astype(int)
+            # Dtypes / order
+            summary['dedup_cnt'] = summary['dedup_cnt'].astype(int)
+            summary['num_uniq_umis'] = summary['num_uniq_umis'].astype(int)
+            summary = summary[['dedup_cnt','ave_eds','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']]
+            summary.sort_index(inplace=True)
+
+            summary.index = summary.index.map(lambda t: f"('{t[0]}', '{t[1]}')")
+            summary.index.name = None
+
+            return summary
         if return_type == 'umis':
             s = corrected.groupby([self.cell_col, self.gene_col])['umi'].nunique()
             if self.adjust_collisions:
@@ -263,7 +321,8 @@ class DropEstUMICorrector:
         return agg_df
 
     def _build_training_pairs(self, agg: pd.DataFrame) -> pd.DataFrame:
-        """Training (Bayesian)
+        """
+        Training (Bayesian)
         Construct candidate (base -> target) pairs for NB training across all groups.
 
         For each (cell,gene) group, connect UMIs whose Hamming distance == 1.
@@ -326,7 +385,7 @@ class DropEstUMICorrector:
         return nb
 
     def _correct_groups_bayesian(self, agg: pd.DataFrame) -> pd.DataFrame:
-        """Correction (Bayesian) """
+        """(Bayesian)"""
         assert self.nb is not None, "NB model must be trained"
         out_rows = []
         for (cell, gene), sub in agg.groupby([self.cell_col, self.gene_col]):
@@ -405,9 +464,8 @@ class DropEstUMICorrector:
             rows.append({self.umi_col: u, 'read_count': counts[u], 'umi_quality': quals.get(u, 30.0)})
         return pd.DataFrame(rows)
 
-
     def _correct_groups_classic(self, agg: pd.DataFrame) -> pd.DataFrame:
-        """ Correction (Classic directional) """
+        """(Classic directional)"""
         out_rows = []
         for (cell, gene), sub in agg.groupby([self.cell_col, self.gene_col]):
             umis = sub[self.umi_col].tolist()
@@ -431,6 +489,8 @@ class DropEstUMICorrector:
             dfc[self.gene_col] = gene
             out_rows.append(dfc)
         return pd.concat(out_rows, ignore_index=True) if out_rows else agg
+
+    # ----------------- Collision adjustment (optional) ----------------- #
 
     def _adjust_collisions_series(self, s: pd.Series) -> pd.Series:
         """Apply a simple occupancy adjustment to per-(cell,gene) UMI counts.
@@ -474,6 +534,7 @@ class DropEstUMICorrector:
         return adj.unstack(umis_matrix.columns)
 
 
+# ---------------------------- Convenience function ---------------------------- #
 
 def dropest_correct(
     df: pd.DataFrame,
@@ -511,45 +572,69 @@ def dropest_correct(
     return corr.fit_transform(df, return_type=return_type)
 
 
-
 if __name__ == "__main__":
-    import pandas as pd
-
     from umiche.bam.Reader import ReaderChunk
 
-    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.filtered.sorted.bam"
-    df = ReaderChunk(
+    # bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.filtered.sorted.bam"
+    # df = ReaderChunk(
+    #     bam_fpn=bam_fpn,
+    #     bam_fields=None,
+    #     tag_whitelist=['MB', 'CB', 'XF'],
+    #     categorize=["chrom"],
+    #     verbose=True,
+    # ).todf(chunk_size=2_000_000)
+    # print(df)
+
+    # df.rename(columns={'CB': 'cell', 'XF': 'gene', 'MB': 'umi'}, inplace=True)
+
+    from umiche.bam.Reader import ReaderChunk
+    from umiche.util.Console import Console
+    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/Smartseq3.TTACCTGCCAGATTCG.bam"
+    df_bam = ReaderChunk(
         bam_fpn=bam_fpn,
-        bam_fields=None,
-        tag_whitelist=['MB', 'CB', 'XF'],
-        categorize=["chrom"],
+        bam_fields=['contig', 'pos', 'CIGAR', 'seq', 'read'],
+        tag_whitelist=['BC', 'QU', 'UX', 'UB', 'GE'],
         verbose=True,
-    ).todf(chunk_size=2_000_000)
-    print(df)
+    ).todf(chunk_size=1_000_000)
+    # print(df)
+    spikecontig = "diySpike"
+    spikename = "g_diySpike4"
+    df_bam = df_bam[df_bam["UX"] != ""]
+    df_bam = df_bam[df_bam["GE"] == spikename]
+    df_bam = df_bam.reset_index(drop=True)
+    df_bam = df_bam.drop("GE", axis=1)
+    # print(df_bam)
+    from umiche.deduplicate.spikein.SpikeUMI import SpikeUMI
 
-    df.rename(columns={'CB': 'cell', 'XF': 'gene', 'MB': 'umi'}, inplace=True)
-
-    # 1) per-(cell,gene,umi) read_count
-    counts = dropest_correct(
-        df,
-        method='bayesian',  # 'classic'
-        cell_col='cell', gene_col='gene', umi_col='umi', qual_col='mapq',
-        return_type='counts'  # 'counts' | 'matrix' | 'umis'
+    df_bam = SpikeUMI(verbose=True).extract_spike_dat(
+        df=df_bam,
+        match_seq_before_UMI="GAGCCTGGGGGAACAGGTAGG",
+        match_seq_after_UMI="CTCGGAGGAGAAA",
     )
-    print(counts)
+    Console(True).df_column_summary(df_bam)
+    from umiche.deduplicate.method.trimer.Expand import Expand
 
-    # 2) cell x gene and corrected read count
-    mat = dropest_correct(df, method='bayesian', return_type='matrix')
-    print(mat)
+    df_bam["htUMI"] = df_bam["UX"].apply(Expand().homotrimer_umi)
+    mut_rate = 0.3
+    from umiche.deduplicate.method.trimer.Error import Error
 
-    # 3) corrected UMI (cell,gene) deduped UMI count
-    umis_per_gene = dropest_correct(df, method='bayesian', return_type='umis')
-    print(umis_per_gene)
+    df_bam["htUMI_" + str(mut_rate)] = df_bam["htUMI"].apply(lambda umi: Error().mutated(umi, mut_rate=mut_rate, mode="normal"))
 
-    # 4) To enable collision approximation correction (you need
-    # to tell UMI the space size, for example L=10 -> 4**10)
-    umis_adj = DropEstUMICorrector(
+
+    summary = dropest_correct(
+        df_bam,
         method='bayesian',
-        adjust_collisions=True, umi_space=4 ** 10
-    ).fit_transform(df, return_type='umis')
-    print(umis_adj)
+        cell_col='BC', gene_col='spikeUMI', umi_col="htUMI_" + str(mut_rate),
+        qual_col='umi_qual',
+        return_type='summary'
+    )
+
+    print(summary.head())
+
+    summary.to_csv(
+        '/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/df.txt',
+        header=True,
+        sep="\t",
+        index=True,
+    )
+
