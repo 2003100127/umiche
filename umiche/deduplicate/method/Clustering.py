@@ -244,8 +244,9 @@ class Clustering:
         return self.netadj.to_edge_list()
 
     def tovertex(self, x):
+        # print(x)
         clustering_cluster_arr = x['clustering_clusters'][0]
-        # print(clustering_cluster_arr)
+        # print("['clustering_clusters'][0]",clustering_cluster_arr)
         cc_vertex_arr = x['cc_vertices']
         # print(cc_vertex_arr)
         uniq_cls_arr = np.unique(clustering_cluster_arr)
@@ -255,6 +256,7 @@ class Clustering:
         for i, cls in enumerate(clustering_cluster_arr):
             # print(cls)
             if cls != -1:
+                # print('ss', cc_vertex_arr[i])
                 clusters[cls].append(cc_vertex_arr[i])
             else:
                 clusters.append([cc_vertex_arr[i]])
@@ -297,6 +299,9 @@ class Clustering:
         # {'A': ['B', 'C', 'D'], 'B': ['A', 'C'], 'C': ['A', 'B'], 'D': ['A'], 'E': ['G'], 'F': ['G'], 'G': ['E', 'F']}
 
         # When an adjacency list of a graph is shown as above, we have the output in the following.
+        # print(int_to_umi_dict)
+        # print(connected_components)
+        # print(dcnt)
         df_ccs = pd.DataFrame({'cc_vertices': [*connected_components.values()]})
         ### @@ df_ccs
         #     cc_vertices
@@ -318,9 +323,10 @@ class Clustering:
         df_ccs['clustering_clusters'] = df_ccs['onehot'].apply(lambda onehot_2d_arrs: [
             clustering_ins.fit(onehot_2d_arrs).labels_
         ])
-        # print(df_ccs['clustering_clusters'])
+        # print('clustering_clusters:',df_ccs['clustering_clusters'])
         df_ccs['clusters'] = df_ccs.apply(lambda x: self.tovertex(x), axis=1)
         # print(df_ccs['clusters'])
+        # print(self.decompose(df_ccs['clusters'].values))
         df_ccs['clust_num'] = df_ccs['clusters'].apply(lambda x: len(x))
         # print(df_ccs['clust_num'])
         df_ccs['graph_cc_adj'] = df_ccs['cc_vertices'].apply(lambda x: self.refkit.graph_cc_adj(x, graph_adj))

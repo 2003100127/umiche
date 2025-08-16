@@ -65,7 +65,7 @@ class Adjacency:
             df_umi_uniq_val_cnt,
             cc,
             graph_adj,
-    ) -> Dict:
+    ):
         """
         umi_tools adjacency
 
@@ -268,7 +268,7 @@ class Adjacency:
             connected_components,
             df_umi_uniq_val_cnt,
     ) -> Dict:
-        """仅合并 count==1 的直接邻居到代表。"""
+        """Only merge direct neighbors with count==1 into the representative."""
         self.console.print("===>UMIcountR adjacency_singleton method is being used.")
         umis_uniq_ordered = df_umi_uniq_val_cnt.index.tolist()
         umis_cnt_dict = df_umi_uniq_val_cnt.to_dict()
