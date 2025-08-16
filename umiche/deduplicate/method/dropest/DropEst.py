@@ -276,13 +276,15 @@ class DropEstUMICorrector:
 
             return summary
         if return_type == 'umis':
-            s = corrected.groupby([self.cell_col, self.gene_col])['umi'].nunique()
+            # s = corrected.groupby([self.cell_col, self.gene_col])['umi'].nunique()
+            s = corrected.groupby([self.cell_col, self.gene_col])[self.umi_col].nunique()
             if self.adjust_collisions:
                 s = self._adjust_collisions_series(s)
             return s
 
         # Per-(cell,gene,umi) counts
-        counts = corrected.groupby([self.cell_col, self.gene_col, 'umi'], as_index=False)['read_count'].sum()
+        # counts = corrected.groupby([self.cell_col, self.gene_col, 'umi'], as_index=False)['read_count'].sum()
+        counts = corrected.groupby([self.cell_col, self.gene_col, self.umi_col], as_index=False)['read_count'].sum()
 
         if return_type == 'matrix':
             mat = counts.pivot_table(index=self.cell_col, columns=self.gene_col, values='read_count', fill_value=0, aggfunc='sum')
@@ -534,9 +536,7 @@ class DropEstUMICorrector:
         return adj.unstack(umis_matrix.columns)
 
 
-# ---------------------------- Convenience function ---------------------------- #
-
-def dropest_correct(
+def dropest_caller(
     df: pd.DataFrame,
     method: str = 'bayesian',
     mult: float = 1.0,
@@ -572,6 +572,125 @@ def dropest_correct(
     return corr.fit_transform(df, return_type=return_type)
 
 
+def write_dedup_bam_from_df(
+    df: pd.DataFrame,
+    src_bam_fpn: str,
+    out_bam_fpn: str,
+    *,
+    method: str = 'bayesian',
+    mult: float = 1.0,
+    quality_quants: int = 10,
+    ratio_quants: int = 10,
+    cbase_quants: int = 10,
+    merge_threshold: float = 0.90,
+    max_iter: int = 100,
+    adjust_collisions: bool = False,
+    umi_space: Optional[int] = None,
+    cell_col: str = 'cell',
+    gene_col: str = 'gene',
+    umi_col: str = 'umi',
+    qual_col: Optional[str] = 'umi_qual',
+    keep_tag: Optional[str] = None,
+    threads: int = 1,
+) -> None:
+    """
+    Write a deduplicated BAM file by keeping exactly ONE representative read per
+    corrected UMI within each (cell, gene) group.
+
+    This function:
+      1) Runs the DropEstUMICorrector on the provided DataFrame to obtain the set of
+         surviving (cell, gene, umi) after correction/deduplication.
+      2) Selects ONE representative read for each surviving (cell, gene, umi).
+         If `qual_col` exists, the representative is chosen by the highest quality
+         within the group; otherwise the first read is used.
+      3) Writes those representative reads into `out_bam_fpn` using the header
+         from `src_bam_fpn`.
+
+    Requirements:
+      - `df` must contain a column named 'read' with pysam.AlignedSegment objects.
+      - `src_bam_fpn` must be the path to the original BAM to provide the header.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Per-read table converted from BAM, MUST contain a 'read' column.
+    src_bam_fpn : str
+        Path to the source BAM file (used to copy header for the output).
+    out_bam_fpn : str
+        Path to the output deduplicated BAM file.
+    method, mult, quality_quants, ratio_quants, cbase_quants, merge_threshold, max_iter :
+        The same algorithmic parameters as in DropEstUMICorrector.
+    adjust_collisions, umi_space :
+        Optional collision adjustment; usually leave as defaults for BAM writing.
+    cell_col, gene_col, umi_col, qual_col :
+        Column names for cell, gene, UMI, and (optional) per-read UMI quality.
+    keep_tag : Optional[str]
+        If provided (e.g., 'KD'), set this tag=1 on kept reads to indicate they
+        are retained after deduplication. By default, no extra tag is added.
+    threads : int
+        Number of threads to use when opening BAM files (if supported).
+
+    Returns
+    -------
+    None
+        Writes `out_bam_fpn` to disk.
+    """
+    # Safety checks
+    if 'read' not in df.columns:
+        raise KeyError("Input DataFrame must contain a 'read' column with pysam.AlignedSegment objects.")
+
+    # Run the corrector to get surviving (cell, gene, umi)
+    corrector = DropEstUMICorrector(
+        method=method,
+        mult=mult,
+        quality_quants=quality_quants,
+        ratio_quants=ratio_quants,
+        cbase_quants=cbase_quants,
+        merge_threshold=merge_threshold,
+        max_iter=max_iter,
+        adjust_collisions=adjust_collisions,
+        umi_space=umi_space,
+        cell_col=cell_col,
+        gene_col=gene_col,
+        umi_col=umi_col,
+        qual_col=qual_col,
+    )
+    # We only need the surviving (cell, gene, umi) keys => use 'counts' output
+    counts = corrector.fit_transform(df, return_type='counts')
+    # survivors = counts[[cell_col, gene_col, 'umi']].drop_duplicates()
+    survivors = counts[[cell_col, gene_col, umi_col]].drop_duplicates()
+
+    # Join back to per-read df to filter reads belonging to surviving UMIs
+    cols_needed = [cell_col, gene_col, umi_col, 'read']
+    if qual_col is not None and qual_col in df.columns:
+        cols_needed.append(qual_col)
+    # df_keep = df[cols_needed].merge(
+    #     survivors.rename(columns={'umi': umi_col}),
+    #     on=[cell_col, gene_col, umi_col],
+    #     how='inner'
+    # )
+    df_keep = df[cols_needed].merge(
+        survivors,
+        on=[cell_col, gene_col, umi_col],
+        how='inner'
+    )
+
+    # Choose ONE representative read per (cell, gene, umi)
+    if qual_col is not None and qual_col in df_keep.columns:
+        df_keep = df_keep.sort_values(by=qual_col, ascending=False)
+    reps = df_keep.groupby([cell_col, gene_col, umi_col], as_index=False).head(1)
+
+    # Write BAM
+    import pysam  # import locally to avoid adding a global dependency if unused
+    with pysam.AlignmentFile(src_bam_fpn, "rb", threads=threads) as src_bam:
+        with pysam.AlignmentFile(out_bam_fpn, "wb", header=src_bam.header, threads=threads) as out_bam:
+            for seg in reps['read']:
+                if keep_tag is not None:
+                    # Mark kept reads (optional)
+                    seg.set_tag(keep_tag, 1, value_type='i')
+                out_bam.write(seg)
+
+
 if __name__ == "__main__":
     from umiche.bam.Reader import ReaderChunk
 
@@ -605,7 +724,6 @@ if __name__ == "__main__":
     df_bam = df_bam.drop("GE", axis=1)
     # print(df_bam)
     from umiche.deduplicate.spikein.SpikeUMI import SpikeUMI
-
     df_bam = SpikeUMI(verbose=True).extract_spike_dat(
         df=df_bam,
         match_seq_before_UMI="GAGCCTGGGGGAACAGGTAGG",
@@ -613,20 +731,20 @@ if __name__ == "__main__":
     )
     Console(True).df_column_summary(df_bam)
     from umiche.deduplicate.method.trimer.Expand import Expand
-
     df_bam["htUMI"] = df_bam["UX"].apply(Expand().homotrimer_umi)
-    mut_rate = 0.3
-    from umiche.deduplicate.method.trimer.Error import Error
+    mut_rate = 0.01
 
+    from umiche.deduplicate.method.trimer.Error import Error
     df_bam["htUMI_" + str(mut_rate)] = df_bam["htUMI"].apply(lambda umi: Error().mutated(umi, mut_rate=mut_rate, mode="normal"))
 
-
-    summary = dropest_correct(
+    summary = dropest_caller(
         df_bam,
         method='bayesian',
-        cell_col='BC', gene_col='spikeUMI', umi_col="htUMI_" + str(mut_rate),
+        cell_col='BC',
+        gene_col='spikeUMI',
+        umi_col="htUMI_" + str(mut_rate),
         qual_col='umi_qual',
-        return_type='summary'
+        return_type='summary',
     )
 
     print(summary.head())
@@ -638,3 +756,15 @@ if __name__ == "__main__":
         index=True,
     )
 
+    write_dedup_bam_from_df(
+        df=df_bam,
+        src_bam_fpn=bam_fpn,
+        out_bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/ddd.bam",
+        method='bayesian',
+        cell_col='BC',
+        gene_col='spikeUMI',
+        umi_col='htUMI_' + str(mut_rate),
+        qual_col='umi_qual',
+        keep_tag=None,
+        threads=2,
+    )
