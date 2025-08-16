@@ -254,7 +254,6 @@ class Graph:
         return eds
 
 
-
 class Basic:
 
     def __init__(
@@ -268,7 +267,7 @@ class Basic:
         Parameters
         ----------
         df
-        ed_thres
+        umi_tag
         """
         self.df = df
         # print(df)
@@ -334,12 +333,14 @@ class Basic:
             # 2
             # ...
             # 20609
+        # print(self.int_to_umi_dict)
         self.data_summary = {
             'int_to_umi_dict': self.int_to_umi_dict,
             'df_umi_uniq_val_cnt': self.df_umi_uniq_val_cnt,
             'uniq_umi_id_to_bam_id_dict': self.uniq_umi_id_to_bam_id_dict,
+            'umi': self.df[umi_tag].unique(),
+            # 'umi': self.df[umi_tag].values,
         }
-
 
 
 class Relation:
