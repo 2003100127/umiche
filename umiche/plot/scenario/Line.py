@@ -13,7 +13,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from umiche.simu.Parameter import Parameter as params
-from umiche.deduplicate.io.Stat import Stat as dedupstat
+from umiche.deduplicate.io.Stat import Simulation as dedupstat
 
 from umiche.util.Reader import Reader as freader
 

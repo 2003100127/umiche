@@ -14,7 +14,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import scipy.stats as st
 from umiche.simu.Parameter import Parameter as params
-from umiche.deduplicate.io.Stat import Stat as dedupstat
+from umiche.deduplicate.io.Stat import Simulation as dedupstat
 from umiche.plot.gadget.Transmitter import Transmitter as transmitter
 
 from umiche.util.Reader import Reader as freader

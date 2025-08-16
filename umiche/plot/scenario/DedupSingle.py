@@ -320,7 +320,7 @@ class DedupSingle:
 
 if __name__ == "__main__":
     from umiche.path import to
-    from umiche.deduplicate.io.Stat import Stat as dedupstat
+    from umiche.deduplicate.io.Stat import Simulation as dedupstat
 
     scenarios = {
         # 'pcr_nums': 'PCR cycle',

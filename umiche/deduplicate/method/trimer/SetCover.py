@@ -473,6 +473,7 @@ class SetCover:
     ):
         return
 
+
 if __name__ == "__main__":
     from umiche.path import to
 

@@ -306,7 +306,7 @@ if __name__ == "__main__":
 
 
     ### ++++++++++++++++++++trace++++++++++++++++++++++++++
-    from umiche.deduplicate.io.Stat import Stat as dedupstat
+    from umiche.deduplicate.io.Stat import Simulation as dedupstat
     scenarios = {
         'pcr_nums': 'PCR cycle',
         # 'pcr_errs': 'PCR error',

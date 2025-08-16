@@ -8,7 +8,7 @@ __email__="jianfeng.sunmt@gmail.com"
 
 from typing import Any
 
-from umiche.deduplicate.io.Stat import Stat
+from umiche.deduplicate.io.Stat import Simulation as statsimu
 from umiche.util.Reader import Reader as freader
 
 
@@ -58,7 +58,7 @@ def stat(
         param_fpn,
         verbose : bool =True
 ):
-    return Stat(
+    return statsimu(
         scenarios=scenarios,
         methods=methods,
         param_fpn=param_fpn,

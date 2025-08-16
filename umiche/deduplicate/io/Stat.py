@@ -15,7 +15,7 @@ from umiche.util.Reader import Reader as freader
 from umiche.util.Console import Console
 
 
-class Stat:
+class Simulation:
 
     def __init__(
             self,
@@ -219,37 +219,115 @@ class Stat:
         return df_inflat, df_exp
 
 
+class Spikein:
+
+    def __init__(
+            self,
+            scenarios: Dict,
+            methods: Dict,
+            token: str,
+            param_fpn: str = None,
+            verbose: bool = True,
+    ):
+        self.scenarios = scenarios
+        self.methods = methods
+        self.token = token
+        self.freader = freader()
+        self.params = params(param_fpn=param_fpn)
+
+        self.console = Console()
+        self.console.verbose = verbose
+
+    @property
+    def df_dedup(self, ):
+        df = pd.DataFrame()
+        for scenario, scenario_formal in self.scenarios.items():
+            self.console.print("======>scenario: {}".format(scenario_formal))
+            for method, method_formal in self.methods.items():
+                self.console.print("=========>method: {}".format(method_formal))
+                df_sce_met = self.freader.generic(
+                    df_fpn=self.params.work_dir + '/' + method + '/' + self.token + '_' + scenario + '_dedup_sum.txt',
+                    index_col=0,
+                    header=0,
+                )
+                print(df_sce_met)
+                # if self.is_trans:
+                #     df_sce_met = (df_sce_met - self.umi_gt_cnt) / self.umi_gt_cnt
+                # df_sce_met['mean'] = df_sce_met.mean(axis=1)
+                # df_sce_met['max'] = df_sce_met.max(axis=1)
+                # df_sce_met['min'] = df_sce_met.min(axis=1)
+                # df_sce_met['std'] = df_sce_met.std(axis=1)
+                # df_sce_met['mean-min'] = df_sce_met['std']
+                # df_sce_met['max-mean'] = df_sce_met['std']
+                df_sce_met['scenario'] = scenario_formal
+                df_sce_met['method'] = method_formal
+                # df_sce_met['metric'] = [str(x) for x in self.params.varied[scenario]]
+                df = pd.concat([df, df_sce_met], axis=0)
+        return df
+
+
 if __name__ == "__main__":
     from umiche.path import to
 
-    p = Stat(
+    p = Spikein(
         scenarios={
-            'pcr_nums': 'PCR cycle',
-            'pcr_errs': 'PCR error',
-            'seq_errs': 'Sequencing error',
-            'ampl_rates': 'Amplification rate',
-            'umi_lens': 'UMI length',
-            'seq_deps': 'Sequencing depth',
+            '0.1': 'Error 0.1',
+            '0.2': 'Error 0.2',
+            '0.3': 'Error 0.3',
+            '0.4': 'Error 0.4',
+            '0.5': 'Error 0.5',
         },
-
         methods={
             # 'unique': 'Unique',
-            # 'cluster': 'Cluster',
-            # 'adjacency': 'Adjacency',
+            'cluster': 'Cluster',
+            'adjacency': 'Adjacency',
             'directional': 'Directional',
-            # 'dbscan_seq_onehot': 'DBSCAN',
-            # 'birch_seq_onehot': 'Birch',
-            # 'aprop_seq_onehot': 'Affinity Propagation',
+            'adj': 'UMICountR-adj',
+            'adj_singleton': 'UMICountR-singleton',
+            'adj_directional': 'UMICountR-adj-direc',
             'mcl': 'MCL',
-            # 'mcl_val': 'MCL-val',
-            # 'mcl_ed': 'MCL-ed',
+            'mcl_val': 'MCL-val',
+            'mcl_ed': 'MCL-ed',
+            'dbscan': 'DBSCAN',
+            'birch': 'Birch',
+            'aprop': 'Affinity Propagation',
+            'set_cover': 'Set Ccover',
+            'majority_vote': 'Majority Vote',
         },
-
-        param_fpn=to('data/params.yml'),
-        verbose=True
+        param_fpn='/mnt/d/Document/Programming/Python/umiche/umiche/data/params_spikein.yml',
+        token='Smartseq3.TTACCTGCCAGATTCG',
+        verbose=True,
     )
-
     print(p.df_dedup)
-    print(p.df_dedup_melt)
-    print(p.df_trace_cnt)
-    print(p.df_inflat_exp)
+    p.df_dedup.to_csv('/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/ex.txt', sep='\t', header=True, index=True)
+
+
+
+    # p = Simulation(
+    #     scenarios={
+    #         'pcr_nums': 'PCR cycle',
+    #         'pcr_errs': 'PCR error',
+    #         'seq_errs': 'Sequencing error',
+    #         'ampl_rates': 'Amplification rate',
+    #         'umi_lens': 'UMI length',
+    #         'seq_deps': 'Sequencing depth',
+    #     },
+    #     methods={
+    #         # 'unique': 'Unique',
+    #         # 'cluster': 'Cluster',
+    #         # 'adjacency': 'Adjacency',
+    #         'directional': 'Directional',
+    #         # 'dbscan_seq_onehot': 'DBSCAN',
+    #         # 'birch_seq_onehot': 'Birch',
+    #         # 'aprop_seq_onehot': 'Affinity Propagation',
+    #         'mcl': 'MCL',
+    #         # 'mcl_val': 'MCL-val',
+    #         # 'mcl_ed': 'MCL-ed',
+    #     },
+    #     param_fpn=to('data/params.yml'),
+    #     verbose=True
+    # )
+    # print(p.df_dedup)
+    # print(p.df_dedup_melt)
+    # print(p.df_trace_cnt)
+    # print(p.df_inflat_exp)
