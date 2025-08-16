@@ -1,4 +1,4 @@
-__version__ = "v1.2"  # add explicit cell/gene/UMI column names
+__version__ = "v1.3"  # add cell+gene mode: dedup by UMI within (chrom, cell, gene) only
 __copyright__ = "Copyright 2025"
 __license__ = "GPL-3.0"
 __developer__ = "Jianfeng Sun"
@@ -12,15 +12,24 @@ import pandas as pd
 from umiche.util.Console import Console
 
 
-class UMItools:
+class UMItoolsReplica:
     """
     Weng-style duplicate detection with PD tag write-back.
 
-    - Only detect duplicates on leftmost mate (not is_reverse)
-    - read1: duplicated over (pos, UMI, tlen)
-    - read2: duplicated over str(pos)+UMI+str(tlen)
-    - Executed within group (chrom[, cell][, gene]); cell/gene/UMI column names are explicitly provided by user
-    - Write back: each read gets SAM tag PD:i:{0|1}, no use of 0x400
+    Modes:
+      1) If BOTH `cell_col` and `gene_col` are provided:
+         - For each (chrom, cell, gene) group, mark duplicates based on UMI ONLY
+           (i.e., reads sharing the same UMI in the group → keep first, others PD=1).
+         - This matches single-cell practice where read names are unique and
+           position/tlen jitter should not block dedup within a gene.
+      2) Otherwise (no cell/gene grouping):
+         - Classic UMItools behavior on leftmost mate:
+           * read1 duplicates: duplicated over (pos, UMI, tlen)
+           * read2 duplicates: duplicated over str(pos)+UMI+str(tlen)
+
+    Write-back:
+      - Each read gets SAM tag PD:i:{0|1}, no use of 0x400.
+      - Writing is chromosome-wise and then merged, consistent with previous behavior.
     """
 
     def __init__(
@@ -41,7 +50,7 @@ class UMItools:
         self.console = Console()
         self.console.verbose = verbose
 
-    # === Calculate duplicate QNAME sets per chromosome (grouped by: chrom[,cell][,gene]) ===
+    # === Calculate duplicate QNAME sets per chromosome ===
     def compute_duplicates_by_chrom(self, df: pd.DataFrame) -> Dict[str, Set[str]]:
         # Required columns
         req = {"qname", "chrom", "pos", "tlen", "is_read1", "is_read2", "is_reverse", self.umi_col}
@@ -54,14 +63,35 @@ class UMItools:
         # Same as fetch(reference=...): only keep aligned records
         df = df[df["chrom"].notna()].copy()
 
-        # Group keys: explicitly provided column names from user
-        group_keys = ["chrom"]
-        if self.cell_col: group_keys.append(self.cell_col)
-        if self.gene_col: group_keys.append(self.gene_col)
-
         dup_by_chrom: Dict[str, Set[str]] = {}
-        tag_title = "group chrom" if len(group_keys) == 1 else "group chrom/cell/gene"
 
+        # --- Single-cell gene-level mode: BOTH cell_col & gene_col are set ---
+        if self.cell_col and self.gene_col:
+            group_keys = ["chrom", self.cell_col, self.gene_col]
+            for key_vals, sub in self.console._tqdm(
+                df.groupby(group_keys, sort=False),
+                desc="[group chrom/cell/gene by UMI]",
+                unit="grp",
+                position=0,
+                leave=True,
+                dynamic_ncols=False,
+            ):
+                # key_vals -> (chrom, cell, gene); dedup by UMI only within the group
+                chrom = key_vals[0] if isinstance(key_vals, tuple) else key_vals
+                dups: Set[str] = set()
+
+                # Mark second+ occurrences of the same UMI as duplicates
+                dup_mask = sub.duplicated([self.umi_col], keep="first")
+                if dup_mask.any():
+                    dups.update(sub.loc[dup_mask, "qname"].tolist())
+
+                if dups:
+                    dup_by_chrom.setdefault(str(chrom), set()).update(dups)
+            return dup_by_chrom
+
+        # --- Classic mode (no cell/gene grouping): UMItools leftmost logic ---
+        group_keys = ["chrom"]
+        tag_title = "group chrom"
         for key_vals, sub in self.console._tqdm(
             df.groupby(group_keys, sort=False),
             desc=f"[{tag_title}]",
@@ -89,7 +119,7 @@ class UMItools:
                     dups.update(r2.loc[dup_mask, "qname"].tolist())
 
             if dups:
-                dup_by_chrom.setdefault(chrom, set()).update(dups)
+                dup_by_chrom.setdefault(str(chrom), set()).update(dups)
 
         return dup_by_chrom
 
@@ -161,14 +191,14 @@ class UMItools:
 
 
 if __name__ == "__main__":
-    # Example: Reader is already implemented in your project; here column names are passed explicitly
+    # Example usage (Reader is in your project; pass column names explicitly there)
     from umiche.bam.Reader import ReaderChunk
 
     # bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umitools/umitools.test.RNA-seq.sorted.tagged.bam"
     bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/trumicount/10xn9k_10c/10xn9k_10c_tagged.sorted.filtered.sorted.bam"
 
     # df_bam must contain: qname, chrom, pos, tlen, is_read1, is_read2, is_reverse, and UMI column (default MB)
-    # If you want to group by cell/gene, explicitly pass their column names here (e.g., cell_col="CB", gene_col="GX" or "gene")
+    # For single-cell gene-level dedup, set both cell_col and gene_col in the tool below.
     df_bam = ReaderChunk(
         bam_fpn=bam_fpn,
         bam_fields=None,
@@ -178,7 +208,7 @@ if __name__ == "__main__":
         verbose=True,
     ).todf(chunk_size=2_000_000)
 
-    tool = UMItools(
+    tool = UMItoolsReplica(
         bam_fpn=bam_fpn,
         umi_col="MB",
         cell_col="CB",
