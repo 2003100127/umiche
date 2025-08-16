@@ -1,16 +1,31 @@
-from collections import defaultdict, Counter, deque
+__version__ = "v1.0"
+__copyright__ = "Copyright 2025"
+__license__ = "GPL-3.0"
+__developer__ = "Jianfeng Sun"
+__maintainer__ = "Jianfeng Sun"
+__email__="jianfeng.sunmt@gmail.com"
+
 from typing import Dict, List, Iterable, Tuple, Optional, Any
+
 import pandas as pd
+
+from collections import defaultdict
+from umiche.util.Console import Console
 
 
 class STARsolo:
-    """"""
 
-    def __init__(self, tie_break_lex=True):
+    def __init__(
+            self,
+            tie_break_lex=True,
+            verbose=False,
+    ):
         # When selecting "best UMI" inside a connected component:
         #  - primary key: highest count
         #  - tie-break: lexicographically smallest if tie_break_lex is True
         self.tie_break_lex = tie_break_lex
+        self.console = Console()
+        self.console.verbose = verbose
 
     def dedup_from_dataframe(
         self,
@@ -82,34 +97,39 @@ class STARsolo:
         return results
 
     def dedup_from_graph(
-        self,
-        adjacency: Dict[str, List[str]],
-        counts: Dict[str, int],
+            self,
+            graph_adj: Dict[str, List[str]],
+            counts: Dict[str, int],
+            connected_components,
     ) -> Dict[str, Any]:
         """
-        Deduplicate from an already-built 1MM adjacency and UMI counts.
+        Deduplicate from an already-built 1MM graph_adj and UMI counts.
 
         Returns a dict (see class docstring).
         """
-        # Normalize: ensure every node exists in adjacency and counts
+        # Normalize: ensure every node exists in graph_adj and counts
         nodes = set(counts.keys())
-        adj = {u: list(set(v)) for u, v in adjacency.items() if u in nodes}
+        adj = {u: list(set(v)) for u, v in graph_adj.items() if u in nodes}
         for u in nodes:
             if u not in adj:
                 adj[u] = []
 
         # Connected components on 1MM graph (equivalent to final graph-coloring CCs)
-        components = self._connected_components(adj)
+        # components = self._connected_components(adj)
+        # print(components)
+        connected_components = [cc for cc in connected_components.values()]
 
         # Winner (best UMI) per component, and umi->winner mapping
-        winner_per_component, map_to_comp_winner = self._pick_winners_and_map(components, counts)
+        winner_per_component, map_to_comp_winner = self._pick_winners_and_map(connected_components, counts)
 
         # Directional collapse inside each component
-        dir_clusters, map_dir, approvals, disapprovals = self._directional_clusters(adj, counts, components)
+        dir_clusters, map_dir, approvals, disapprovals = self._directional_clusters(adj, counts, connected_components)
+
+        dir_clusters_ = {i: clus for i, clus in enumerate(dir_clusters)}
 
         return {
-            "dedup_count": len(dir_clusters),
-            "clusters": dir_clusters,
+            "count": len(dir_clusters),
+            "clusters": dir_clusters_,
 
             # "n_before": len(nodes),
             # "n_after_1mm": len(components),
@@ -175,26 +195,6 @@ class STARsolo:
 
         return {u: sorted(v) for u, v in adj.items()}
 
-    @staticmethod
-    def _connected_components(adjacency: Dict[str, List[str]]) -> List[List[str]]:
-        visited = set()
-        comps: List[List[str]] = []
-        for node in adjacency.keys():
-            if node in visited:
-                continue
-            comp = []
-            dq = deque([node])
-            visited.add(node)
-            while dq:
-                u = dq.popleft()
-                comp.append(u)
-                for v in adjacency[u]:
-                    if v not in visited:
-                        visited.add(v)
-                        dq.append(v)
-            comps.append(sorted(comp))
-        return comps
-
     def _pick_winners_and_map(
         self,
         components: List[List[str]],
@@ -225,8 +225,8 @@ class STARsolo:
 
         Returns clusters (list of nodes per root), loser->winner map, and approval/disapproval edges per root.
         """
-        if components is None:
-            components = self._connected_components(adjacency)
+        # if components is None:
+        #     components = self._connected_components(adjacency)
 
         # order nodes within each CC by decreasing count
         clusters: List[List[str]] = []
@@ -294,6 +294,7 @@ class STARsolo:
 
 if __name__ == "__main__":
     import pandas as pd
+    from umiche.deduplicate.method.Cluster import Cluster as umiclust
 
     p = STARsolo()
 
@@ -340,6 +341,9 @@ if __name__ == "__main__":
         'F': 1,
     })
 
-    res = p.dedup_from_graph(adjacency=graph_adj, counts=node_val_sorted.to_dict())
+    ccs = umiclust().cc(graph_adj=graph_adj)
+    print("Connected components:\n{}".format(ccs))
+
+    res = p.dedup_from_graph(graph_adj=graph_adj, counts=node_val_sorted.to_dict(), connected_components=ccs)
 
     print(res)

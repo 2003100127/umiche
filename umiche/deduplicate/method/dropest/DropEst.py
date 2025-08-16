@@ -224,7 +224,7 @@ class DropEstUMICorrector:
             - 'matrix': a cell x gene count matrix
             - 'umis':   per-(cell,gene) UMI totals after correction (Series)
             - 'summary': MultiIndex (cell,gene) DataFrame with columns
-                ['dedup_cnt','ave_eds','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']
+                ['dedup_cnt','ave_ed','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']
         """
         df = self._normalize_columns(df)
 
@@ -258,7 +258,7 @@ class DropEstUMICorrector:
             aveds = (
                 corrected.groupby([self.cell_col, self.gene_col])[self.umi_col]
                          .apply(lambda s: _average_pairwise_hamming(list(pd.unique(s))))
-                         .rename('ave_eds')
+                         .rename('ave_ed')
             )
             summary = pd.concat([post_uniqs, aveds, pre_uniqs], axis=1).fillna(0)
             # Differences
@@ -268,7 +268,7 @@ class DropEstUMICorrector:
             # Dtypes / order
             summary['dedup_cnt'] = summary['dedup_cnt'].astype(int)
             summary['num_uniq_umis'] = summary['num_uniq_umis'].astype(int)
-            summary = summary[['dedup_cnt','ave_eds','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']]
+            summary = summary[['dedup_cnt','ave_ed','num_uniq_umis','num_diff_dedup_uniq_umis','num_diff_dedup_reads']]
             summary.sort_index(inplace=True)
 
             summary.index = summary.index.map(lambda t: f"('{t[0]}', '{t[1]}')")
@@ -572,7 +572,7 @@ def dropest_caller(
     return corr.fit_transform(df, return_type=return_type)
 
 
-def write_dedup_bam_from_df(
+def write_dedup_bam(
     df: pd.DataFrame,
     src_bam_fpn: str,
     out_bam_fpn: str,
@@ -756,7 +756,7 @@ if __name__ == "__main__":
         index=True,
     )
 
-    write_dedup_bam_from_df(
+    write_dedup_bam(
         df=df_bam,
         src_bam_fpn=bam_fpn,
         out_bam_fpn="/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/umicountr/ddd.bam",

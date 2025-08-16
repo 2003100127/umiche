@@ -9,7 +9,7 @@ from typing import Optional, Iterable, Dict, Any, List, Generator
 
 import time
 import pandas as pd
-import pysam
+# import pysam
 
 from umiche.util.Console import Console
 
@@ -410,7 +410,7 @@ class ReaderChunk:
             if "seq" in bam_field_set:       row["seq"] = r.query_sequence
             if "mate_chrom" in bam_field_set:  row["mate_chrom"] = r.next_reference_name
             if "read" in bam_field_set:    row["read"] = r
-            if "read_id" in bam_field_set:    row["read_id"] = id(r)
+            # if "read_id" in bam_field_set:    row["read_id"] = id(r)
             if tag_whitelist is not None:
                 for tag, val in r.get_tags():
                     if tag in tag_whitelist:

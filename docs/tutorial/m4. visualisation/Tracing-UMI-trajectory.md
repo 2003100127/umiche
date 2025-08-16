@@ -7,7 +7,7 @@ We recorded the information about UMI identities as soon as there is a merging o
 
 :material-language-python: `Python`
 ``` py linenums="1"
-from umiche.deduplicate.io.Stat import Stat as dedupstat
+from umiche.deduplicate.io.Stat import Simulation as dedupstat
 scenarios = {
     'pcr_nums': 'PCR cycle',
     # 'pcr_errs': 'PCR error',
@@ -59,7 +59,7 @@ uc.plot.trace_single(
 
 :material-language-python: `Python`
 ``` py linenums="1"
-from umiche.deduplicate.io.Stat import Stat as dedupstat
+from umiche.deduplicate.io.Stat import Simulation as dedupstat
 scenarios = {
     'pcr_nums': 'PCR cycle',
     # 'pcr_errs': 'PCR error',
