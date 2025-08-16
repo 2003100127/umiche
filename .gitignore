@@ -5,7 +5,7 @@ umiche/plot/transloc/
 umiche/plot/graph/draw/
 umiche/method/trimer/setcover_ex.py
 
-
+.idea/
 
 __pycache__/
 *.py[cod]

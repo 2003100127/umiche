@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="lh_ubuntu" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="lh_ubuntu (3)" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+    <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="lh_mcl">
         <serverdata>
@@ -23,11 +24,14 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="lh_ubuntu">
+      <paths name="lh_ubuntu (3)">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/jsun/software/umiche" local="$PROJECT_DIR$" />
+            <mapping deploy="/home/jsun/store" local="$PROJECT_DIR$" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/umiche/data" />
+          </excludedPaths>
         </serverdata>
       </paths>
       <paths name="ox">
@@ -51,6 +55,14 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="ox (4)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>
