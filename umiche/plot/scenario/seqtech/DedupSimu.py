@@ -517,7 +517,7 @@ class DedupSimu:
                 ax.set_ylabel(ylabel, fontsize=11)
             ax.grid(axis="x", linestyle=":", alpha=0.3)
             title_txt = seqtech_display_map.get(seq, seq) if isinstance(seqtech_display_map, dict) else seq
-            ax.set_title(title_txt, fontsize=10, pad=6)
+            ax.set_title(title_txt, fontsize=12, pad=6)
 
         # clean empty axis
         for k in range(n, nrows * ncols):
