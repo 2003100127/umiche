@@ -109,7 +109,8 @@ class Tabulate:
             lambda x: umisc(verbose=self.verbose).greedy(
                 multimer_list=x['vignette']['umi'],
                 recur_len=kwargs['umi_unit_pattern'],
-                split_method='split_to_all',
+                # split_method='split_to_all',
+                split_method='split_to_',
             )['clusters'],
             axis=1,
         )
@@ -128,7 +129,7 @@ class Tabulate:
             umi_col=kwargs['umi_col'],
             new_col='UMI_mapped',
             pd_col='PD',
-            inplace=False
+            inplace=False,
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
         # print(self.df_bam)
@@ -262,12 +263,12 @@ class Tabulate:
             inplace=False
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
-        print(self.df_bam)
-        gp_df = self.df_bam.groupby(by=['spikeUMI'])
-        keys = gp_df.groups.keys()
-        for key in keys:
-            df_sub = gp_df.get_group(key)
-            print(key, df_sub['UMI_mapped'].unique().shape[0])
+        # print(self.df_bam)
+        # gp_df = self.df_bam.groupby(by=['spikeUMI'])
+        # keys = gp_df.groups.keys()
+        # for key in keys:
+        #     df_sub = gp_df.get_group(key)
+        #     print(key, df_sub['UMI_mapped'].unique().shape[0])
 
         self.console.print('======>calculate average edit distances between umis...')
         self.df['ave_ed'] = self.df.apply(lambda x: self.umigadgetry.ed_ave(x, by_col='repr_nodes'), axis=1)
@@ -533,11 +534,11 @@ class Tabulate:
         )
         # self.df_bam.to_csv(self.work_dir + 'self.df_bam.txt', sep='\t', index=False, header=True)
         # print(self.df_bam)
-        gp_df = self.df_bam.groupby(by=['spikeUMI'])
-        keys = gp_df.groups.keys()
-        for key in keys:
-            df_sub = gp_df.get_group(key)
-            print(key, df_sub['UMI_mapped'].unique().shape[0])
+#         gp_df = self.df_bam.groupby(by=['spikeUMI'])
+#         keys = gp_df.groups.keys()
+#         for key in keys:
+#             df_sub = gp_df.get_group(key)
+#             print(key, df_sub['UMI_mapped'].unique().shape[0])
 
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
@@ -1600,6 +1601,7 @@ class Tabulate:
             method='bayesian',
             cell_col=kwargs['granul_lvl_list'][0],
             gene_col=kwargs['granul_lvl_list'][1],
+            # gene_col=kwargs['granul_lvl_list'][0],
             umi_col=kwargs['umi_col'],
             qual_col='umi_qual',
             return_type='summary',
@@ -1644,7 +1646,8 @@ class Tabulate:
 
         irescuer = Irescue(
             cell_col=kwargs['granul_lvl_list'][0],
-            feature_col=kwargs['granul_lvl_list'][1],
+            # feature_col=kwargs['granul_lvl_list'][1],
+            feature_col=kwargs['granul_lvl_list'][0],
             umi_col=kwargs['umi_col'],
             read_id_col=None,
             max_hd=kwargs['max_hd'],
@@ -1656,7 +1659,27 @@ class Tabulate:
 
         counts_long, df_sum = irescuer.fit_transform(self.df_bam)
 
-        # print(df_sum)
+        print(df_sum.head())
+        import pandas as pd, ast
+        def second_index_level(idx: pd.Index) -> pd.Index:
+            if isinstance(idx, pd.MultiIndex) and idx.nlevels > 1:
+                return idx.get_level_values(1)
+            # for (a,b) or "(a, b)"
+            out = []
+            for x in idx:
+                if isinstance(x, tuple) and len(x) >= 2:
+                    out.append(x[1])
+                elif isinstance(x, str) and x.startswith("("):
+                    try:
+                        t = ast.literal_eval(x)
+                        out.append(t[1] if isinstance(t, tuple) and len(t) >= 2 else x)
+                    except Exception:
+                        out.append(x)
+                else:
+                    out.append(x)
+            return pd.Index(out)
+        df_sum.index = second_index_level(df_sum.index)
+        print(df_sum.head())
 
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder
@@ -1674,7 +1697,8 @@ class Tabulate:
                 src_bam_fpn=self.bam_fpn,
                 out_bam_fpn=self.work_dir + '/irescue/' + self.bam_fn + '_' + str(kwargs['token']) + '_dedup.bam',
                 cell_col=kwargs['granul_lvl_list'][0],
-                feature_col=kwargs['granul_lvl_list'][1],
+                # feature_col=kwargs['granul_lvl_list'][1],
+                feature_col=kwargs['granul_lvl_list'][0],
                 umi_col=kwargs['umi_col'],
                 read_col="read",
                 read_id_col=None,
@@ -1699,7 +1723,7 @@ class Tabulate:
         tag_map = {
             'cell': kwargs['granul_lvl_list'][0],
             'umi': kwargs['umi_col'],
-            'gene': kwargs['granul_lvl_list'][1],
+            'gene': kwargs['granul_lvl_list'][0],
             'ref_name': 'chrom',
             'nh': 'NH',
             'pos': 'pos',
@@ -1708,8 +1732,28 @@ class Tabulate:
 
         counter = UMIS(tag_map=tag_map, min_evidence=1.0, weighted=True, positional=False)
         df_sum = counter.count_df(self.df_bam, drop_zeros=True)
-        # print(df_sum.head())
-        # print(df_sum)
+        print(df_sum.head())
+        import pandas as pd, ast
+        def second_index_level(idx: pd.Index) -> pd.Index:
+            if isinstance(idx, pd.MultiIndex) and idx.nlevels > 1:
+                return idx.get_level_values(1)
+            # for (a,b) or "(a, b)"
+            out = []
+            for x in idx:
+                if isinstance(x, tuple) and len(x) >= 2:
+                    out.append(x[1])
+                elif isinstance(x, str) and x.startswith("("):
+                    try:
+                        t = ast.literal_eval(x)
+                        out.append(t[1] if isinstance(t, tuple) and len(t) >= 2 else x)
+                    except Exception:
+                        out.append(x)
+                else:
+                    out.append(x)
+            return pd.Index(out)
+
+        df_sum.index = second_index_level(df_sum.index)
+        print(df_sum.head())
 
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder

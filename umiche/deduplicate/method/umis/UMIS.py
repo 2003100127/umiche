@@ -10,11 +10,13 @@ class UMIS:
     - Evidence = sum of per-alignment weights; default weight = 1/NH; if evidence >= min_evidence, the (cell,gene,umi[,pos]) counts as 1 molecule.
     - Output: a gene-by-cell matrix of unique UMI counts (integers).
     """
-    def __init__(self,
-                 tag_map=None,
-                 min_evidence=1.0,
-                 weighted=True,
-                 positional=False):
+    def __init__(
+            self,
+             tag_map=None,
+             min_evidence=1.0,
+             weighted=True,
+             positional=False,
+    ):
         # Column name mapping (adjust to your DataFrame columns if needed)
         self.tag_map = {
             'cell': 'CB',          # cell barcode column
