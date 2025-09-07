@@ -191,7 +191,8 @@ class DedupSpikein:
             scenario_order: list | None = None,
             ncols: int = 3,
             figsize=(16, 9),
-            sharey: bool = True,
+            sharey: bool = False,
+            sharex: bool = True,
             jitter_width: float = 0.18,
             point_size: float = 14,
             point_alpha: float = 0.6,
@@ -239,7 +240,7 @@ class DedupSpikein:
         ncols = max(1, int(ncols))
         nrows = math.ceil(n_scen / ncols)
 
-        fig, axes = plt.subplots(nrows, ncols, figsize=figsize, sharey=sharey)
+        fig, axes = plt.subplots(nrows, ncols, figsize=figsize, sharex=sharex, sharey=sharey)
         if isinstance(axes, np.ndarray):
             axes = axes.ravel()
         else:
@@ -332,7 +333,7 @@ class DedupSpikein:
                     alpha=point_alpha,
                     edgecolors="none",
                     linewidths=0,
-                    color=method_color[m],  # 每个箱子固定一种颜色
+                    color=method_color[m],
                 )
             # style
             ax.set_xticks(positions)
@@ -340,7 +341,7 @@ class DedupSpikein:
             if (i % ncols) == 0:
                 # ax.set_ylabel(value_col, fontsize=14)
                 ax.set_ylabel(r'$\frac{N_e-N_t}{N_t}$', fontsize=18)
-            # ax.set_title(str(scen), fontsize=14)
+            ax.set_title(str(scen), fontsize=16)
             ax.grid(axis="y", linestyle="--", alpha=0.35)
             ax.set_xlim(0.5, len(local_methods) + 0.5)
             ax.spines['right'].set_color('none')
@@ -374,14 +375,14 @@ if __name__ == "__main__":
         scenarios={
             # '0.0005': 'Error 0.0005',
             # '0.001': 'Error 0.001',
-            # '0.01': 'Error 0.01',
+            '0.01': 'Sequencing error rate 0.01',
             # '0.05': 'Error 0.05',
             # '0.1': 'Error 0.1',
             # '0.2': 'Error 0.2',
             # '0.3': 'Error 0.3',
             # '0.4': 'Error 0.4',
-            '0.5': 'Error 0.5',
-            # '0': 'Error-free',
+            # '0.5': 'Error 0.5',
+            '0': 'Oringinal',
         },
         methods={
             'unique': 'Unique',
@@ -425,13 +426,13 @@ if __name__ == "__main__":
     #     sharey=True,
     #     showfliers=False,
     #     title="",
-    #     save_to=None,
+    #     save_to=None, # e.g. "dedup_cnt_box_scatter_by_scenario.png"
     # )
     # plt.show()
 
     p.plot_dedup_by_method_per_scenario_control(
         # y_max=140, # max to 200
-        y_max=20, # max to 200
+        # y_max=20, # max to 200
         ncols=1,
         truncate_for_boxplot=False,
         figsize=(16, 7),
