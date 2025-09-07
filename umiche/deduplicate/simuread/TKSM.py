@@ -460,7 +460,7 @@ if __name__ == "__main__":
     # @@ /*** -------------------- ***/
     # calc homotrimer UMIs
     # @@ /*** -------------------- ***/
-    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simur/tksm/reads_with_tags.bam"
+    bam_fpn = "/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simuread/tksm/reads_with_tags.bam"
     from umiche.bam.Reader import ReaderChunk
     df_bam = ReaderChunk(
         bam_fpn=bam_fpn,
@@ -496,32 +496,6 @@ if __name__ == "__main__":
         from umiche.deduplicate.method.trimer.Error import Error
         df_bam["htUMI_" + str(mut_rate)] = df_bam["htUMI"].apply(lambda umi: Error().mutated(umi, mut_rate=mut_rate, mode="normal"))
 
-        p = TKSM(
-            bam_fpn=bam_fpn,
-            df_bam=df_bam,
-            ed_thres=1,
-            # umi_tag="MB",
-            umi_tag="htUMI_" + str(mut_rate),
-            token=str(mut_rate),
-            # granul_lvl_list=['CB', 'XT'],
-            granul_lvl_list=['XT'],
-
-            build_method='basic',  # basic graph
-
-            work_dir='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simur/tksm/ed1/',
-
-            mcl_fold_thres=1.5,
-            inflat_val=1.6,
-            exp_val=2,
-            iter_num=100,
-
-            umi_unit_pattern=3,
-
-            verbose=True,  # False True
-        )
-        res_sc = p.set_cover()
-        # res_mv = p.majority_vote()
-
         # p = TKSM(
         #     bam_fpn=bam_fpn,
         #     df_bam=df_bam,
@@ -532,19 +506,45 @@ if __name__ == "__main__":
         #     # granul_lvl_list=['CB', 'XT'],
         #     granul_lvl_list=['XT'],
         #
-        #     build_method='graph',  # basic graph
+        #     build_method='basic',  # basic graph
         #
-        #     work_dir='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simur/tksm/ed1/',
+        #     work_dir='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simuread/tksm/ed1/',
         #
         #     mcl_fold_thres=1.5,
         #     inflat_val=1.6,
         #     exp_val=2,
         #     iter_num=100,
         #
-        #     umi_unit_pattern=1,
+        #     umi_unit_pattern=3,
         #
         #     verbose=True,  # False True
         # )
+        # res_sc = p.set_cover()
+        # res_mv = p.majority_vote()
+
+        p = TKSM(
+            bam_fpn=bam_fpn,
+            df_bam=df_bam,
+            ed_thres=1,
+            # umi_tag="MB",
+            umi_tag="htUMI_" + str(mut_rate),
+            token=str(mut_rate),
+            # granul_lvl_list=['CB', 'XT'],
+            granul_lvl_list=['XT'],
+
+            build_method='graph',  # basic graph
+
+            work_dir='/mnt/d/Document/Programming/Python/umiche/umiche/data/r1/simuread/tksm/ed1/',
+
+            mcl_fold_thres=1.5,
+            inflat_val=1.6,
+            exp_val=2,
+            iter_num=100,
+
+            umi_unit_pattern=1,
+
+            verbose=True,  # False True
+        )
         # res_unique = p.unique()
         # res_cluster = p.cluster()
         # res_adjacency = p.adjacency()
@@ -557,9 +557,9 @@ if __name__ == "__main__":
         # res_mcl_val = p.mcl_val()
         # res_dbscan_seq_onehot = p.dbscan_seq_onehot()
         # res_aprop_seq_onehot = p.aprop_seq_onehot()
-        # res_birch_seq_onehot = p.birch_seq_onehot()
+        res_birch_seq_onehot = p.birch_seq_onehot()
         # res_starsolo = p.starsolo()
         # res_gencore = p.gencore()
-        # # res_dropest = p.dropest()
-        # res_irescue = p.irescue()
+        # res_dropest = p.dropest()
+        res_irescue = p.irescue()
         # res_umis = p.umis()
