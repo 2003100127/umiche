@@ -1350,7 +1350,6 @@ class Tabulate:
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder
             crtfolder().osmkdir(DIRECTORY=self.work_dir + '/' + str(clustering_method) + '/')
-
             self.fwriter.generic(
                 df=self.ave_ed_bins,
                 sv_fpn=self.work_dir + '/' + str(clustering_method) + '/' + self.bam_fn + '_' + str(kwargs['token']) + '_ave_ed_bin.txt',
@@ -1425,7 +1424,6 @@ class Tabulate:
         # for key in keys:
         #     df_sub = gp_df.get_group(key)
         #     print(key, df_sub['UMI_mapped'].unique().shape[0])
-
         self.console.print('======>finish finding deduplicated umis in {:.2f}s'.format(time.time() - dedup_umi_stime))
         # self.console.print('======># of umis deduplicated to be {}'.format(self.df['dedup_cnt'].loc['yes']))
         self.console.print('======>calculate average edit distances between umis...')
@@ -1451,7 +1449,6 @@ class Tabulate:
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder
             crtfolder().osmkdir(DIRECTORY=self.work_dir + '/starsolo/')
-
             self.fwriter.generic(
                 df=self.ave_ed_bins,
                 sv_fpn=self.work_dir + '/starsolo/' + self.bam_fn + '_' + str(kwargs['token']) + '_ave_ed_bin.txt',
@@ -1595,7 +1592,6 @@ class Tabulate:
             **kwargs,
     ):
         from umiche.deduplicate.method.dropest.DropEst import dropest_caller, write_dedup_bam
-
         df_sum = dropest_caller(
             self.df_bam,
             method='bayesian',
@@ -1606,20 +1602,16 @@ class Tabulate:
             qual_col='umi_qual',
             return_type='summary',
         )
-
         # print(df_sum.head())
-
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder
             crtfolder().osmkdir(DIRECTORY=self.work_dir + '/dropest/')
-
             self.fwriter.generic(
                 df=df_sum,
                 sv_fpn=self.work_dir + '/dropest/' + self.bam_fn + '_' + str(kwargs['token']) + '_dedup_sum.txt',
                 index=True,
                 header=True,
             )
-
             write_dedup_bam(
                 df=self.df_bam,
                 src_bam_fpn=self.bam_fpn,
@@ -1632,7 +1624,6 @@ class Tabulate:
                 keep_tag=None,
                 threads=2,
             )
-
         return {
             'df': self.df,
             'df_bam': self.df_bam,
@@ -1646,8 +1637,8 @@ class Tabulate:
 
         irescuer = Irescue(
             cell_col=kwargs['granul_lvl_list'][0],
-            # feature_col=kwargs['granul_lvl_list'][1],
-            feature_col=kwargs['granul_lvl_list'][0],
+            feature_col=kwargs['granul_lvl_list'][1],
+            # feature_col=kwargs['granul_lvl_list'][0],
             umi_col=kwargs['umi_col'],
             read_id_col=None,
             max_hd=kwargs['max_hd'],
@@ -1656,7 +1647,6 @@ class Tabulate:
             dump_ec=True,
             no_umi=False,
         )
-
         counts_long, df_sum = irescuer.fit_transform(self.df_bam)
 
         print(df_sum.head())
@@ -1684,7 +1674,6 @@ class Tabulate:
         if not self.heterogeneity:
             from umiche.util.Folder import Folder as crtfolder
             crtfolder().osmkdir(DIRECTORY=self.work_dir + '/irescue/')
-
             self.fwriter.generic(
                 df=df_sum,
                 sv_fpn=self.work_dir + '/irescue/' + self.bam_fn + '_' + str(kwargs['token']) + '_dedup_sum.txt',
@@ -1697,8 +1686,8 @@ class Tabulate:
                 src_bam_fpn=self.bam_fpn,
                 out_bam_fpn=self.work_dir + '/irescue/' + self.bam_fn + '_' + str(kwargs['token']) + '_dedup.bam',
                 cell_col=kwargs['granul_lvl_list'][0],
-                # feature_col=kwargs['granul_lvl_list'][1],
-                feature_col=kwargs['granul_lvl_list'][0],
+                feature_col=kwargs['granul_lvl_list'][1],
+                # feature_col=kwargs['granul_lvl_list'][0],
                 umi_col=kwargs['umi_col'],
                 read_col="read",
                 read_id_col=None,
